@@ -1,4 +1,5 @@
 - [Vite plugin-react version](vite-plugin-react-compat.md) — @vitejs/plugin-react v6 requires Vite 7; use v5 with Vite 6
 - [exactOptionalPropertyTypes pattern](exact-optional-props.md) — passing `T|undefined` to optional props needs conditional spread
-- [Font stack](font-stack.md) — 3-font combo: Sora (body), Space Grotesk (currency/numbers via font-display), DM Serif Display (serif/display); applied font-display + tabular-nums to all currency displays
-- [Calculator architecture](calculator-arch.md) — CalculatorContext wraps entire app in main.tsx; AppBar uses useCalculator() to open it; no more fixed-positioned button; CalculatorSheet renders in AppShell via context
+- [Font stack](font-stack.md) — 3-font combo: Sora (body), Space Grotesk (currency via font-display), DM Serif Display (serif); use tabular-nums on all currency displays
+- [Calculator architecture](calculator-arch.md) — CalculatorContext wraps entire app; AppBar uses useCalculator() to open it; no fixed-positioned button
+- [Onboarding biometric redirect fix](onboarding-biometric.md) — must block redirect with parent-level state flag BEFORE calling completeOnboarding; lifting state up is required

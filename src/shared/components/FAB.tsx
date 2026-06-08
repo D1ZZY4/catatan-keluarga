@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeftRight,
   Plus,
@@ -11,42 +11,52 @@ import { cn } from "@/shared/utils/misc";
 
 export type FABAction = "income" | "expense" | "transfer" | "scan";
 
-interface SpeedDialOption {
+interface ActionCard {
   action: FABAction;
   label: string;
+  sub: string;
   Icon: React.ElementType;
-  bg: string;
-  shadow: string;
+  colorClass: string;
+  bgClass: string;
+  textClass: string;
 }
 
-const SPEED_DIAL: SpeedDialOption[] = [
+const ACTIONS: ActionCard[] = [
   {
-    action: "scan",
-    label: "Scan Struk",
-    Icon: ScanLine,
-    bg: "bg-warning",
-    shadow: "shadow-warning/30",
-  },
-  {
-    action: "transfer",
-    label: "Transfer",
-    Icon: ArrowLeftRight,
-    bg: "bg-accent-primary",
-    shadow: "shadow-accent-primary/30",
+    action: "income",
+    label: "Pemasukan",
+    sub: "Uang masuk",
+    Icon: TrendingUp,
+    colorClass: "text-success",
+    bgClass: "bg-success/15",
+    textClass: "text-success",
   },
   {
     action: "expense",
     label: "Pengeluaran",
+    sub: "Uang keluar",
     Icon: TrendingDown,
-    bg: "bg-danger",
-    shadow: "shadow-danger/30",
+    colorClass: "text-danger",
+    bgClass: "bg-danger/15",
+    textClass: "text-danger",
   },
   {
-    action: "income",
-    label: "Pemasukan",
-    Icon: TrendingUp,
-    bg: "bg-success",
-    shadow: "shadow-success/30",
+    action: "transfer",
+    label: "Transfer",
+    sub: "Pindah dompet",
+    Icon: ArrowLeftRight,
+    colorClass: "text-accent-primary",
+    bgClass: "bg-accent-primary/15",
+    textClass: "text-accent-primary",
+  },
+  {
+    action: "scan",
+    label: "Scan Struk",
+    sub: "Foto kwitansi",
+    Icon: ScanLine,
+    colorClass: "text-warning",
+    bgClass: "bg-warning/15",
+    textClass: "text-warning",
   },
 ];
 
@@ -56,8 +66,6 @@ interface FABProps {
 
 export function FAB({ onAction }: FABProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const didLongPress = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -68,32 +76,7 @@ export function FAB({ onAction }: FABProps) {
     return () => document.removeEventListener("keydown", close);
   }, [isOpen]);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    didLongPress.current = false;
-    pressTimer.current = setTimeout(() => {
-      didLongPress.current = true;
-      setIsOpen(true);
-    }, 400);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerUp = () => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-  };
-
-  const handleClick = () => {
-    if (didLongPress.current) return;
-    if (isOpen) {
-      setIsOpen(false);
-    } else {
-      onAction("expense");
-    }
-  };
-
-  const handleOptionClick = (action: FABAction) => {
+  const handleAction = (action: FABAction) => {
     setIsOpen(false);
     onAction(action);
   };
@@ -102,72 +85,85 @@ export function FAB({ onAction }: FABProps) {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[3px]"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <div className="fixed right-4 bottom-[88px] z-50 flex flex-col items-end gap-3">
-        {SPEED_DIAL.map((opt, i) => {
-          const delay = isOpen ? i * 45 : (SPEED_DIAL.length - 1 - i) * 30;
-          return (
-            <div
-              key={opt.action}
-              className={cn(
-                "flex items-center gap-3 transition-all duration-200",
-                isOpen
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4 pointer-events-none",
-              )}
-              style={{ transitionDelay: `${delay}ms` }}
-            >
-              <div className="bg-bg-surface/95 backdrop-blur-md rounded-full px-3.5 py-1.5 shadow-card border border-black/[0.06] dark:border-white/10">
-                <span className="text-sm font-medium text-text-primary whitespace-nowrap">
-                  {opt.label}
-                </span>
-              </div>
-              <button
-                onClick={() => handleOptionClick(opt.action)}
-                className={cn(
-                  "w-12 h-12 rounded-[16px] flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg",
-                  opt.bg,
-                )}
-                aria-label={opt.label}
-              >
-                <opt.Icon size={20} strokeWidth={2.2} />
-              </button>
-            </div>
-          );
-        })}
-
-        <button
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-          onClick={handleClick}
+      <div className="fixed bottom-[80px] left-0 right-0 z-50 px-3 pointer-events-none">
+        <div
           className={cn(
-            "w-[60px] h-[60px] rounded-[20px] flex items-center justify-center text-white transition-all duration-200 active:scale-90",
+            "bg-bg-surface rounded-3xl shadow-2xl border border-black/[0.06] dark:border-white/10 overflow-hidden transition-all duration-300 ease-out pointer-events-auto",
             isOpen
-              ? "bg-text-muted/80 shadow-lg rotate-45"
-              : "bg-accent-primary shadow-xl",
+              ? "opacity-100 translate-y-0 scale-100"
+              : "opacity-0 translate-y-6 scale-95 pointer-events-none",
           )}
-          style={
-            isOpen
-              ? undefined
-              : {
-                  boxShadow:
-                    "0 8px 24px rgba(140,192,235,0.50), 0 2px 8px rgba(140,192,235,0.25)",
-                }
-          }
-          aria-label={isOpen ? "Tutup" : "Tambah transaksi"}
         >
-          {isOpen ? (
-            <X size={22} strokeWidth={2.5} />
-          ) : (
-            <Plus size={28} strokeWidth={2.5} />
-          )}
-        </button>
+          <div className="p-3 pb-2">
+            <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider text-center mb-3">
+              Catat Transaksi
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {ACTIONS.map((act) => (
+                <button
+                  key={act.action}
+                  onClick={() => handleAction(act.action)}
+                  className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-2xl active:scale-95 transition-all text-left",
+                    act.bgClass,
+                  )}
+                  aria-label={act.label}
+                >
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/60 dark:bg-black/20",
+                    )}
+                  >
+                    <act.Icon size={20} strokeWidth={2.2} className={act.colorClass} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={cn("text-sm font-bold leading-tight", act.textClass)}>
+                      {act.label}
+                    </p>
+                    <p className="text-[11px] text-text-muted leading-tight mt-0.5">{act.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-2 bg-bg-surface" />
+        </div>
       </div>
+
+      <button
+        onClick={() => setIsOpen((v) => !v)}
+        className={cn(
+          "fixed right-4 bottom-[calc(80px+12px)] z-50",
+          "w-[58px] h-[58px] rounded-[18px] flex flex-col items-center justify-center text-white",
+          "active:scale-90 transition-all duration-200",
+          isOpen ? "bg-text-muted/80 shadow-lg" : "bg-accent-primary",
+        )}
+        style={
+          isOpen
+            ? undefined
+            : {
+                boxShadow:
+                  "0 8px 28px rgba(140,192,235,0.55), 0 2px 8px rgba(140,192,235,0.30)",
+              }
+        }
+        aria-label={isOpen ? "Tutup" : "Tambah transaksi"}
+      >
+        {isOpen ? (
+          <X size={22} strokeWidth={2.5} />
+        ) : (
+          <>
+            <Plus size={24} strokeWidth={2.5} />
+            <span className="text-[9px] font-bold mt-0.5 tracking-wide leading-none opacity-90">
+              CATAT
+            </span>
+          </>
+        )}
+      </button>
     </>
   );
 }

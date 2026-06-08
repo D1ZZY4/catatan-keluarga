@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Fingerprint, Lock } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/app/AuthContext";
 import { cn } from "@/shared/utils/misc";
@@ -128,15 +128,24 @@ const SLIDES: SlideData[] = [
 
 interface SetupSlideProps {
   onComplete: (name: string, pin?: string) => Promise<void>;
+  onShowBiometric: () => void;
+  showingBiometric: boolean;
 }
 
-function SetupSlide({ onComplete }: SetupSlideProps) {
+function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlideProps) {
+  const { registerWebAuthn } = useAuth();
   const [name, setName] = useState("");
   const [usePIN, setUsePIN] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [biometricDone, setBiometricDone] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+  const [biometricError, setBiometricError] = useState("");
+
+  const supportsWebAuthn =
+    typeof window !== "undefined" && "PublicKeyCredential" in window;
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -155,9 +164,69 @@ function SetupSlide({ onComplete }: SetupSlideProps) {
     }
     setLoading(true);
     setError("");
+    // If PIN + WebAuthn, block redirect BEFORE completing onboarding
+    if (usePIN && supportsWebAuthn) {
+      onShowBiometric();
+    }
     await onComplete(name.trim(), usePIN ? pin : undefined);
     setLoading(false);
   };
+
+  const handleBiometric = async () => {
+    setBiometricLoading(true);
+    setBiometricError("");
+    const ok = await registerWebAuthn();
+    setBiometricLoading(false);
+    if (ok) {
+      setBiometricDone(true);
+    } else {
+      setBiometricError("Gagal mengaktifkan. Coba lagi atau lewati.");
+    }
+  };
+
+  if (showingBiometric) {
+    return (
+      <div className="flex flex-col items-center gap-5 px-6 pb-6 animate-fade-in">
+        <div className="w-20 h-20 rounded-3xl bg-accent-primary/15 flex items-center justify-center">
+          <Fingerprint size={40} className="text-accent-primary" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-text-primary mb-2">
+            Aktifkan Sidik Jari / Wajah?
+          </h2>
+          <p className="text-sm text-text-muted leading-relaxed">
+            Buka aplikasi lebih cepat dan aman menggunakan biometrik HP kamu — sidik jari atau pengenalan wajah.
+          </p>
+        </div>
+
+        {biometricError && (
+          <p className="text-sm text-danger text-center">{biometricError}</p>
+        )}
+
+        {biometricDone ? (
+          <div className="w-full py-4 bg-success/15 rounded-2xl flex items-center justify-center gap-2">
+            <Lock size={18} className="text-success" />
+            <span className="text-sm font-semibold text-success">Biometrik aktif!</span>
+          </div>
+        ) : (
+          <button
+            onClick={() => void handleBiometric()}
+            disabled={biometricLoading}
+            className="w-full py-4 bg-accent-primary text-white rounded-2xl font-bold text-base active:scale-[0.98] transition-transform disabled:opacity-50 shadow-fab"
+          >
+            {biometricLoading ? "Memproses…" : "Aktifkan Sidik Jari / Wajah"}
+          </button>
+        )}
+
+        <button
+          onClick={() => { window.location.assign("/"); }}
+          className="text-sm text-text-muted active:opacity-60 transition-opacity py-2"
+        >
+          {biometricDone ? "Lanjut ke aplikasi" : "Lewati, gunakan PIN saja"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-5 px-6 pb-6">
@@ -170,47 +239,51 @@ function SetupSlide({ onComplete }: SetupSlideProps) {
       </svg>
 
       <div className="w-full space-y-1">
-        <label className="text-xs font-medium text-text-muted">Siapa nama kamu?</label>
+        <label className="text-xs font-semibold text-text-muted">Siapa nama kamu?</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Masukkan nama kamu"
-          className="w-full bg-bg-card rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
+          className="w-full bg-bg-card rounded-2xl px-4 py-3.5 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
           autoFocus
           maxLength={40}
         />
       </div>
 
-      <div className="w-full">
+      <div className="w-full bg-bg-card rounded-2xl p-4 space-y-3">
         <button
           onClick={() => setUsePIN((v) => !v)}
-          className="flex items-center gap-3 w-full py-2 text-sm text-text-muted"
+          className="flex items-center gap-3 w-full text-left"
         >
           <div
             className={cn(
-              "w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-colors",
-              usePIN ? "bg-accent-primary border-accent-primary" : "border-text-muted",
+              "w-11 h-6 rounded-full transition-colors flex-shrink-0 relative",
+              usePIN ? "bg-accent-primary" : "bg-text-muted/30",
             )}
           >
-            {usePIN && (
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6 L5 9 L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            )}
+            <div
+              className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
+                usePIN ? "translate-x-5" : "translate-x-0.5",
+              )}
+            />
           </div>
-          Aktifkan PIN (opsional)
+          <div>
+            <p className="text-sm font-semibold text-text-primary">Aktifkan PIN</p>
+            <p className="text-xs text-text-muted">Kunci aplikasi dengan kode rahasia</p>
+          </div>
         </button>
 
         {usePIN && (
-          <div className="space-y-3 mt-3 animate-fade-in">
+          <div className="space-y-2 pt-1 animate-fade-in">
             <input
               type="password"
               inputMode="numeric"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
               placeholder="Buat PIN (4–8 digit)"
-              className="w-full bg-bg-card rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
+              className="w-full bg-bg-page rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
             />
             <input
               type="password"
@@ -218,18 +291,27 @@ function SetupSlide({ onComplete }: SetupSlideProps) {
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
               placeholder="Ulangi PIN"
-              className="w-full bg-bg-card rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
+              className="w-full bg-bg-page rounded-xl px-4 py-3 text-base text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
             />
           </div>
         )}
       </div>
 
+      {usePIN && hasWebAuthn && (
+        <div className="w-full bg-accent-primary/10 rounded-2xl px-4 py-3 flex items-center gap-3 border border-accent-primary/20">
+          <Fingerprint size={20} className="text-accent-primary flex-shrink-0" />
+          <p className="text-xs text-text-primary leading-snug">
+            Setelah PIN dibuat, kamu bisa aktifkan <strong>sidik jari / wajah</strong> di langkah berikutnya.
+          </p>
+        </div>
+      )}
+
       {error && <p className="text-sm text-danger w-full">{error}</p>}
 
       <button
-        onClick={handleSubmit}
+        onClick={() => void handleSubmit()}
         disabled={loading || !name.trim()}
-        className="w-full py-4 bg-accent-primary text-white rounded-2xl font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-50 shadow-fab mt-2"
+        className="w-full py-4 bg-accent-primary text-white rounded-2xl font-bold text-base active:scale-[0.98] transition-transform disabled:opacity-50 shadow-fab mt-2"
       >
         {loading ? "Mempersiapkan…" : "Mulai Sekarang"}
       </button>
@@ -242,9 +324,10 @@ function SetupSlide({ onComplete }: SetupSlideProps) {
 export function OnboardingPage() {
   const { state, completeOnboarding } = useAuth();
   const [current, setCurrent] = useState(0);
+  const [showBiometric, setShowBiometric] = useState(false);
   const startX = useRef(0);
 
-  if (state.status === "unlocked") {
+  if (state.status === "unlocked" && !showBiometric) {
     return <Navigate to="/" replace />;
   }
 
@@ -279,7 +362,7 @@ export function OnboardingPage() {
               {slideData.illustration}
             </div>
             <div className="space-y-3">
-              <h1 className="text-2xl font-semibold text-text-primary whitespace-pre-line leading-snug">
+              <h1 className="text-2xl font-bold text-text-primary whitespace-pre-line leading-snug">
                 {slideData.headline}
               </h1>
               <p className="text-sm text-text-muted leading-relaxed">{slideData.subtitle}</p>
@@ -287,10 +370,14 @@ export function OnboardingPage() {
           </div>
         ) : (
           <div className="w-full max-w-sm animate-fade-in">
-            <h1 className="text-2xl font-semibold text-text-primary text-center mb-6">
+            <h1 className="text-2xl font-bold text-text-primary text-center mb-6">
               Hampir siap!
             </h1>
-            <SetupSlide onComplete={completeOnboarding} />
+            <SetupSlide
+              onComplete={completeOnboarding}
+              onShowBiometric={() => setShowBiometric(true)}
+              showingBiometric={showBiometric}
+            />
           </div>
         )}
       </div>
@@ -302,12 +389,11 @@ export function OnboardingPage() {
               key={i}
               onClick={() => setCurrent(i)}
               className={cn(
-                "rounded-full transition-all",
+                "rounded-full transition-all duration-300",
                 i === current
-                  ? "w-5 h-2 bg-accent-primary"
-                  : "w-2 h-2 bg-bg-card hover:bg-accent-secondary",
+                  ? "w-6 h-2 bg-accent-primary"
+                  : "w-2 h-2 bg-bg-card",
               )}
-              aria-label={`Slide ${i + 1}`}
             />
           ))}
         </div>
@@ -316,16 +402,15 @@ export function OnboardingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setCurrent(SLIDES.length)}
-              className="text-sm text-text-muted py-2 px-3 active:opacity-60"
+              className="text-sm text-text-muted py-2 active:opacity-60 transition-opacity"
             >
               Lewati
             </button>
             <button
               onClick={goNext}
-              className="flex items-center gap-2 bg-accent-primary text-white px-6 py-3 rounded-2xl font-semibold text-sm active:scale-95 transition-transform shadow-fab"
+              className="flex items-center gap-1.5 bg-accent-primary text-white px-5 py-2.5 rounded-2xl text-sm font-bold active:scale-95 transition-transform shadow-fab"
             >
-              Lanjut
-              <ChevronRight size={18} />
+              Lanjut <ChevronRight size={16} />
             </button>
           </div>
         )}
