@@ -23,7 +23,7 @@ import { cn } from "@/shared/utils/misc";
 import type { Transaction } from "@/shared/types";
 import type { AppOutletContext } from "@/app/AppShell";
 
-type Period = "week" | "month" | "3months" | "6months" | "year";
+type Period = "week" | "month" | "3months" | "6months" | "year" | "custom";
 type StatsTab = "overview" | "debt";
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -32,9 +32,10 @@ const PERIOD_LABELS: Record<Period, string> = {
   "3months": "3 Bulan",
   "6months": "6 Bulan",
   year: "Tahun Ini",
+  custom: "Kustom",
 };
 
-function getPeriodStart(period: Period): number {
+function getPeriodStart(period: Exclude<Period, "custom">): number {
   const now = new Date();
   switch (period) {
     case "week": {
@@ -52,6 +53,21 @@ function getPeriodStart(period: Period): number {
     case "year":
       return new Date(now.getFullYear(), 0, 1).getTime();
   }
+}
+
+function dateToInputValue(ts: number): string {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function inputValueToTs(val: string, endOfDay = false): number {
+  const d = new Date(val);
+  if (endOfDay) d.setHours(23, 59, 59, 999);
+  else d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
 function isIncome(tx: Transaction): boolean {
@@ -98,19 +114,31 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
-function OverviewTab({ period }: { period: Period }) {
+function OverviewTab({
+  period,
+  customStart,
+  customEnd,
+}: {
+  period: Period;
+  customStart?: number;
+  customEnd?: number;
+}) {
   const { transactions, categories, wallets } = useAppData();
 
-  const periodStart = getPeriodStart(period);
+  const periodStart = period === "custom"
+    ? (customStart ?? getPeriodStart("month"))
+    : getPeriodStart(period);
+  const periodEnd = period === "custom" ? (customEnd ?? Date.now()) : Date.now();
+
   const filtered = useMemo(
-    () => transactions.filter((tx) => tx.date >= periodStart),
-    [transactions, periodStart],
+    () => transactions.filter((tx) => tx.date >= periodStart && tx.date <= periodEnd),
+    [transactions, periodStart, periodEnd],
   );
 
   const totalIncome = filtered.filter(isIncome).reduce((s, tx) => s + tx.amount, 0);
   const totalExpense = filtered.filter(isExpense).reduce((s, tx) => s + tx.amount, 0);
   const netBalance = totalIncome - totalExpense;
-  const daysInPeriod = Math.max(1, Math.ceil((Date.now() - periodStart) / 86400000));
+  const daysInPeriod = Math.max(1, Math.ceil((periodEnd - periodStart) / 86400000));
   const avgDailyExpense = totalExpense / daysInPeriod;
   const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
 
@@ -203,7 +231,7 @@ function OverviewTab({ period }: { period: Period }) {
         ].map((m) => (
           <div key={m.label} className="bg-bg-card rounded-xl p-3 shadow-card">
             <p className="text-[10px] text-text-muted mb-1">{m.label}</p>
-            <p className={cn("text-sm font-bold tabular-nums leading-tight", m.color)}>
+            <p className={cn("text-sm font-bold font-display tabular-nums leading-tight", m.color)}>
               {m.value}
             </p>
           </div>
@@ -312,7 +340,7 @@ function OverviewTab({ period }: { period: Period }) {
       <div className="px-4">
         <div className="bg-bg-card rounded-xl p-4 shadow-card">
           <p className="text-xs text-text-muted mb-1">Tingkat Tabungan</p>
-          <p className={cn("text-2xl font-bold", savingsRate >= 0 ? "text-success" : "text-danger")}>
+          <p className={cn("text-2xl font-bold font-display tabular-nums", savingsRate >= 0 ? "text-success" : "text-danger")}>
             {savingsRate}%
           </p>
           <p className="text-xs text-text-muted mt-1">
@@ -454,6 +482,17 @@ export function StatsPage() {
   const { transactions } = useAppData();
   const [period, setPeriod] = useState<Period>("month");
   const [activeTab, setActiveTab] = useState<StatsTab>("overview");
+  const [customStart, setCustomStart] = useState<number>(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  });
+  const [customEnd, setCustomEnd] = useState<number>(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d.getTime();
+  });
 
   if (transactions.length === 0) {
     return (
@@ -505,7 +544,39 @@ export function StatsPage() {
               </button>
             ))}
           </div>
-          <OverviewTab period={period} />
+
+          {period === "custom" && (
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-bg-card border-b border-bg-card">
+              <div className="flex-1">
+                <p className="text-[10px] text-text-muted mb-1">Dari tanggal</p>
+                <input
+                  type="date"
+                  value={dateToInputValue(customStart)}
+                  onChange={(e) => {
+                    if (e.target.value) setCustomStart(inputValueToTs(e.target.value));
+                  }}
+                  className="w-full bg-bg-surface rounded-lg px-2 py-1.5 text-xs text-text-primary outline-none focus:ring-2 focus:ring-accent-primary/40"
+                />
+              </div>
+              <div className="w-4 h-px bg-text-muted/40 flex-shrink-0 mt-4" />
+              <div className="flex-1">
+                <p className="text-[10px] text-text-muted mb-1">Sampai tanggal</p>
+                <input
+                  type="date"
+                  value={dateToInputValue(customEnd)}
+                  onChange={(e) => {
+                    if (e.target.value) setCustomEnd(inputValueToTs(e.target.value, true));
+                  }}
+                  className="w-full bg-bg-surface rounded-lg px-2 py-1.5 text-xs text-text-primary outline-none focus:ring-2 focus:ring-accent-primary/40"
+                />
+              </div>
+            </div>
+          )}
+
+          <OverviewTab
+            period={period}
+            {...(period === "custom" ? { customStart, customEnd } : {})}
+          />
         </>
       )}
 

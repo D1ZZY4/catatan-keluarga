@@ -47,7 +47,7 @@ export function AppBar({
       <h1 className={cn("flex-1 text-base font-semibold text-text-primary truncate", showBack ? "ml-0" : "ml-3")}>
         {title}
       </h1>
-      {actions !== undefined && <div className="flex items-center gap-1">{actions}</div>}
+      {actions !== undefined && <div className="flex items-center gap-1 mr-11">{actions}</div>}
     </header>
   );
 }

@@ -120,7 +120,7 @@ export function WalletCard({
       </div>
 
       <p className="text-xs text-text-muted mb-0.5 truncate">{wallet.name}</p>
-      <p className="text-lg font-semibold text-text-primary leading-tight truncate">
+      <p className="text-lg font-semibold font-display text-text-primary leading-tight truncate tabular-nums">
         {formatCurrency(balance, wallet.currency)}
       </p>
 

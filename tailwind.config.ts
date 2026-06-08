@@ -18,7 +18,9 @@ export default {
         danger: "var(--danger)",
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+        sans: ['"Sora"', "system-ui", "sans-serif"],
+        display: ['"Space Grotesk"', "system-ui", "sans-serif"],
+        serif: ['"DM Serif Display"', "serif"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "1.4" }],

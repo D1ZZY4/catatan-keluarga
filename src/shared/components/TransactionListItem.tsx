@@ -77,7 +77,7 @@ export function TransactionListItem({
         <p className="text-xs text-text-muted">{formatDate(transaction.date)}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className={cn("text-sm font-semibold", amountColor)}>
+        <p className={cn("text-sm font-semibold font-display tabular-nums", amountColor)}>
           {amountPrefix}
           {formatCurrency(transaction.amount, transaction.currency)}
         </p>

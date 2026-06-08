@@ -374,7 +374,7 @@ export function BudgetPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-text-muted">Terpakai</p>
-                  <p className="text-sm font-bold text-text-primary tabular-nums">
+                  <p className="text-sm font-bold font-display text-text-primary tabular-nums">
                     {formatCurrency(spent, budget.currency)}
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export function BudgetPage() {
                   <p className="text-xs text-text-muted">Sisa</p>
                   <p
                     className={cn(
-                      "text-sm font-bold tabular-nums",
+                      "text-sm font-bold font-display tabular-nums",
                       budget.amount - spent < 0 ? "text-danger" : "text-success",
                     )}
                   >

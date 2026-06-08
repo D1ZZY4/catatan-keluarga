@@ -1,3 +1,3 @@
 - [Vite plugin-react version](vite-plugin-react-compat.md) — @vitejs/plugin-react v6 requires Vite 7; use v5 with Vite 6
 - [exactOptionalPropertyTypes pattern](exact-optional-props.md) — passing `T|undefined` to optional props needs conditional spread
-- [Catatan Keuangan app state](catatan-keuangan-state.md) — all M0–M17 milestones complete; build passes clean; key tech choices noted
+- [Font stack](font-stack.md) — 3-font combo: Sora (body), Space Grotesk (currency/numbers via font-display), DM Serif Display (serif/display); applied font-display + tabular-nums to all currency displays

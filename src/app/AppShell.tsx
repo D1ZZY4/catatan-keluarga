@@ -148,10 +148,12 @@ export function AppShell() {
 
       <button
         onClick={openCalculator}
-        className="fixed top-3 right-4 z-30 w-9 h-9 flex items-center justify-center rounded-full bg-bg-card shadow-card active:scale-90 transition-transform"
+        className="fixed top-0 right-0 z-40 w-14 h-14 flex items-center justify-center active:scale-90 transition-transform"
         aria-label="Kalkulator"
       >
-        <Calculator size={18} className="text-text-muted" />
+        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-card shadow-card">
+          <Calculator size={16} className="text-text-muted" />
+        </div>
       </button>
 
       <Suspense fallback={null}>

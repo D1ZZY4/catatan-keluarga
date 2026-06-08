@@ -217,8 +217,8 @@ export function HomePage() {
   return (
     <main className="pb-4">
       <div className="px-4 pt-14 pb-5 bg-gradient-to-b from-bg-card to-bg-page">
-        <p className="text-xs text-text-muted mb-1">Selamat datang, {userName}</p>
-        <p className="text-2xl font-bold text-text-primary tabular-nums">
+        <p className="text-xs text-text-muted mb-1 font-medium">Selamat datang, <span className="text-text-primary">{userName}</span></p>
+        <p className="text-3xl font-bold font-display text-text-primary tabular-nums tracking-tight">
           {formatCurrency(netWorth, "IDR")}
         </p>
         <p className="text-xs text-text-muted mt-0.5">Total kekayaan bersih</p>

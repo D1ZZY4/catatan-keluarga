@@ -132,12 +132,12 @@ export function TransactionPage() {
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-success" />
             <span className="text-text-muted">Masuk:</span>
-            <span className="font-semibold text-success">{formatCurrency(totalIncome, "IDR")}</span>
+            <span className="font-semibold font-display tabular-nums text-success">{formatCurrency(totalIncome, "IDR")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-danger" />
             <span className="text-text-muted">Keluar:</span>
-            <span className="font-semibold text-danger">{formatCurrency(totalExpense, "IDR")}</span>
+            <span className="font-semibold font-display tabular-nums text-danger">{formatCurrency(totalExpense, "IDR")}</span>
           </div>
         </div>
       </div>

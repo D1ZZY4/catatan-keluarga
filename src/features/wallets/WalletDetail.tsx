@@ -108,7 +108,7 @@ export function WalletDetail() {
             </span>
           )}
         </div>
-        <p className="text-3xl font-bold text-text-primary tabular-nums">
+        <p className="text-3xl font-bold font-display text-text-primary tabular-nums tracking-tight">
           {formatCurrency(balance, wallet.currency)}
         </p>
         <p className="text-xs text-text-muted mt-1">Saldo saat ini</p>
