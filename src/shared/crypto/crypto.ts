@@ -22,15 +22,17 @@ export function toBase64(buf: ArrayBuffer | Uint8Array): string {
   return btoa(s);
 }
 
-export function fromBase64(b64: string): Uint8Array {
+export function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
   const s = atob(b64);
-  const out = new Uint8Array(s.length);
+  const buf = new ArrayBuffer(s.length);
+  const out = new Uint8Array(buf);
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
   return out;
 }
 
-export function randomBytes(length: number): Uint8Array {
-  const out = new Uint8Array(length);
+export function randomBytes(length: number): Uint8Array<ArrayBuffer> {
+  const buf = new ArrayBuffer(length);
+  const out = new Uint8Array(buf);
   crypto.getRandomValues(out);
   return out;
 }
@@ -89,9 +91,11 @@ export async function deriveDeviceKey(): Promise<CryptoKey> {
 
 export async function hashPin(pin: string, saltB64: string): Promise<string> {
   const salt = fromBase64(saltB64);
-  const material = new Uint8Array(salt.length + pin.length);
+  const pinBytes = enc.encode(pin);
+  const buf = new ArrayBuffer(salt.length + pinBytes.length);
+  const material = new Uint8Array(buf);
   material.set(salt, 0);
-  material.set(enc.encode(pin), salt.length);
+  material.set(pinBytes, salt.length);
   const digest = await crypto.subtle.digest("SHA-256", material);
   return toBase64(digest);
 }
