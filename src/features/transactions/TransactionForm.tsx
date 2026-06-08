@@ -194,7 +194,9 @@ export function TransactionForm({
   const isDebtType = ["debt_given", "debt_received", "debt_repay"].includes(form.type);
   const isTransfer = form.type === "transfer_internal";
 
-  const title = editTransaction ? "Edit Transaksi" : "Catat Transaksi";
+  const typeLabel =
+    TYPE_OPTIONS.find((t) => t.type === form.type)?.label ?? "Transaksi";
+  const title = editTransaction ? "Edit Transaksi" : typeLabel;
 
   if (activeWallets.length === 0) {
     return (

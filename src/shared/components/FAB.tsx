@@ -1,59 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowLeftRight,
-  Plus,
-  ScanLine,
-  TrendingDown,
-  TrendingUp,
-  X,
-} from "lucide-react";
+import { MoreVertical, Settings2, X } from "lucide-react";
+import { DynamicIcon } from "./DynamicIcon";
 import { cn } from "@/shared/utils/misc";
+import { useQuickActions } from "@/features/home/useQuickActions";
+import { QUICK_ACTION_META } from "@/features/home/quickActionsConfig";
+import { EditQuickActionsSheet } from "@/features/home/EditQuickActionsSheet";
+import type { TransactionType } from "@/shared/types";
 
-export type FABAction = "income" | "expense" | "transfer" | "scan";
-
-interface SpeedDialItem {
-  action: FABAction;
-  label: string;
-  Icon: React.ElementType;
-  colorClass: string;
-  bgClass: string;
-  ringClass: string;
-}
-
-const DIAL_ITEMS: SpeedDialItem[] = [
-  {
-    action: "scan",
-    label: "Scan Struk",
-    Icon: ScanLine,
-    colorClass: "text-text-muted",
-    bgClass: "bg-bg-surface",
-    ringClass: "ring-1 ring-black/[0.08]",
-  },
-  {
-    action: "transfer",
-    label: "Transfer",
-    Icon: ArrowLeftRight,
-    colorClass: "text-accent-primary",
-    bgClass: "bg-accent-primary/12",
-    ringClass: "ring-1 ring-accent-primary/20",
-  },
-  {
-    action: "expense",
-    label: "Pengeluaran",
-    Icon: TrendingDown,
-    colorClass: "text-danger",
-    bgClass: "bg-danger/10",
-    ringClass: "ring-1 ring-danger/20",
-  },
-  {
-    action: "income",
-    label: "Pemasukan",
-    Icon: TrendingUp,
-    colorClass: "text-success",
-    bgClass: "bg-success/10",
-    ringClass: "ring-1 ring-success/20",
-  },
-];
+export type FABAction = TransactionType | "scan";
 
 interface FABProps {
   onAction: (action: FABAction) => void;
@@ -61,10 +15,9 @@ interface FABProps {
 
 export function FAB({ onAction }: FABProps) {
   const [dialOpen, setDialOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const didLongPress = useRef(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { actions } = useQuickActions();
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
@@ -80,35 +33,22 @@ export function FAB({ onAction }: FABProps) {
     return () => document.removeEventListener("keydown", handler);
   }, [dialOpen]);
 
-  const startPress = useCallback(() => {
-    didLongPress.current = false;
-    pressTimer.current = setTimeout(() => {
-      didLongPress.current = true;
-      setDialOpen(true);
-    }, 500);
+  const handleToggle = useCallback(() => {
+    setDialOpen((v) => !v);
   }, []);
-
-  const cancelPress = useCallback(() => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-  }, []);
-
-  const handleTap = useCallback(() => {
-    cancelPress();
-    if (!didLongPress.current) {
-      onAction("expense");
-    }
-  }, [cancelPress, onAction]);
 
   const handleDialAction = useCallback(
-    (action: FABAction) => {
+    (type: FABAction) => {
       setDialOpen(false);
-      onAction(action);
+      onAction(type);
     },
     [onAction],
   );
+
+  const handleEditOpen = useCallback(() => {
+    setDialOpen(false);
+    setEditOpen(true);
+  }, []);
 
   return (
     <>
@@ -121,52 +61,83 @@ export function FAB({ onAction }: FABProps) {
       )}
 
       <div
-        className="fixed right-4 z-50 flex flex-col items-center gap-3"
+        className={cn(
+          "fixed right-4 z-50 flex flex-col items-end gap-2.5 transition-all duration-300",
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
+        )}
         style={{ bottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
       >
-        {DIAL_ITEMS.map((item, i) => {
-          const delay = (DIAL_ITEMS.length - 1 - i) * 50;
+        {/* Edit Aksi Cepat — always last (topmost) */}
+        <div
+          className={cn(
+            "flex items-center gap-2.5 transition-all",
+            dialOpen
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-4 pointer-events-none",
+          )}
+          style={{
+            transitionDuration: "180ms",
+            transitionDelay: dialOpen ? `${(actions.length) * 50}ms` : "0ms",
+          }}
+        >
+          <span
+            className="text-xs font-semibold text-text-primary bg-bg-surface/95 backdrop-blur-sm px-2.5 py-1 rounded-full whitespace-nowrap"
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+          >
+            Edit Aksi Cepat
+          </span>
+          <button
+            onClick={handleEditOpen}
+            aria-label="Edit aksi cepat"
+            className="w-11 h-11 rounded-full flex items-center justify-center bg-bg-surface ring-1 ring-black/[0.08] active:scale-90 transition-transform shadow-card"
+          >
+            <Settings2 size={18} className="text-text-muted" />
+          </button>
+        </div>
+
+        {/* Quick action items — reversed so first action is closest to button */}
+        {[...actions].reverse().map((action, revIdx) => {
+          const idx = actions.length - 1 - revIdx;
+          const meta = QUICK_ACTION_META[action.type];
+          const delay = dialOpen ? `${idx * 50}ms` : "0ms";
           return (
             <div
-              key={item.action}
+              key={action.id}
               className={cn(
-                "flex items-center gap-2.5 transition-all duration-200",
+                "flex items-center gap-2.5 transition-all",
                 dialOpen
-                  ? "opacity-100 translate-y-0"
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
                   : "opacity-0 translate-y-4 pointer-events-none",
               )}
-              style={{
-                transitionDelay: dialOpen ? `${delay}ms` : "0ms",
-              }}
+              style={{ transitionDuration: "180ms", transitionDelay: delay }}
             >
               <span
-                className="text-xs font-semibold text-text-primary bg-bg-surface/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-card whitespace-nowrap"
+                className="text-xs font-semibold text-text-primary bg-bg-surface/95 backdrop-blur-sm px-2.5 py-1 rounded-full whitespace-nowrap"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
               >
-                {item.label}
+                {meta.label}
               </span>
               <button
-                onClick={() => handleDialAction(item.action)}
-                aria-label={item.label}
-                className={cn(
-                  "w-11 h-11 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-card",
-                  item.bgClass,
-                  item.ringClass,
-                )}
+                onClick={() => handleDialAction(action.type as FABAction)}
+                aria-label={meta.label}
+                className="w-11 h-11 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-card ring-1 ring-black/[0.08]"
+                style={{ background: meta.iconBg }}
               >
-                <item.Icon size={20} strokeWidth={2} className={item.colorClass} />
+                <DynamicIcon
+                  name={meta.iconName}
+                  size={19}
+                  strokeWidth={2}
+                  style={{ color: meta.iconColor }}
+                />
               </button>
             </div>
           );
         })}
 
+        {/* Main toggle button */}
         <button
-          ref={buttonRef}
-          onPointerDown={startPress}
-          onPointerUp={handleTap}
-          onPointerLeave={cancelPress}
-          onPointerCancel={cancelPress}
-          aria-label={dialOpen ? "Tutup menu" : "Tambah transaksi"}
+          onClick={handleToggle}
+          aria-label={dialOpen ? "Tutup menu" : "Buka menu aksi cepat"}
           className={cn(
             "w-14 h-14 rounded-full flex items-center justify-center",
             "active:scale-90 transition-all duration-200 select-none",
@@ -184,24 +155,21 @@ export function FAB({ onAction }: FABProps) {
           <div
             className={cn(
               "transition-transform duration-200",
-              dialOpen ? "rotate-45" : "rotate-0",
+              dialOpen ? "rotate-90" : "rotate-0",
             )}
           >
             {dialOpen ? (
-              <X size={24} strokeWidth={2.5} className="text-white" />
+              <X size={22} strokeWidth={2.5} className="text-white" />
             ) : (
-              <Plus size={24} strokeWidth={2.5} className="text-white" />
+              <MoreVertical size={22} strokeWidth={2.5} className="text-white" />
             )}
           </div>
         </button>
       </div>
 
-      <div
-        className={cn(
-          "fixed right-6 z-50 transition-all duration-300",
-          mounted ? "opacity-100 scale-100" : "opacity-0 scale-0",
-        )}
-        style={{ bottom: "calc(100px + env(safe-area-inset-bottom, 0px))", pointerEvents: "none" }}
+      <EditQuickActionsSheet
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
       />
     </>
   );

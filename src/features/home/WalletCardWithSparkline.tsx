@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { WalletCard } from "@/shared/components/WalletCard";
 import { useAppData } from "@/app/AppDataContext";
 
@@ -15,7 +16,11 @@ function useSparkline(
       const dayStart = now - d * 86400000;
       const dayEnd = dayStart + 86400000;
       const balance = transactions
-        .filter((tx) => tx.date < dayEnd && (tx.walletId === walletId || tx.toWalletId === walletId))
+        .filter(
+          (tx) =>
+            tx.date < dayEnd &&
+            (tx.walletId === walletId || tx.toWalletId === walletId),
+        )
         .reduce((acc, tx) => {
           if (tx.walletId === walletId) {
             switch (tx.type) {
@@ -37,7 +42,8 @@ function useSparkline(
                 return acc;
             }
           }
-          if (tx.toWalletId === walletId && tx.type === "transfer_internal") return acc + tx.amount;
+          if (tx.toWalletId === walletId && tx.type === "transfer_internal")
+            return acc + tx.amount;
           return acc;
         }, initialBalance);
       points.push(balance);
@@ -53,6 +59,17 @@ export function WalletCardWithSparkline({
 }) {
   const { transactions, getWalletBalance } = useAppData();
   const balance = getWalletBalance(wallet.id);
-  const sparkline = useSparkline(wallet.id, transactions, wallet.initialBalance);
-  return <WalletCard wallet={wallet} balance={balance} sparkline={sparkline} />;
+  const sparkline = useSparkline(
+    wallet.id,
+    transactions,
+    wallet.initialBalance,
+  );
+  return (
+    <Link
+      to={`/wallets/${wallet.id}`}
+      className="block active:scale-[0.97] transition-transform"
+    >
+      <WalletCard wallet={wallet} balance={balance} sparkline={sparkline} />
+    </Link>
+  );
 }

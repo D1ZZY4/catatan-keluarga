@@ -30,6 +30,15 @@
 - [x] AppShell.tsx JSX broken structure (Suspense blocks di luar wrapper div) → diperbaiki
 - [x] Tablet sidebar (SideNav) + BottomNav md:hidden + FAB md:hidden
 
+### Diperbaiki (Sesi terbaru — UI polish berdasarkan feedback pengguna)
+- [x] Greeting "Halo, Nama" terlalu kebawah (pt-14) → dikurangi ke pt-5
+- [x] Greeting statis "Halo" → sekarang dinamis/random 20+ varian berdasarkan waktu (pagi/siang/sore/malam), hari (Senin, akhir pekan), tanggal (awal/akhir bulan)
+- [x] FAB tombol Plus → diganti MoreVertical (titik tiga ⋮); satu tap = toggle speed dial; dial menampilkan aksi cepat + "Edit Aksi Cepat"
+- [x] Quick Actions hardcoded → sekarang customizable, disimpan di IndexedDB (settings key: 'quickActions'), default 4 aksi
+- [x] EditQuickActionsSheet — bottom sheet baru: tambah/hapus aksi, reset ke bawaan, simpan
+- [x] Form transaksi judul hardcoded "Catat Transaksi" → sekarang menampilkan nama tipe ("Pengeluaran", "Pemasukan", dll.)
+- [x] Kartu dompet di beranda tidak bisa diklik → sekarang wrapped Link ke /wallets/:id
+
 ### Status Terbuka
 - Chunk DynamicIcon (Lucide) 165 KB gzipped — besar tapi lazy-loaded, tidak mempengaruhi initial load
 - Chunk Tesseract.js 190 KB gzipped — inherently besar karena WebAssembly OCR engine

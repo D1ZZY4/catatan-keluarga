@@ -148,10 +148,11 @@ export function AppShell() {
           <div className="md:hidden">
             <FAB
               onAction={(action: FABAction) => {
-                if (action === "income") openTransactionForm("income");
-                else if (action === "transfer") openTransactionForm("transfer_internal");
-                else if (action === "scan") setOcrOpen(true);
-                else openTransactionForm("expense");
+                if (action === "scan") {
+                  setOcrOpen(true);
+                } else {
+                  openTransactionForm(action);
+                }
               }}
             />
           </div>
