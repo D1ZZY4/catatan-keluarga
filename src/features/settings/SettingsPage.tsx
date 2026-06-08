@@ -624,7 +624,7 @@ export function SettingsPage() {
 
         <div className="px-4 pt-8 pb-4 text-center text-xs text-text-muted space-y-1">
           <p className="font-bold text-text-primary">Catatan Keuangan</p>
-          <p>Versi 1.0.0</p>
+          <p>Versi {import.meta.env.VITE_APP_VERSION} ({import.meta.env.VITE_BUILD_DATE})</p>
           <p>Data sepenuhnya tersimpan di perangkat Anda. Tidak ada server.</p>
         </div>
       </div>

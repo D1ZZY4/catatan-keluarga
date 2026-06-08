@@ -20,7 +20,7 @@ const NAV_ITEMS: Array<{
 export function BottomNav() {
   return (
     <nav
-      className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-48px)] max-w-[480px]"
+      className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-48px)] max-w-[480px]"
       aria-label="Navigasi utama"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >

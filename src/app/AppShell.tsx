@@ -4,6 +4,7 @@ import { useAuth } from "./AuthContext";
 import { useAppData } from "./AppDataContext";
 import { useCalculator } from "./CalculatorContext";
 import { BottomNav } from "@/shared/components/BottomNav";
+import { SideNav } from "@/shared/components/SideNav";
 import { FAB, type FABAction } from "@/shared/components/FAB";
 import { ToastContainer } from "@/shared/components/Toast";
 import { SkeletonCard } from "@/shared/components/SkeletonCard";
@@ -124,58 +125,64 @@ export function AppShell() {
   const outletCtx: AppOutletContext = { openTransactionForm, openCalculator, openOCR };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-bg-page">
-      {state.status === "locked" && (
-        <Suspense fallback={null}>
-          <LockScreen />
-        </Suspense>
-      )}
+    <div className="flex min-h-[100dvh] bg-bg-page">
+      <SideNav />
 
-      <div className={state.status === "locked" ? "pointer-events-none select-none" : ""}>
-        <Suspense fallback={<LoadingFallback />}>
-          <Outlet context={outletCtx} />
-        </Suspense>
-        <div className="h-[100px]" aria-hidden />
-      </div>
-
-      <BottomNav />
-
-      {!hideFAB && (
-        <FAB
-          onAction={(action: FABAction) => {
-            if (action === "income") openTransactionForm("income");
-            else if (action === "transfer") openTransactionForm("transfer_internal");
-            else if (action === "scan") setOcrOpen(true);
-            else openTransactionForm("expense");
-          }}
-        />
-      )}
-
-      <Suspense fallback={null}>
-        {txSheet.open && (
-          <TransactionForm
-            isOpen={txSheet.open}
-            onClose={() => setTxSheet((s) => ({ ...s, open: false }))}
-            defaultType={txSheet.type}
-            {...(txSheet.editTx !== undefined ? { editTransaction: txSheet.editTx } : {})}
-            {...(txSheet.prefill !== undefined ? { prefill: txSheet.prefill } : {})}
-          />
+      <div className="flex flex-col flex-1 min-w-0">
+        {state.status === "locked" && (
+          <Suspense fallback={null}>
+            <LockScreen />
+          </Suspense>
         )}
-      </Suspense>
 
-      <Suspense fallback={null}>
-        <CalculatorSheet isOpen={calcOpen} onClose={closeCalculator} />
-      </Suspense>
+        <div className={state.status === "locked" ? "pointer-events-none select-none" : ""}>
+          <Suspense fallback={<LoadingFallback />}>
+            <Outlet context={outletCtx} />
+          </Suspense>
+          <div className="h-[100px] md:h-8" aria-hidden />
+        </div>
 
-      <Suspense fallback={null}>
-        <OCRScanner
-          isOpen={ocrOpen}
-          onClose={() => setOcrOpen(false)}
-          onConfirm={handleOCRConfirm}
-        />
-      </Suspense>
+        <BottomNav />
 
-      <ToastContainer />
+        {!hideFAB && (
+          <div className="md:hidden">
+            <FAB
+              onAction={(action: FABAction) => {
+                if (action === "income") openTransactionForm("income");
+                else if (action === "transfer") openTransactionForm("transfer_internal");
+                else if (action === "scan") setOcrOpen(true);
+                else openTransactionForm("expense");
+              }}
+            />
+          </div>
+        )}
+
+        <Suspense fallback={null}>
+          {txSheet.open && (
+            <TransactionForm
+              isOpen={txSheet.open}
+              onClose={() => setTxSheet((s) => ({ ...s, open: false }))}
+              defaultType={txSheet.type}
+              {...(txSheet.editTx !== undefined ? { editTransaction: txSheet.editTx } : {})}
+              {...(txSheet.prefill !== undefined ? { prefill: txSheet.prefill } : {})}
+            />
+          )}
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <CalculatorSheet isOpen={calcOpen} onClose={closeCalculator} />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <OCRScanner
+            isOpen={ocrOpen}
+            onClose={() => setOcrOpen(false)}
+            onConfirm={handleOCRConfirm}
+          />
+        </Suspense>
+
+        <ToastContainer />
+      </div>
     </div>
   );
 }

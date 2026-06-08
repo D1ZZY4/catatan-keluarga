@@ -1,8 +1,9 @@
 import React, { useRef, useState } from "react";
 import { ChevronRight, Fingerprint, Lock } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/AuthContext";
 import { cn } from "@/shared/utils/misc";
+import { WelcomeScreen } from "./WelcomeScreen";
 
 // ---- SVG Illustrations -------------------------------------------------------
 
@@ -164,7 +165,6 @@ function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlid
     }
     setLoading(true);
     setError("");
-    // If PIN + WebAuthn, block redirect BEFORE completing onboarding
     if (usePIN && supportsWebAuthn) {
       onShowBiometric();
     }
@@ -195,7 +195,7 @@ function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlid
             Aktifkan Sidik Jari / Wajah?
           </h2>
           <p className="text-sm text-text-muted leading-relaxed">
-            Buka aplikasi lebih cepat dan aman menggunakan biometrik HP kamu — sidik jari atau pengenalan wajah.
+            Buka aplikasi lebih cepat dan aman menggunakan biometrik HP kamu.
           </p>
         </div>
 
@@ -323,12 +323,24 @@ function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlid
 
 export function OnboardingPage() {
   const { state, completeOnboarding } = useAuth();
+  const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [showBiometric, setShowBiometric] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
   const startX = useRef(0);
 
-  if (state.status === "unlocked" && !showBiometric) {
+  if (state.status === "unlocked" && !showBiometric && !showWelcome) {
     return <Navigate to="/" replace />;
+  }
+
+  if (showWelcome) {
+    return (
+      <WelcomeScreen
+        userName={welcomeName}
+        onContinue={() => navigate("/", { replace: true })}
+      />
+    );
   }
 
   const isLast = current === SLIDES.length;
@@ -347,6 +359,14 @@ export function OnboardingPage() {
     const diff = startX.current - endX;
     if (diff > 50 && current < SLIDES.length) setCurrent((c) => c + 1);
     if (diff < -50 && current > 0) setCurrent((c) => c - 1);
+  };
+
+  const handleComplete = async (name: string, pin?: string) => {
+    setWelcomeName(name);
+    await completeOnboarding(name, pin);
+    if (!pin) {
+      setShowWelcome(true);
+    }
   };
 
   return (
@@ -374,7 +394,7 @@ export function OnboardingPage() {
               Hampir siap!
             </h1>
             <SetupSlide
-              onComplete={completeOnboarding}
+              onComplete={handleComplete}
               onShowBiometric={() => setShowBiometric(true)}
               showingBiometric={showBiometric}
             />

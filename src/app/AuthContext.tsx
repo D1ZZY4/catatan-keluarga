@@ -13,7 +13,7 @@ import {
   generateSalt,
   hashPin,
 } from "@/shared/crypto/crypto";
-import { seedDefaultCategories } from "@/shared/db/seed";
+import { seedDefaultCategories, seedDefaultWallets } from "@/shared/db/seed";
 
 // ---- Types ----------------------------------------------------------------
 
@@ -282,6 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await seedDefaultCategories(cryptoKey);
+      await seedDefaultWallets(cryptoKey);
 
       dispatch({
         type: "SET_STATE",

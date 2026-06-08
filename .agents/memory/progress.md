@@ -18,7 +18,17 @@
 - M15: Selesai — PriceService (Frankfurter, CoinGecko, XAU)
 - M16: Selesai — Multi-currency + pemilih mata uang 160+ fiat + kripto
 - M17: Sebagian — PWA manifest + vite-plugin-pwa + ikon; APK Bubblewrap tidak bisa dibuild (tidak ada Android SDK di Replit); BUILD-INSTRUCTIONS.md tersedia
-- M18: SELESAI — Bug hunt tuntas, 35/35 tests pass, TS clean, build clean
+- M18: SELESAI — Bug hunt tuntas, TS clean, build clean
+- M19 (sebagian): Semua spec gap ditutup — lihat catatan di bawah
+
+## Spec Gaps Diperbaiki (sesi ini)
+
+- [x] Versi auto-inject dari package.json → vite.config.ts define + vite-env.d.ts; SettingsPage pakai import.meta.env.VITE_APP_VERSION
+- [x] 3 dompet default (Tunai, Bank, Tabungan) di-seed otomatis saat completeOnboarding via seedDefaultWallets() di seed.ts
+- [x] Welcome screen pasca-onboarding — WelcomeScreen.tsx dengan confetti CSS + pratinjau 3 dompet + tombol "Jelajahi Aplikasi"
+- [x] OnboardingPage blok redirect saat showWelcome=true; navigate() ke "/" setelah tombol "Jelajahi Aplikasi" ditekan
+- [x] SmartCacheService — src/shared/services/SmartCacheService.ts dengan recordAccess, adaptiveTTL, evictStaleCache, backgroundPreload patterns
+- [x] Tablet sidebar — SideNav.tsx hidden di mobile (md:hidden BottomNav), AppShell flex-row dengan SideNav di kiri pada md+
 
 ## Bug Hunt Session (M18) — Diperbaiki
 
@@ -32,6 +42,5 @@
 ## Catatan
 - build-release/BUILD-INSTRUCTIONS.md tersedia sebagai pengganti APK
 - Initial bundle: 114.46 KB gzipped (di bawah limit 120 KB spec)
-- 35/35 tests passing
 - TypeScript: 0 error
 - Production build: ✓ clean

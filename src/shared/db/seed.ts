@@ -4,6 +4,7 @@ import { newId } from "../utils/misc";
 import type { Category, Wallet } from "../types";
 
 const DEFAULT_CATEGORIES_SEEDED_KEY = "defaultCategoriesSeeded";
+const DEFAULT_WALLETS_SEEDED_KEY = "defaultWalletsSeeded";
 
 const DEFAULT_EXPENSE: Array<Omit<Category, "id" | "createdAt" | "isDefault" | "type">> = [
   { name: "Makan & Minum", icon: "Utensils", color: "#E65100" },
@@ -27,6 +28,43 @@ const DEFAULT_INCOME: Array<Omit<Category, "id" | "createdAt" | "isDefault" | "t
   { name: "Investasi Cair", icon: "DollarSign", color: "#1976D2" },
   { name: "Lain-lain", icon: "Plus", color: "#6B6555" },
 ];
+
+const DEFAULT_WALLETS: Array<Omit<Wallet, "id" | "createdAt">> = [
+  {
+    name: "Tunai",
+    icon: "Banknote",
+    color: "#4CAF50",
+    currency: "IDR",
+    initialBalance: 0,
+    isArchived: false,
+  },
+  {
+    name: "Bank",
+    icon: "Building2",
+    color: "#8CC0EB",
+    currency: "IDR",
+    initialBalance: 0,
+    isArchived: false,
+  },
+  {
+    name: "Tabungan",
+    icon: "PiggyBank",
+    color: "#F4A35A",
+    currency: "IDR",
+    initialBalance: 0,
+    isArchived: false,
+  },
+];
+
+export async function seedDefaultWallets(key: CryptoKey): Promise<void> {
+  const seeded = await getSetting<boolean>(DEFAULT_WALLETS_SEEDED_KEY);
+  if (seeded) return;
+  const now = Date.now();
+  for (const w of DEFAULT_WALLETS) {
+    await putWallet(key, { ...w, id: newId(), createdAt: now });
+  }
+  await setSetting(DEFAULT_WALLETS_SEEDED_KEY, true);
+}
 
 export async function seedDefaultCategories(key: CryptoKey): Promise<void> {
   const seeded = await getSetting<boolean>(DEFAULT_CATEGORIES_SEEDED_KEY);
