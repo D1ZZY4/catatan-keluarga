@@ -13,11 +13,25 @@ import type { AppOutletContext } from "@/app/AppShell";
 import type { Transaction } from "@/shared/types";
 
 type FilterPeriod = "all" | "today" | "week" | "month";
+type FilterType = "all" | "income" | "expense" | "transfer";
 
 interface FilterState {
   period: FilterPeriod;
+  txType: FilterType;
   walletId: string;
   search: string;
+}
+
+const INCOME_TYPES = ["income", "debt_received", "savings_withdraw", "invest_sell"];
+const EXPENSE_TYPES = ["expense", "transfer_external", "debt_given", "savings_deposit", "invest_buy", "debt_repay"];
+const TRANSFER_TYPES = ["transfer"];
+
+function matchesType(tx: Transaction, txType: FilterType): boolean {
+  if (txType === "all") return true;
+  if (txType === "income") return INCOME_TYPES.includes(tx.type);
+  if (txType === "expense") return EXPENSE_TYPES.includes(tx.type);
+  if (txType === "transfer") return TRANSFER_TYPES.includes(tx.type);
+  return true;
 }
 
 export function TransactionPage() {
@@ -25,7 +39,12 @@ export function TransactionPage() {
   const { showToast } = useToast();
   const { openTransactionForm } = useOutletContext<AppOutletContext>();
 
-  const [filter, setFilter] = useState<FilterState>({ period: "month", walletId: "all", search: "" });
+  const [filter, setFilter] = useState<FilterState>({
+    period: "month",
+    txType: "all",
+    walletId: "all",
+    search: "",
+  });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
@@ -33,6 +52,7 @@ export function TransactionPage() {
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
       if (filter.walletId !== "all" && tx.walletId !== filter.walletId && tx.toWalletId !== filter.walletId) return false;
+      if (!matchesType(tx, filter.txType)) return false;
       if (filter.period === "today") {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
@@ -75,10 +95,10 @@ export function TransactionPage() {
   }, [filtered]);
 
   const totalIncome = filtered
-    .filter((tx) => ["income", "debt_received", "savings_withdraw", "invest_sell"].includes(tx.type))
+    .filter((tx) => INCOME_TYPES.includes(tx.type))
     .reduce((s, tx) => s + tx.amount, 0);
   const totalExpense = filtered
-    .filter((tx) => ["expense", "debt_given", "transfer_external", "savings_deposit", "invest_buy"].includes(tx.type))
+    .filter((tx) => EXPENSE_TYPES.includes(tx.type))
     .reduce((s, tx) => s + tx.amount, 0);
 
   const handleDelete = async () => {
@@ -95,6 +115,17 @@ export function TransactionPage() {
     { id: "all", label: "Semua" },
   ];
 
+  const TX_TYPES: { id: FilterType; label: string }[] = [
+    { id: "all", label: "Semua Jenis" },
+    { id: "income", label: "Pemasukan" },
+    { id: "expense", label: "Pengeluaran" },
+    { id: "transfer", label: "Transfer" },
+  ];
+
+  const activeFilterCount =
+    (filter.txType !== "all" ? 1 : 0) +
+    (filter.walletId !== "all" ? 1 : 0);
+
   return (
     <>
       <AppBar
@@ -102,10 +133,15 @@ export function TransactionPage() {
         actions={
           <button
             onClick={() => setFilterOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-full active:bg-bg-card transition-colors"
+            className="relative w-9 h-9 flex items-center justify-center rounded-full active:bg-bg-card transition-colors"
             aria-label="Filter"
           >
             <Filter size={18} className="text-text-muted" />
+            {activeFilterCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-warning text-white text-[9px] font-bold flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         }
       />
@@ -217,7 +253,27 @@ export function TransactionPage() {
       </BottomSheet>
 
       <BottomSheet isOpen={filterOpen} onClose={() => setFilterOpen(false)} title="Filter">
-        <div className="p-4 space-y-4 pb-8">
+        <div className="p-4 space-y-5 pb-8">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Jenis Transaksi</p>
+            <div className="grid grid-cols-2 gap-2">
+              {TX_TYPES.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setFilter((f) => ({ ...f, txType: t.id }))}
+                  className={cn(
+                    "flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    filter.txType === t.id
+                      ? "bg-accent-primary/10 text-accent-primary ring-1 ring-accent-primary/30"
+                      : "bg-bg-card text-text-primary",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Dompet</p>
             <div className="flex flex-col gap-1">
@@ -227,7 +283,9 @@ export function TransactionPage() {
                   onClick={() => setFilter((f) => ({ ...f, walletId: w.id }))}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
-                    filter.walletId === w.id ? "bg-accent-primary/10 text-accent-primary" : "bg-bg-card text-text-primary",
+                    filter.walletId === w.id
+                      ? "bg-accent-primary/10 text-accent-primary ring-1 ring-accent-primary/30"
+                      : "bg-bg-card text-text-primary",
                   )}
                 >
                   {w.name}
@@ -235,12 +293,26 @@ export function TransactionPage() {
               ))}
             </div>
           </div>
-          <button
-            onClick={() => setFilterOpen(false)}
-            className="w-full py-3 bg-accent-primary text-white rounded-2xl text-sm font-semibold"
-          >
-            Terapkan
-          </button>
+
+          <div className="flex gap-2">
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  setFilter((f) => ({ ...f, txType: "all", walletId: "all" }));
+                  setFilterOpen(false);
+                }}
+                className="flex-1 py-3 bg-bg-card text-text-muted rounded-2xl text-sm font-semibold"
+              >
+                Reset
+              </button>
+            )}
+            <button
+              onClick={() => setFilterOpen(false)}
+              className="flex-1 py-3 bg-accent-primary text-white rounded-2xl text-sm font-semibold"
+            >
+              Terapkan
+            </button>
+          </div>
         </div>
       </BottomSheet>
     </>

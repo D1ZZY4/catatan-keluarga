@@ -104,8 +104,8 @@ function QuickActions({
     {
       label: "Transfer",
       icon: ArrowLeftRight,
-      iconColor: "var(--accent-primary)",
-      iconBg: "rgba(140,192,235,0.15)",
+      iconColor: "var(--text-muted)",
+      iconBg: "var(--bg-surface)",
       onClick: () => openTransactionForm("transfer_internal"),
     },
     {
@@ -162,10 +162,10 @@ function BudgetRow() {
     <section className="space-y-2.5">
       <div className="flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
-          <Layers size={14} className="text-accent-primary" />
+          <Layers size={14} className="text-text-muted" />
           Anggaran Bulan Ini
         </h2>
-        <Link to="/budgets" className="text-xs text-accent-primary font-medium">
+        <Link to="/budgets" className="text-xs text-text-muted font-medium">
           Kelola
         </Link>
       </div>
@@ -253,7 +253,7 @@ function RemindersRow() {
           <Bell size={14} className="text-warning" />
           Pengingat Tagihan
         </h2>
-        <Link to="/settings/reminders" className="text-xs text-accent-primary font-medium">
+        <Link to="/settings/reminders" className="text-xs text-text-muted font-medium">
           Lihat semua
         </Link>
       </div>
@@ -274,7 +274,7 @@ function RemindersRow() {
                   "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold mb-2",
                   isUrgent
                     ? "bg-warning/20 text-warning"
-                    : "bg-accent-secondary/30 text-accent-primary",
+                    : "bg-bg-surface text-text-muted",
                 )}
               >
                 {daysLeft === 0
@@ -320,13 +320,13 @@ function NetWorthHero({
         className="px-4 pt-14 pb-6"
         style={{
           background:
-            "linear-gradient(155deg, var(--accent-secondary) 0%, var(--bg-card) 60%, var(--bg-page) 100%)",
+            "linear-gradient(170deg, var(--bg-card) 0%, var(--bg-page) 100%)",
         }}
       >
         <div className="flex items-start justify-between mb-5">
           <div>
             <p className="text-[13px] font-semibold text-text-primary">
-              Halo, <span className="text-accent-primary">{userName}</span>
+              Halo, <span className="text-warning font-bold">{userName}</span>
             </p>
             <p className="text-[11px] text-text-muted mt-0.5">
               {monthName} {now.getFullYear()}
@@ -425,12 +425,12 @@ export function HomePage() {
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
-              <Wallet size={14} className="text-accent-primary" />
+              <Wallet size={14} className="text-text-muted" />
               Dompet Saya
             </h2>
             <Link
               to="/wallets"
-              className="text-xs text-accent-primary font-medium flex items-center gap-0.5"
+              className="text-xs text-text-muted font-medium flex items-center gap-0.5"
             >
               Lihat semua <ChevronRight size={13} />
             </Link>
@@ -445,10 +445,10 @@ export function HomePage() {
             <div className="mx-4">
               <Link
                 to="/wallets"
-                className="flex items-center gap-3 bg-bg-card rounded-2xl px-4 py-3.5 border-2 border-dashed border-accent-primary/25 active:bg-bg-surface transition-colors"
+                className="flex items-center gap-3 bg-bg-card rounded-2xl px-4 py-3.5 border-2 border-dashed border-bg-surface active:scale-[0.98] transition-transform"
               >
-                <div className="w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Plus size={18} className="text-accent-primary" />
+                <div className="w-10 h-10 rounded-xl bg-bg-surface flex items-center justify-center flex-shrink-0">
+                  <Plus size={18} className="text-text-muted" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-text-primary">Tambah Dompet Pertama</p>
@@ -466,10 +466,10 @@ export function HomePage() {
               {activeWallets.length > 0 && (
                 <Link
                   to="/wallets"
-                  className="flex-shrink-0 w-[90px] rounded-2xl bg-bg-card border-2 border-dashed border-accent-primary/20 flex flex-col items-center justify-center gap-1.5 text-text-muted active:bg-bg-surface transition-colors"
+                  className="flex-shrink-0 w-[90px] rounded-2xl bg-bg-card border-2 border-dashed border-bg-surface flex flex-col items-center justify-center gap-1.5 text-text-muted active:scale-[0.97] transition-transform"
                 >
-                  <Plus size={16} className="text-accent-primary" />
-                  <span className="text-[9px] font-semibold text-accent-primary">Tambah</span>
+                  <Plus size={16} className="text-text-muted" />
+                  <span className="text-[9px] font-semibold text-text-muted">Tambah</span>
                 </Link>
               )}
             </div>
@@ -484,7 +484,7 @@ export function HomePage() {
             <h2 className="text-sm font-semibold text-text-primary">Transaksi Terbaru</h2>
             <Link
               to="/transactions"
-              className="text-xs text-accent-primary font-medium flex items-center gap-0.5"
+              className="text-xs text-text-muted font-medium flex items-center gap-0.5"
             >
               Lihat semua <ChevronRight size={13} />
             </Link>
@@ -508,8 +508,8 @@ export function HomePage() {
               onClick={() => openTransactionForm("expense")}
               className="mx-4 w-[calc(100%-2rem)] flex items-center gap-3 bg-bg-card rounded-2xl px-4 py-3.5 border-2 border-dashed border-bg-surface active:bg-bg-surface transition-colors"
             >
-              <div className="w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center flex-shrink-0">
-                <TrendingDown size={18} className="text-accent-primary" />
+              <div className="w-10 h-10 rounded-xl bg-bg-surface flex items-center justify-center flex-shrink-0">
+                <TrendingDown size={18} className="text-text-muted" />
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-text-primary">Catat Transaksi Pertama</p>

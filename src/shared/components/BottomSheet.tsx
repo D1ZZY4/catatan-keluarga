@@ -23,17 +23,35 @@ export function BottomSheet({
   const startY = useRef(0);
   const currentY = useRef(0);
   const isDragging = useRef(false);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
       document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => {
+        closeBtnRef.current?.focus();
+      });
     } else {
       document.body.style.overflow = "";
+      previousFocusRef.current?.focus();
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     startY.current = e.clientY;
@@ -61,10 +79,16 @@ export function BottomSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end">
+    <div
+      className="fixed inset-0 z-[60] flex items-end"
+      role="dialog"
+      aria-modal="true"
+      {...(title !== undefined ? { "aria-labelledby": "sheet-title" } : {})}
+    >
       <div
         className="absolute inset-0 bg-black/45 backdrop-blur-[3px] animate-fade-in"
         onClick={onClose}
+        aria-hidden="true"
       />
       <div
         ref={sheetRef}
@@ -87,10 +111,14 @@ export function BottomSheet({
           </div>
           {title !== undefined && (
             <div className="flex items-center justify-between px-5 pt-1 pb-3">
-              <h2 className="text-[17px] font-semibold text-text-primary tracking-tight">
+              <h2
+                id="sheet-title"
+                className="text-[17px] font-semibold text-text-primary tracking-tight"
+              >
                 {title}
               </h2>
               <button
+                ref={closeBtnRef}
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-card hover:bg-bg-card/80 active:scale-90 transition-all"
                 aria-label="Tutup"

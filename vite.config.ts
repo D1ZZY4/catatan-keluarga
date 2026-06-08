@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 5000,
     allowedHosts: true,
+    watch: {
+      ignored: ["**/android/**", "**/build-release/**", "**/.git/**"],
+    },
   },
   plugins: [
     react(),

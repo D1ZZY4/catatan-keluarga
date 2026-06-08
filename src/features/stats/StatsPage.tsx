@@ -154,7 +154,7 @@ function OverviewTab({
       .slice(0, 8)
       .map(([name, value]) => {
         const cat = categories.find((c) => c.name === name);
-        return { name, value, color: cat?.color ?? "#8CC0EB" };
+        return { name, value, color: cat?.color ?? "#E65100" };
       });
   }, [filtered, categories]);
 
@@ -317,8 +317,8 @@ function OverviewTab({
             <AreaChart data={balanceOverTime} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="assetGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="var(--success)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--success)" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-page)" vertical={false} />
@@ -328,7 +328,7 @@ function OverviewTab({
               <Area
                 type="monotone"
                 dataKey="Total Aset"
-                stroke="var(--accent-primary)"
+                stroke="var(--success)"
                 fill="url(#assetGrad)"
                 strokeWidth={2}
               />
@@ -433,7 +433,7 @@ function DebtTab() {
           <div key={entry.name} className="bg-bg-card rounded-xl p-4 shadow-card">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent-primary/15 flex items-center justify-center text-sm font-bold text-accent-primary">
+                <div className="w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center text-sm font-bold text-warning">
                   {entry.name.charAt(0).toUpperCase()}
                 </div>
                 <div>

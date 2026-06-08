@@ -71,6 +71,38 @@ export function WalletPage() {
     .filter((w) => !w.isArchived)
     .reduce((sum, w) => sum + computeWalletBalance(w, transactions), 0);
 
+  const sparklines = useMemo(() => {
+    const result: Record<string, number[]> = {};
+    const now = new Date();
+    const DAYS = 30;
+    for (const w of activeWallets) {
+      const points: number[] = [];
+      for (let d = DAYS - 1; d >= 0; d--) {
+        const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - d);
+        dayEnd.setHours(23, 59, 59, 999);
+        const cutoff = dayEnd.getTime();
+        let balance = w.initialBalance;
+        for (const tx of transactions) {
+          if (tx.date > cutoff) continue;
+          if (tx.walletId === w.id) {
+            if (["income", "debt_received", "savings_withdraw", "invest_sell"].includes(tx.type)) {
+              balance += tx.amount;
+            } else if (["expense", "transfer_external", "debt_given", "savings_deposit", "invest_buy", "debt_repay"].includes(tx.type)) {
+              balance -= tx.amount;
+            } else if (tx.type === "transfer_internal") {
+              balance -= tx.amount;
+            }
+          } else if (tx.toWalletId === w.id && tx.type === "transfer_internal") {
+            balance += tx.amount;
+          }
+        }
+        points.push(balance);
+      }
+      result[w.id] = points;
+    }
+    return result;
+  }, [activeWallets, transactions]);
+
   const nonBaseCurrencies = useMemo(
     () => [...new Set(activeWallets.map((w) => w.currency).filter((c) => c !== "IDR"))],
     [activeWallets],
@@ -208,6 +240,7 @@ export function WalletPage() {
                   onClick={() => navigate(`/wallets/${w.id}`)}
                   onLongPress={() => setActionWallet(w)}
                   {...(label !== undefined ? { convertedLabel: label } : {})}
+                  {...(sparklines[w.id] !== undefined ? { sparkline: sparklines[w.id] } : {})}
                 />
               );
             })}

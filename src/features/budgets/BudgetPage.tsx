@@ -16,7 +16,7 @@ function BudgetEmptyIllustration() {
   return (
     <svg viewBox="0 0 120 100" className="w-28 h-28" fill="none" aria-hidden>
       <rect x="20" y="30" width="80" height="55" rx="10" fill="var(--bg-card)" />
-      <rect x="32" y="44" width="56" height="8" rx="4" fill="var(--accent-primary)" opacity="0.4" />
+      <rect x="32" y="44" width="56" height="8" rx="4" fill="var(--warning)" opacity="0.4" />
       <rect x="32" y="58" width="40" height="6" rx="3" fill="var(--bg-page)" />
       <rect x="32" y="68" width="25" height="6" rx="3" fill="var(--bg-page)" />
       <circle cx="88" cy="26" r="14" fill="var(--success)" opacity="0.15" />
