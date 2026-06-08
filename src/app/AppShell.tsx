@@ -31,7 +31,7 @@ export interface AppOutletContext {
   openCalculator: () => void;
 }
 
-const PAGES_WITHOUT_FAB = ["/onboarding"];
+const PAGES_WITHOUT_FAB = ["/onboarding", "/settings"];
 
 function LoadingFallback() {
   return (
@@ -113,7 +113,11 @@ export function AppShell() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  const hideFAB = PAGES_WITHOUT_FAB.some((p) => location.pathname.startsWith(p));
+  const hideFAB =
+    PAGES_WITHOUT_FAB.some((p) => location.pathname.startsWith(p)) ||
+    txSheet.open ||
+    ocrOpen ||
+    calcOpen;
   const outletCtx: AppOutletContext = { openTransactionForm, openCalculator };
 
   return (

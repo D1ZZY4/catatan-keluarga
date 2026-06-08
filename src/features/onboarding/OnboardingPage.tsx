@@ -355,7 +355,7 @@ export function OnboardingPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-4">
+      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-[10vh] pb-4">
         {!isLast && slideData !== undefined ? (
           <div className="flex flex-col items-center gap-6 text-center animate-fade-in w-full max-w-sm">
             <div className="flex items-center justify-center h-[200px]">

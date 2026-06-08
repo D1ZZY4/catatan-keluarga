@@ -5,6 +5,7 @@
 :root {
   --bg-page: #fff9d2;
   --bg-card: #ffebcc;
+  --bg-card-rgb: 255, 235, 204;
   --bg-surface: #ffffff;
   --accent-primary: #8cc0eb;
   --accent-secondary: #bfddf0;
@@ -18,6 +19,7 @@
 .dark {
   --bg-page: #1a1910;
   --bg-card: #242218;
+  --bg-card-rgb: 36, 34, 24;
   --bg-surface: #2e2c20;
   --accent-primary: #6aadd8;
   --accent-secondary: #4a8faf;

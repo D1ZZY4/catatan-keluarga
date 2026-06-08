@@ -524,8 +524,8 @@ export function SettingsPage() {
                 <Sun size={18} className="text-warning" />
               )
             }
-            label={darkMode ? "Mode Gelap" : "Mode Terang"}
-            description="Ubah tema tampilan aplikasi"
+            label="Mode Gelap"
+            description={darkMode ? "Aktif — ketuk untuk beralih ke mode terang" : "Nonaktif — ketuk untuk beralih ke mode gelap"}
             right={<Toggle value={darkMode} />}
             onClick={toggleTheme}
           />

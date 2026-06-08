@@ -61,7 +61,7 @@ export function BottomSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className="fixed inset-0 z-[60] flex items-end">
       <div
         className="absolute inset-0 bg-black/45 backdrop-blur-[3px] animate-fade-in"
         onClick={onClose}
