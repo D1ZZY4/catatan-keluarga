@@ -2,7 +2,7 @@ import type { Transaction } from "@/shared/types";
 import { INCOME_TYPES, EXPENSE_TYPES } from "@/shared/constants/transactionTypes";
 
 export type Period = "week" | "month" | "3months" | "6months" | "year" | "custom";
-export type StatsTab = "overview" | "debt";
+export type StatsTab = "overview" | "debt" | "tags";
 
 export const PERIOD_LABELS: Record<Period, string> = {
   week: "Minggu Ini",

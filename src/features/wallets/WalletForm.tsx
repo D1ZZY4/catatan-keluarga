@@ -9,7 +9,7 @@ import { evaluateAmount } from "@/shared/utils/math";
 import { getCurrencyInfo } from "@/shared/data/currencies";
 import { getSetting } from "@/shared/db/db";
 import { cn } from "@/shared/utils/misc";
-import type { Wallet } from "@/shared/types";
+import type { Wallet, WalletType } from "@/shared/types";
 
 interface WalletFormProps {
   isOpen: boolean;
@@ -31,6 +31,7 @@ export function WalletForm({ isOpen, onClose, editWallet }: WalletFormProps) {
   const [initialBalance, setInitialBalance] = useState(
     editWallet ? String(editWallet.initialBalance) : "0",
   );
+  const [walletType, setWalletType] = useState<WalletType>(editWallet?.type ?? "cash");
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -52,10 +53,10 @@ export function WalletForm({ isOpen, onClose, editWallet }: WalletFormProps) {
     try {
       const balance = evaluateAmount(initialBalance) ?? 0;
       if (editWallet) {
-        await updateWallet({ ...editWallet, name: name.trim(), icon, color, currency, initialBalance: balance });
+        await updateWallet({ ...editWallet, name: name.trim(), icon, color, currency, initialBalance: balance, type: walletType });
         showToast("Dompet berhasil diperbarui", "success");
       } else {
-        await addWallet({ name: name.trim(), icon, color, currency, initialBalance: balance, isArchived: false });
+        await addWallet({ name: name.trim(), icon, color, currency, initialBalance: balance, isArchived: false, type: walletType });
         showToast("Dompet berhasil ditambahkan", "success");
       }
       onClose();
@@ -126,6 +127,38 @@ export function WalletForm({ isOpen, onClose, editWallet }: WalletFormProps) {
                   </div>
                   <span className="text-text-muted text-xs">Ubah</span>
                 </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-text-muted">Jenis Dompet</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(
+                    [
+                      { value: "cash", label: "Tunai" },
+                      { value: "bank", label: "Bank" },
+                      { value: "savings", label: "Tabungan" },
+                      { value: "e-wallet", label: "E-Wallet" },
+                      { value: "investment", label: "Investasi" },
+                      { value: "credit", label: "Kredit" },
+                      { value: "crypto", label: "Kripto" },
+                      { value: "other", label: "Lainnya" },
+                    ] satisfies { value: WalletType; label: string }[]
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setWalletType(opt.value)}
+                      className={cn(
+                        "py-2 rounded-xl text-xs font-medium transition-all",
+                        walletType === opt.value
+                          ? "bg-accent-primary text-white"
+                          : "bg-bg-card text-text-muted",
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-1.5">

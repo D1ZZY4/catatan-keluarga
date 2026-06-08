@@ -9,6 +9,7 @@ import {
 } from "./StatsUtils";
 import { OverviewTab } from "./OverviewTab";
 import { DebtTab } from "./DebtTab";
+import { TagStatsTab } from "./TagStatsTab";
 import { LocalInsights } from "./LocalInsights";
 
 export function StatsPage() {
@@ -57,7 +58,7 @@ export function StatsPage() {
       <AppBar title="Statistik" />
 
       <div className="flex border-b border-bg-card">
-        {(["overview", "debt"] as StatsTab[]).map((tab) => (
+        {(["overview", "debt", "tags"] as StatsTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -68,7 +69,7 @@ export function StatsPage() {
                 : "text-text-muted border-transparent",
             )}
           >
-            {tab === "overview" ? "Ringkasan" : "Hutang & Piutang"}
+            {tab === "overview" ? "Ringkasan" : tab === "debt" ? "Hutang & Piutang" : "Per Tag"}
           </button>
         ))}
       </div>
@@ -154,6 +155,7 @@ export function StatsPage() {
       )}
 
       {activeTab === "debt" && <DebtTab />}
+      {activeTab === "tags" && <TagStatsTab />}
     </>
   );
 }

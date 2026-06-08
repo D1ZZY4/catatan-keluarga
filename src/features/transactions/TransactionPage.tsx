@@ -221,8 +221,7 @@ export function TransactionPage() {
     return Array.from(set).sort();
   }, [transactions]);
 
-  const activeFilterCount =
-    (filter.walletId !== "all" ? 1 : 0) + (filter.tag !== null ? 1 : 0);
+  const activeFilterCount = filter.walletId !== "all" ? 1 : 0;
 
   return (
     <>
