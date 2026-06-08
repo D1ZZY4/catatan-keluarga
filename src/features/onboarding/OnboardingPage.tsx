@@ -3,7 +3,6 @@ import { ChevronRight, Fingerprint, Lock } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/AuthContext";
 import { cn } from "@/shared/utils/misc";
-import { WelcomeScreen } from "./WelcomeScreen";
 
 // ---- SVG Illustrations -------------------------------------------------------
 
@@ -120,8 +119,7 @@ const SLIDES: SlideData[] = [
   {
     illustration: <Slide4Illustration />,
     headline: "Data kamu,\ntidak kemana-mana",
-    subtitle:
-      "Semua data tersimpan di HP kamu sendiri, tidak dikirim ke server manapun.",
+    subtitle: "Semua data tersimpan di HP kamu sendiri, tidak dikirim ke server manapun.",
   },
 ];
 
@@ -134,6 +132,7 @@ interface SetupSlideProps {
 }
 
 function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlideProps) {
+  const navigate = useNavigate();
   const { registerWebAuthn } = useAuth();
   const [name, setName] = useState("");
   const [usePIN, setUsePIN] = useState(false);
@@ -219,7 +218,7 @@ function SetupSlide({ onComplete, onShowBiometric, showingBiometric }: SetupSlid
         )}
 
         <button
-          onClick={() => { window.location.assign("/"); }}
+          onClick={() => navigate("/", { replace: true })}
           className="text-sm text-text-muted active:opacity-60 transition-opacity py-2"
         >
           {biometricDone ? "Lanjut ke aplikasi" : "Lewati, gunakan PIN saja"}
@@ -326,21 +325,11 @@ export function OnboardingPage() {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [showBiometric, setShowBiometric] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeName, setWelcomeName] = useState("");
   const startX = useRef(0);
 
-  if (state.status === "unlocked" && !showBiometric && !showWelcome) {
+  // When unlocked and not in biometric flow → go directly to home (GuidedTour handles welcome)
+  if (state.status === "unlocked" && !showBiometric) {
     return <Navigate to="/" replace />;
-  }
-
-  if (showWelcome) {
-    return (
-      <WelcomeScreen
-        userName={welcomeName}
-        onContinue={() => navigate("/", { replace: true })}
-      />
-    );
   }
 
   const isLast = current === SLIDES.length;
@@ -362,10 +351,11 @@ export function OnboardingPage() {
   };
 
   const handleComplete = async (name: string, pin?: string) => {
-    setWelcomeName(name);
     await completeOnboarding(name, pin);
+    // No PIN = no biometric step = go directly to home
+    // The <Navigate> above fires automatically when state becomes "unlocked"
     if (!pin) {
-      setShowWelcome(true);
+      navigate("/", { replace: true });
     }
   };
 
@@ -375,7 +365,6 @@ export function OnboardingPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Scrollable content area — padded so fixed bottom bar never covers it */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-36 pt-6 overflow-y-auto">
         {!isLast && slideData !== undefined ? (
           <div className="flex flex-col items-center gap-6 text-center animate-fade-in w-full max-w-sm">
@@ -403,7 +392,6 @@ export function OnboardingPage() {
         )}
       </div>
 
-      {/* Fixed bottom bar — same position as BottomNav floating pill */}
       <div
         className="fixed bottom-5 left-0 right-0 z-40 px-6"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
