@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
   Plus,
@@ -11,52 +11,47 @@ import { cn } from "@/shared/utils/misc";
 
 export type FABAction = "income" | "expense" | "transfer" | "scan";
 
-interface ActionCard {
+interface SpeedDialItem {
   action: FABAction;
   label: string;
-  sub: string;
   Icon: React.ElementType;
   colorClass: string;
   bgClass: string;
-  textClass: string;
+  ringClass: string;
 }
 
-const ACTIONS: ActionCard[] = [
+const DIAL_ITEMS: SpeedDialItem[] = [
   {
-    action: "income",
-    label: "Pemasukan",
-    sub: "Uang masuk",
-    Icon: TrendingUp,
-    colorClass: "text-success",
-    bgClass: "bg-success/15",
-    textClass: "text-success",
-  },
-  {
-    action: "expense",
-    label: "Pengeluaran",
-    sub: "Uang keluar",
-    Icon: TrendingDown,
-    colorClass: "text-danger",
-    bgClass: "bg-danger/15",
-    textClass: "text-danger",
+    action: "scan",
+    label: "Scan Struk",
+    Icon: ScanLine,
+    colorClass: "text-text-muted",
+    bgClass: "bg-bg-surface",
+    ringClass: "ring-1 ring-black/[0.08]",
   },
   {
     action: "transfer",
     label: "Transfer",
-    sub: "Pindah dompet",
     Icon: ArrowLeftRight,
     colorClass: "text-accent-primary",
-    bgClass: "bg-accent-primary/15",
-    textClass: "text-accent-primary",
+    bgClass: "bg-accent-primary/12",
+    ringClass: "ring-1 ring-accent-primary/20",
   },
   {
-    action: "scan",
-    label: "Scan Struk",
-    sub: "Foto kwitansi",
-    Icon: ScanLine,
-    colorClass: "text-warning",
-    bgClass: "bg-warning/15",
-    textClass: "text-warning",
+    action: "expense",
+    label: "Pengeluaran",
+    Icon: TrendingDown,
+    colorClass: "text-danger",
+    bgClass: "bg-danger/10",
+    ringClass: "ring-1 ring-danger/20",
+  },
+  {
+    action: "income",
+    label: "Pemasukan",
+    Icon: TrendingUp,
+    colorClass: "text-success",
+    bgClass: "bg-success/10",
+    ringClass: "ring-1 ring-success/20",
   },
 ];
 
@@ -65,105 +60,149 @@ interface FABProps {
 }
 
 export function FAB({ onAction }: FABProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [dialOpen, setDialOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-    };
-    document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
-  }, [isOpen]);
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
-  const handleAction = (action: FABAction) => {
-    setIsOpen(false);
-    onAction(action);
-  };
+  useEffect(() => {
+    if (!dialOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDialOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [dialOpen]);
+
+  const startPress = useCallback(() => {
+    didLongPress.current = false;
+    pressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      setDialOpen(true);
+    }, 500);
+  }, []);
+
+  const cancelPress = useCallback(() => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }, []);
+
+  const handleTap = useCallback(() => {
+    cancelPress();
+    if (!didLongPress.current) {
+      onAction("expense");
+    }
+  }, [cancelPress, onAction]);
+
+  const handleDialAction = useCallback(
+    (action: FABAction) => {
+      setDialOpen(false);
+      onAction(action);
+    },
+    [onAction],
+  );
 
   return (
     <>
-      {isOpen && (
+      {dialOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[3px]"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40"
+          onClick={() => setDialOpen(false)}
+          aria-hidden
         />
       )}
 
-      <div className="fixed bottom-[80px] left-0 right-0 z-50 px-3 pointer-events-none">
-        <div
-          className={cn(
-            "bg-bg-surface rounded-3xl shadow-2xl border border-black/[0.06] dark:border-white/10 overflow-hidden transition-all duration-300 ease-out pointer-events-auto",
-            isOpen
-              ? "opacity-100 translate-y-0 scale-100"
-              : "opacity-0 translate-y-6 scale-95 pointer-events-none",
-          )}
-        >
-          <div className="p-3 pb-2">
-            <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider text-center mb-3">
-              Catat Transaksi
-            </p>
-            <div className="grid grid-cols-2 gap-2.5">
-              {ACTIONS.map((act) => (
-                <button
-                  key={act.action}
-                  onClick={() => handleAction(act.action)}
-                  className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-2xl active:scale-95 transition-all text-left",
-                    act.bgClass,
-                  )}
-                  aria-label={act.label}
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/60 dark:bg-black/20",
-                    )}
-                  >
-                    <act.Icon size={20} strokeWidth={2.2} className={act.colorClass} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={cn("text-sm font-bold leading-tight", act.textClass)}>
-                      {act.label}
-                    </p>
-                    <p className="text-[11px] text-text-muted leading-tight mt-0.5">{act.sub}</p>
-                  </div>
-                </button>
-              ))}
+      <div
+        className="fixed right-6 z-50 flex flex-col items-center gap-3"
+        style={{ bottom: "calc(100px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        {DIAL_ITEMS.map((item, i) => {
+          const delay = (DIAL_ITEMS.length - 1 - i) * 50;
+          return (
+            <div
+              key={item.action}
+              className={cn(
+                "flex items-center gap-2.5 transition-all duration-200",
+                dialOpen
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4 pointer-events-none",
+              )}
+              style={{
+                transitionDelay: dialOpen ? `${delay}ms` : "0ms",
+              }}
+            >
+              <span
+                className="text-xs font-semibold text-text-primary bg-bg-surface/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-card whitespace-nowrap"
+                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+              >
+                {item.label}
+              </span>
+              <button
+                onClick={() => handleDialAction(item.action)}
+                aria-label={item.label}
+                className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-card",
+                  item.bgClass,
+                  item.ringClass,
+                )}
+              >
+                <item.Icon size={20} strokeWidth={2} className={item.colorClass} />
+              </button>
             </div>
+          );
+        })}
+
+        <button
+          ref={buttonRef}
+          onPointerDown={startPress}
+          onPointerUp={handleTap}
+          onPointerLeave={cancelPress}
+          onPointerCancel={cancelPress}
+          aria-label={dialOpen ? "Tutup menu" : "Tambah transaksi"}
+          className={cn(
+            "w-14 h-14 rounded-full flex items-center justify-center",
+            "active:scale-90 transition-all duration-200 select-none",
+            dialOpen ? "bg-text-muted/70" : "bg-accent-primary",
+          )}
+          style={
+            !dialOpen
+              ? {
+                  boxShadow:
+                    "0 4px 20px rgba(140,192,235,0.55), 0 2px 8px rgba(140,192,235,0.30)",
+                }
+              : undefined
+          }
+        >
+          <div
+            className={cn(
+              "transition-transform duration-200",
+              dialOpen ? "rotate-45" : "rotate-0",
+            )}
+          >
+            {dialOpen ? (
+              <X size={24} strokeWidth={2.5} className="text-white" />
+            ) : (
+              <Plus size={24} strokeWidth={2.5} className="text-white" />
+            )}
           </div>
-          <div className="h-2 bg-bg-surface" />
-        </div>
+        </button>
       </div>
 
-      <button
-        onClick={() => setIsOpen((v) => !v)}
+      <div
         className={cn(
-          "fixed right-4 bottom-[calc(80px+12px)] z-50",
-          "w-[58px] h-[58px] rounded-[18px] flex flex-col items-center justify-center text-white",
-          "active:scale-90 transition-all duration-200",
-          isOpen ? "bg-text-muted/80 shadow-lg" : "bg-accent-primary",
+          "fixed right-6 z-50 transition-all duration-300",
+          mounted ? "opacity-100 scale-100" : "opacity-0 scale-0",
         )}
-        style={
-          isOpen
-            ? undefined
-            : {
-                boxShadow:
-                  "0 8px 28px rgba(140,192,235,0.55), 0 2px 8px rgba(140,192,235,0.30)",
-              }
-        }
-        aria-label={isOpen ? "Tutup" : "Tambah transaksi"}
-      >
-        {isOpen ? (
-          <X size={22} strokeWidth={2.5} />
-        ) : (
-          <>
-            <Plus size={24} strokeWidth={2.5} />
-            <span className="text-[9px] font-bold mt-0.5 tracking-wide leading-none opacity-90">
-              CATAT
-            </span>
-          </>
-        )}
-      </button>
+        style={{ bottom: "calc(100px + env(safe-area-inset-bottom, 0px))", pointerEvents: "none" }}
+      />
     </>
   );
 }

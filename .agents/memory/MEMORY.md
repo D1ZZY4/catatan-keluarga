@@ -3,7 +3,11 @@
 - [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono); old Sora/Space Grotesk/DM Serif Display were wrong
 - [Calculator architecture](calculator-arch.md) — CalculatorContext wraps entire app; AppBar uses useCalculator() to open it; no fixed-positioned button
 - [Onboarding biometric redirect fix](onboarding-biometric.md) — must block redirect with parent-level state flag BEFORE calling completeOnboarding; lifting state up is required
-- [Progress & milestones](progress.md) — M0–M16 selesai; M17 partial; M18 bug hunt selesai (TS clean, fonts fixed)
+- [Progress & milestones](progress.md) — M0–M18 done; TS clean, 35 tests passing, all spec violations fixed
 - [Architecture decisions](architecture.md) — Context+useReducer, AES-GCM, font stack, exactOptionalPropertyTypes patterns
 - [UI audit findings](ui-audit.md) — all known UI bugs fixed (hasWebAuthn, Cell key, dead code, favicon, iOS PWA meta)
 - [Build & APK](build-log.md) — APK via Bubblewrap TWA; see build-release/BUILD-INSTRUCTIONS.md
+- [BottomNav array type](bottomnav-spec.md) — use explicit Array<{center?:boolean}> instead of as const when array has optional prop on some items only
+- [Vitest config scoping](vitest-scoping.md) — must set include:["src/**/*.test.*"] and exclude:[".cache","dist"]; bun cache pollutes test discovery
+- [cn utility is not tailwind-merge](cn-utility.md) — cn() is simple filter+join; no deduplication; don't write tests that expect twmerge behavior
+- [React Router future flags TS](rr-future-flags.md) — v7_startTransition not in FutureConfig type; cast as Record<string,boolean> to suppress TS error

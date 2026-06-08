@@ -3,25 +3,26 @@ import { Link } from "react-router-dom";
 import {
   Archive,
   Bell,
+  BookOpen,
   Check,
   ChevronRight,
-  Download,
   Fingerprint,
+  Info,
+  Layers,
   Lock,
   Moon,
   Shield,
   ShieldCheck,
-  Smartphone,
   Sun,
   Tag,
+  Trash2,
   User,
 } from "lucide-react";
 import { AppBar } from "@/shared/components/AppBar";
 import { BottomSheet } from "@/shared/components/BottomSheet";
-import { CurrencySelector } from "@/features/wallets/CurrencySelector";
 import { useAuth } from "@/app/AuthContext";
 import { useToast } from "@/shared/hooks/useToast";
-import { setSetting } from "@/shared/db/db";
+import { db, getSetting, setSetting } from "@/shared/db/db";
 import { cn } from "@/shared/utils/misc";
 
 function SettingRow({
@@ -173,7 +174,7 @@ function PINSheet({
               inputMode="numeric"
               value={newPin}
               onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
-              placeholder={mode === "setup" ? "Buat PIN baru (4–8 digit)" : "PIN baru (4–8 digit)"}
+              placeholder={mode === "setup" ? "Buat PIN baru (4-8 digit)" : "PIN baru (4-8 digit)"}
               className="w-full bg-bg-card rounded-2xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
             />
             <input
@@ -200,7 +201,7 @@ function PINSheet({
           )}
         >
           {loading
-            ? "Memproses…"
+            ? "Memproses..."
             : mode === "remove"
               ? "Hapus PIN"
               : mode === "setup"
@@ -212,70 +213,117 @@ function PINSheet({
   );
 }
 
-type InstallPromptEvent = Event & { prompt?: () => Promise<void> };
-
-function InstallSheet({
+function DeleteAllSheet({
   isOpen,
   onClose,
-  installPrompt,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  installPrompt: (() => void) | null;
 }) {
+  const { state } = useAuth();
+  const { showToast } = useToast();
+  const [step, setStep] = useState<"confirm" | "pin">("confirm");
+  const [confirmText, setConfirmText] = useState("");
+  const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const hasPin = state.status === "unlocked" ? state.hasPin : false;
+
+  const handleClose = () => {
+    setStep("confirm");
+    setConfirmText("");
+    setPin("");
+    onClose();
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await db.wallets.clear();
+      await db.transactions.clear();
+      await db.categories.clear();
+      await db.budgets.clear();
+      await db.reminders.clear();
+      await db.price_cache.clear();
+      await db.auth.clear();
+      await db.settings.clear();
+      await db.notifications_sent.clear();
+      showToast("Semua data berhasil dihapus. Aplikasi akan dimuat ulang.", "success");
+      setTimeout(() => window.location.reload(), 1500);
+    } catch {
+      showToast("Gagal menghapus data. Coba lagi.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title="Pasang di HP">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title="Hapus Semua Data">
       <div className="p-4 pb-10 space-y-4">
-        <div className="bg-accent-primary/10 rounded-2xl p-4 border border-accent-primary/20">
-          <div className="flex items-center gap-3 mb-2">
-            <Smartphone size={20} className="text-accent-primary flex-shrink-0" />
-            <p className="text-sm font-bold text-text-primary">Apa itu PWA?</p>
-          </div>
+        <div className="bg-danger/8 border border-danger/25 rounded-2xl p-4">
+          <p className="text-sm text-danger font-semibold mb-1">Tindakan ini tidak dapat dibatalkan</p>
           <p className="text-xs text-text-muted leading-relaxed">
-            Catatan Keuangan adalah aplikasi PWA — bisa dipakai offline, punya ikon di layar utama, dan tidak perlu instal dari Play Store. Pengalamannya sama seperti aplikasi biasa!
+            Semua dompet, transaksi, anggaran, kategori, dan pengingat akan dihapus permanen dari perangkat ini.
           </p>
         </div>
 
-        {installPrompt !== null && (
-          <button
-            onClick={() => {
-              installPrompt();
-              onClose();
-            }}
-            className="w-full py-4 bg-accent-primary text-white rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform shadow-fab flex items-center justify-center gap-2"
-          >
-            <Download size={18} />
-            Pasang Aplikasi Sekarang
-          </button>
+        {step === "confirm" && (
+          <>
+            <div className="space-y-2">
+              <p className="text-sm text-text-primary font-semibold">
+                Ketik <strong className="text-danger">HAPUS</strong> untuk melanjutkan
+              </p>
+              <input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Ketik HAPUS di sini"
+                className="w-full bg-bg-card rounded-2xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-danger/40"
+                autoComplete="off"
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (confirmText !== "HAPUS") {
+                  showToast("Ketik HAPUS terlebih dahulu", "error");
+                  return;
+                }
+                if (hasPin) {
+                  setStep("pin");
+                } else {
+                  void handleDelete();
+                }
+              }}
+              disabled={confirmText !== "HAPUS" || loading}
+              className="w-full py-4 bg-danger text-white rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform disabled:opacity-40"
+            >
+              Lanjutkan
+            </button>
+          </>
         )}
 
-        <div className="space-y-3">
-          <p className="text-xs font-bold text-text-muted uppercase tracking-wide">
-            Cara pasang secara manual:
-          </p>
-          {[
-            {
-              step: "1",
-              label: "Android (Chrome)",
-              desc: 'Buka menu titik tiga (pojok kanan atas) → ketuk "Tambahkan ke layar utama" → Tambahkan',
-            },
-            {
-              step: "2",
-              label: "iPhone / iPad (Safari)",
-              desc: 'Ketuk ikon Bagikan (kotak dengan panah ke atas) → geser ke bawah → "Tambahkan ke Layar Utama"',
-            },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-3 bg-bg-card rounded-2xl p-3.5">
-              <div className="w-7 h-7 rounded-xl bg-accent-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-accent-primary">{item.step}</span>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-text-primary mb-0.5">{item.label}</p>
-                <p className="text-xs text-text-muted leading-relaxed">{item.desc}</p>
-              </div>
+        {step === "pin" && (
+          <>
+            <div className="space-y-2">
+              <p className="text-sm text-text-primary font-semibold">Konfirmasi PIN</p>
+              <input
+                type="password"
+                inputMode="numeric"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                placeholder="Masukkan PIN Anda"
+                className="w-full bg-bg-card rounded-2xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-danger/40"
+                autoFocus
+              />
             </div>
-          ))}
-        </div>
+            <button
+              onClick={() => void handleDelete()}
+              disabled={pin.length < 4 || loading}
+              className="w-full py-4 bg-danger text-white rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform disabled:opacity-40"
+            >
+              {loading ? "Menghapus..." : "Hapus Semua Data"}
+            </button>
+          </>
+        )}
       </div>
     </BottomSheet>
   );
@@ -285,33 +333,26 @@ export function SettingsPage() {
   const { state, registerWebAuthn, unregisterWebAuthn, lock, refreshSettings } = useAuth();
   const { showToast } = useToast();
 
-  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [pinSheet, setPinSheet] = useState<"setup" | "change" | "remove" | null>(null);
   const [darkMode, setDarkMode] = useState(() =>
     document.documentElement.classList.contains("dark"),
   );
   const [autoLockOpen, setAutoLockOpen] = useState(false);
-  const [installOpen, setInstallOpen] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<(() => void) | null>(null);
-
-  React.useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      const pe = e as InstallPromptEvent;
-      if (pe.prompt) {
-        const fn = pe.prompt.bind(pe);
-        setInstallPrompt(() => fn);
-      }
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editNameOpen, setEditNameOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() =>
+    "Notification" in window && Notification.permission === "granted",
+  );
 
   const isUnlocked = state.status === "unlocked";
   const userName = isUnlocked ? state.userName : "";
   const hasPin = isUnlocked ? state.hasPin : false;
   const hasWebAuthn = isUnlocked ? state.hasWebAuthn : false;
   const autoLockSeconds = isUnlocked ? state.autoLockSeconds : 0;
+  const [newName, setNewName] = useState(userName);
+
+  const supportsWebAuthn =
+    typeof window !== "undefined" && "PublicKeyCredential" in window;
 
   const toggleTheme = () => {
     const next = !darkMode;
@@ -327,7 +368,7 @@ export function SettingsPage() {
     } else {
       const ok = await registerWebAuthn();
       if (ok) showToast("Biometrik berhasil diaktifkan", "success");
-      else showToast("Gagal — pastikan HP kamu mendukung sidik jari/wajah", "error");
+      else showToast("Gagal. Pastikan perangkat mendukung sidik jari atau wajah.", "error");
     }
   };
 
@@ -335,6 +376,27 @@ export function SettingsPage() {
     await setSetting("userName", name);
     await refreshSettings();
     showToast("Nama berhasil diperbarui", "success");
+  };
+
+  const handleToggleNotifications = async () => {
+    if (!("Notification" in window)) {
+      showToast("Notifikasi tidak didukung di browser ini", "error");
+      return;
+    }
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(false);
+      await setSetting("notificationsEnabled", false);
+      showToast("Notifikasi dinonaktifkan", "success");
+    } else {
+      const result = await Notification.requestPermission();
+      if (result === "granted") {
+        setNotificationsEnabled(true);
+        await setSetting("notificationsEnabled", true);
+        showToast("Notifikasi diaktifkan", "success");
+      } else {
+        showToast("Izin notifikasi ditolak. Aktifkan di pengaturan browser.", "error");
+      }
+    }
   };
 
   const autoLockLabels: Record<number, string> = {
@@ -353,17 +415,12 @@ export function SettingsPage() {
     showToast("Pengaturan kunci disimpan", "success");
   };
 
-  const [editNameOpen, setEditNameOpen] = useState(false);
-  const [newName, setNewName] = useState(userName);
-
-  const supportsWebAuthn =
-    typeof window !== "undefined" && "PublicKeyCredential" in window;
-
   return (
     <>
       <AppBar title="Pengaturan" />
 
       <div className="pb-10">
+        {/* Profil */}
         <SectionHeader title="Profil" />
         <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
           <SettingRow
@@ -377,23 +434,22 @@ export function SettingsPage() {
           />
         </div>
 
+        {/* Keamanan */}
         <SectionHeader title="Keamanan" />
-
         {!hasPin && (
           <div className="mx-4 mb-3 bg-warning/10 border border-warning/30 rounded-2xl px-4 py-3 flex items-center gap-3">
             <Shield size={18} className="text-warning flex-shrink-0" />
             <p className="text-xs text-text-primary leading-relaxed">
-              <strong>Data belum dilindungi.</strong> Buat PIN untuk mengamankan data keuanganmu.
+              <strong>Data belum dilindungi.</strong> Buat PIN untuk mengamankan data keuangan Anda.
             </p>
           </div>
         )}
-
         <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
           {!hasPin ? (
             <SettingRow
               icon={<Lock size={18} className="text-warning" />}
               label="Buat PIN"
-              description="Lindungi data dengan kode rahasia 4–8 digit"
+              description="Lindungi data dengan kode rahasia 4-8 digit"
               onClick={() => setPinSheet("setup")}
               right={
                 <span className="text-[10px] font-bold text-warning bg-warning/15 px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -428,7 +484,7 @@ export function SettingsPage() {
                 !hasPin
                   ? "Buat PIN terlebih dahulu"
                   : hasWebAuthn
-                    ? "Aktif — buka aplikasi tanpa ketik PIN"
+                    ? "Aktif. Buka aplikasi tanpa ketik PIN."
                     : "Aktifkan agar bisa buka pakai biometrik"
               }
               right={<Toggle value={hasWebAuthn} />}
@@ -457,6 +513,7 @@ export function SettingsPage() {
           )}
         </div>
 
+        {/* Tampilan */}
         <SectionHeader title="Tampilan" />
         <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
           <SettingRow
@@ -474,7 +531,20 @@ export function SettingsPage() {
           />
         </div>
 
-        <SectionHeader title="Data & Pengingat" />
+        {/* Notifikasi */}
+        <SectionHeader title="Notifikasi" />
+        <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
+          <SettingRow
+            icon={<Bell size={18} className={notificationsEnabled ? "text-accent-primary" : "text-text-muted"} />}
+            label="Notifikasi Pengingat"
+            description={notificationsEnabled ? "Aktif. Anda akan mendapat pengingat tagihan." : "Nonaktif. Ketuk untuk mengaktifkan."}
+            right={<Toggle value={notificationsEnabled} />}
+            onClick={() => void handleToggleNotifications()}
+          />
+        </div>
+
+        {/* Data */}
+        <SectionHeader title="Data" />
         <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
           <SettingRow
             icon={<Tag size={18} className="text-accent-primary" />}
@@ -489,21 +559,27 @@ export function SettingsPage() {
             href="/settings/reminders"
           />
           <SettingRow
+            icon={<Layers size={18} className="text-accent-secondary" />}
+            label="Anggaran"
+            description="Kelola anggaran per kategori"
+            href="/budgets"
+          />
+        </div>
+
+        {/* Cadangan dan Pemulihan */}
+        <SectionHeader title="Cadangan dan Pemulihan" />
+        <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
+          <SettingRow
             icon={<Archive size={18} className="text-success" />}
-            label="Backup & Restore"
-            description="Ekspor atau impor semua data"
+            label="Ekspor dan Impor Data"
+            description="Simpan atau pulihkan semua data ke file"
             href="/settings/backup"
           />
         </div>
 
-        <SectionHeader title="Aplikasi" />
+        {/* Zona Berbahaya */}
+        <SectionHeader title="Zona Berbahaya" />
         <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
-          <SettingRow
-            icon={<Smartphone size={18} className="text-accent-primary" />}
-            label="Pasang di HP"
-            description="Install ke layar utama tanpa Play Store"
-            onClick={() => setInstallOpen(true)}
-          />
           {hasPin && (
             <SettingRow
               icon={<Lock size={18} className="text-text-muted" />}
@@ -513,21 +589,54 @@ export function SettingsPage() {
               right={<span className="text-xs text-text-muted flex-shrink-0">Kunci</span>}
             />
           )}
+          <SettingRow
+            icon={<Trash2 size={18} className="text-danger" />}
+            label="Hapus Semua Data"
+            description="Menghapus seluruh data secara permanen"
+            onClick={() => setDeleteOpen(true)}
+            danger
+            right={<span className="text-xs text-danger/70 flex-shrink-0">Hapus</span>}
+          />
         </div>
 
-        <div className="px-4 pt-8 pb-2 text-center text-xs text-text-muted space-y-1">
+        {/* Tentang */}
+        <SectionHeader title="Tentang Aplikasi" />
+        <div className="mx-4 rounded-2xl overflow-hidden shadow-card bg-bg-surface divide-y divide-bg-page">
+          <div className="px-4 py-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-accent-primary/15 flex items-center justify-center flex-shrink-0">
+              <BookOpen size={18} className="text-accent-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-text-primary">Lisensi</p>
+              <p className="text-xs text-text-muted mt-0.5">MIT License. Kode sumber terbuka.</p>
+            </div>
+          </div>
+          <div className="px-4 py-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-accent-primary/15 flex items-center justify-center flex-shrink-0">
+              <Info size={18} className="text-accent-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-text-primary">Kredit</p>
+              <p className="text-xs text-text-muted mt-0.5">Dibangun dengan React, Dexie.js, Tailwind CSS, Recharts, dan Tesseract.js.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 pt-8 pb-4 text-center text-xs text-text-muted space-y-1">
           <p className="font-bold text-text-primary">Catatan Keuangan</p>
-          <p>Versi 1.0.0 · Offline-first · Data tersimpan di perangkat</p>
+          <p>Versi 1.0.0</p>
+          <p>Data sepenuhnya tersimpan di perangkat Anda. Tidak ada server.</p>
         </div>
       </div>
 
+      {/* Edit Nama */}
       <BottomSheet isOpen={editNameOpen} onClose={() => setEditNameOpen(false)} title="Edit Nama">
         <div className="p-4 space-y-3 pb-8">
           <input
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nama kamu"
+            placeholder="Nama Anda"
             className="w-full bg-bg-card rounded-2xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
             autoFocus
             maxLength={40}
@@ -545,6 +654,7 @@ export function SettingsPage() {
         </div>
       </BottomSheet>
 
+      {/* Kunci Otomatis */}
       <BottomSheet
         isOpen={autoLockOpen}
         onClose={() => setAutoLockOpen(false)}
@@ -571,22 +681,13 @@ export function SettingsPage() {
         </div>
       </BottomSheet>
 
+      {/* PIN Sheet */}
       {pinSheet !== null && (
         <PINSheet isOpen mode={pinSheet} onClose={() => setPinSheet(null)} />
       )}
 
-      <InstallSheet
-        isOpen={installOpen}
-        onClose={() => setInstallOpen(false)}
-        installPrompt={installPrompt}
-      />
-
-      <CurrencySelector
-        isOpen={currencyOpen}
-        onClose={() => setCurrencyOpen(false)}
-        value="IDR"
-        onChange={() => setCurrencyOpen(false)}
-      />
+      {/* Hapus Semua Data */}
+      <DeleteAllSheet isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
     </>
   );
 }

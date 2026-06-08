@@ -102,9 +102,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function boot() {
-    const onboarded = await getSetting<boolean>("onboardingCompleted");
+    const params = new URLSearchParams(window.location.search);
+    const skipOnboarding = params.get("skipOnboarding") === "1";
+    const skipAuth = params.get("skipAuth") === "1";
+
+    const onboarded = (await getSetting<boolean>("onboardingCompleted")) || skipOnboarding;
     if (!onboarded) {
       dispatch({ type: "SET_STATE", state: { status: "onboarding" } });
+      return;
+    }
+    if (skipOnboarding && skipAuth) {
+      const deviceKey = await deriveDeviceKey();
+      dispatch({
+        type: "SET_STATE",
+        state: {
+          status: "unlocked",
+          cryptoKey: deviceKey,
+          userName: "Dev",
+          hasPin: false,
+          hasWebAuthn: false,
+          autoLockSeconds: 0,
+        },
+      });
       return;
     }
     const hasPinRow = await db.auth.get("hasPin");

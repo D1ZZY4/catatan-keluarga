@@ -128,7 +128,7 @@ export function AppShell() {
         <Suspense fallback={<LoadingFallback />}>
           <Outlet context={outletCtx} />
         </Suspense>
-        <div className="h-[72px]" aria-hidden />
+        <div className="h-[100px]" aria-hidden />
       </div>
 
       <BottomNav />
