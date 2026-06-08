@@ -50,6 +50,21 @@ export function TransactionEmptyIllustration() {
   );
 }
 
+export function ReminderEmptyIllustration() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+      <circle cx="60" cy="55" r="30" fill="var(--bg-card)" />
+      <path d="M60 30 C60 30 60 28 62 28 A2 2 0 0 1 58 28 C60 28 60 30 60 30" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      <path d="M42 55 C42 45.6 50.1 38 60 38 C69.9 38 78 45.6 78 55 L78 66 L84 72 L36 72 L42 66 Z" fill="var(--accent-primary)" opacity="0.25" />
+      <path d="M42 55 C42 45.6 50.1 38 60 38 C69.9 38 78 45.6 78 55 L78 66 L84 72 L36 72 L42 66 Z" stroke="var(--accent-primary)" strokeWidth="2" fill="none" opacity="0.6" />
+      <rect x="36" y="72" width="48" height="4" rx="2" fill="var(--accent-primary)" opacity="0.3" />
+      <path d="M55 76 Q60 82 65 76" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6" />
+      <circle cx="88" cy="35" r="14" fill="var(--warning)" opacity="0.15" />
+      <path d="M84 35 L87 38 L93 32" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+    </svg>
+  );
+}
+
 export function StatsEmptyIllustration() {
   return (
     <svg width="120" height="120" viewBox="0 0 120 120" fill="none">

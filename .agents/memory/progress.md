@@ -19,28 +19,23 @@
 - M16: Selesai — Multi-currency + pemilih mata uang 160+ fiat + kripto
 - M17: Sebagian — PWA manifest + vite-plugin-pwa + ikon; APK Bubblewrap tidak bisa dibuild (tidak ada Android SDK di Replit); BUILD-INSTRUCTIONS.md tersedia
 - M18: SELESAI — Bug hunt tuntas, TS clean, build clean
-- M19 (sebagian): Semua spec gap ditutup — lihat catatan di bawah
+- M19: SELESAI — Audit penuh: CSS tokens lengkap, aksesibilitas, empty states, tablet sidebar
 
-## Spec Gaps Diperbaiki (sesi ini)
+## Semua Spec Gap Ditutup
 
-- [x] Versi auto-inject dari package.json → vite.config.ts define + vite-env.d.ts; SettingsPage pakai import.meta.env.VITE_APP_VERSION
-- [x] 3 dompet default (Tunai, Bank, Tabungan) di-seed otomatis saat completeOnboarding via seedDefaultWallets() di seed.ts
-- [x] Welcome screen pasca-onboarding — WelcomeScreen.tsx dengan confetti CSS + pratinjau 3 dompet + tombol "Jelajahi Aplikasi"
-- [x] OnboardingPage blok redirect saat showWelcome=true; navigate() ke "/" setelah tombol "Jelajahi Aplikasi" ditekan
-- [x] SmartCacheService — src/shared/services/SmartCacheService.ts dengan recordAccess, adaptiveTTL, evictStaleCache, backgroundPreload patterns
-- [x] Tablet sidebar — SideNav.tsx hidden di mobile (md:hidden BottomNav), AppShell flex-row dengan SideNav di kiri pada md+
-
-## Bug Hunt Session (M18) — Diperbaiki
-
-- [x] FAB overlap BottomSheet → BottomSheet z-[60] (di atas FAB z-50)
-- [x] FAB muncul di Settings → tambahkan '/settings' ke PAGES_WITHOUT_FAB
-- [x] FAB muncul saat sheet terbuka → tambahkan txSheet.open || ocrOpen || calcOpen ke hideFAB
-- [x] Navbar dark mode rusak → tambahkan --bg-card-rgb ke :root dan .dark di styles.css
-- [x] Onboarding konten terlalu ke bawah → justify-start pt-[10vh]
-- [x] Settings toggle label "Mode Terang/Gelap" ambigu → label statis "Mode Gelap" + deskripsi dinamis
+- [x] Versi auto-inject dari package.json (VITE_APP_VERSION, VITE_BUILD_DATE)
+- [x] 3 dompet default di-seed saat completeOnboarding
+- [x] Welcome screen pasca-onboarding (confetti + wallet preview)
+- [x] SmartCacheService (adaptive TTL, eviksi, preload pattern)
+- [x] Tablet sidebar (SideNav md+, BottomNav md:hidden)
+- [x] CSS token lengkap sesuai spec (--bg-input, --accent-warm, --text-placeholder, --border, --shadow-sm/md/inset)
+- [x] --bg-surface tidak lagi putih murni (#EDE8B8)
+- [x] ReminderEmptyIllustration + aria-label pada icon buttons
+- [x] WelcomeScreen warna wallet pakai CSS vars (theme-aware)
 
 ## Catatan
 - build-release/BUILD-INSTRUCTIONS.md tersedia sebagai pengganti APK
-- Initial bundle: 114.46 KB gzipped (di bawah limit 120 KB spec)
 - TypeScript: 0 error
-- Production build: ✓ clean
+- Production build: ✓ clean (26s)
+- Bundle main: 114.94 KB gzipped (batas spec 120 KB ✓)
+- PWA: 49 entries precached

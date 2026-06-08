@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Bell, BellOff, Calendar, Clock, Plus, Trash2 } from "lucide-react";
 import { AppBar } from "@/shared/components/AppBar";
 import { BottomSheet } from "@/shared/components/BottomSheet";
-import { EmptyState } from "@/shared/components/EmptyState";
+import { EmptyState, ReminderEmptyIllustration } from "@/shared/components/EmptyState";
 import { useAppData } from "@/app/AppDataContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { notificationService } from "@/shared/services/NotificationService";
@@ -183,7 +183,8 @@ export function ReminderPage() {
       )}
 
       {reminders.length === 0 ? (
-        <EmptyState title="Belum ada pengingat"
+        <EmptyState illustration={<ReminderEmptyIllustration />}
+          title="Belum ada pengingat"
           description="Tambahkan tagihan rutin seperti listrik, air, atau cicilan agar tidak lupa"
           action={{ label: "+ Tambah Pengingat", onClick: () => setFormOpen(true) }} />
       ) : (
@@ -225,11 +226,13 @@ export function ReminderPage() {
                   </div>
                 </div>
                 <button onClick={() => void handleToggle(r)}
+                  aria-label={r.isActive ? "Nonaktifkan pengingat" : "Aktifkan pengingat"}
                   className={cn("w-9 h-9 flex items-center justify-center rounded-full transition-colors flex-shrink-0",
                     r.isActive ? "text-accent-primary" : "text-text-muted")}>
                   {r.isActive ? <Bell size={18} /> : <BellOff size={18} />}
                 </button>
                 <button onClick={() => { void removeReminder(r.id); showToast("Pengingat dihapus", "success"); }}
+                  aria-label="Hapus pengingat"
                   className="w-9 h-9 flex items-center justify-center rounded-full text-danger flex-shrink-0">
                   <Trash2 size={16} />
                 </button>

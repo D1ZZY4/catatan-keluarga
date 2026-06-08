@@ -8,9 +8,9 @@ interface WalletPreview {
 }
 
 const DEFAULT_WALLET_PREVIEWS: WalletPreview[] = [
-  { name: "Tunai", icon: <Banknote size={20} className="text-white" />, color: "#4CAF50" },
-  { name: "Bank", icon: <Building2 size={20} className="text-white" />, color: "#8CC0EB" },
-  { name: "Tabungan", icon: <PiggyBank size={20} className="text-white" />, color: "#F4A35A" },
+  { name: "Tunai", icon: <Banknote size={20} className="text-white" />, color: "var(--success)" },
+  { name: "Bank", icon: <Building2 size={20} className="text-white" />, color: "var(--accent-primary)" },
+  { name: "Tabungan", icon: <PiggyBank size={20} className="text-white" />, color: "var(--accent-warm)" },
 ];
 
 interface ConfettiPiece {
