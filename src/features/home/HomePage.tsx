@@ -5,10 +5,12 @@ import { useAuth } from "@/app/AuthContext";
 import { useAppData, computeWalletBalance } from "@/app/AppDataContext";
 import { SkeletonCard } from "@/shared/components/SkeletonCard";
 import { TransactionListItem } from "@/shared/components/TransactionListItem";
+import { GuidedHomeTour } from "@/shared/components/GuidedHomeTour";
 import type { AppOutletContext } from "@/app/AppShell";
 import { NetWorthHero } from "./NetWorthHero";
 import { WalletCardWithSparkline } from "./WalletCardWithSparkline";
 import { QuickActions, BudgetRow, RemindersRow } from "./HomeWidgets";
+import { HealthScoreWidget } from "./HealthScoreWidget";
 
 export function HomePage() {
   const { state } = useAuth();
@@ -37,6 +39,8 @@ export function HomePage() {
   const recentTransactions = transactions.slice(0, 6);
 
   return (
+    <>
+    <GuidedHomeTour />
     <main className="pb-6">
       <NetWorthHero
         userName={userName}
@@ -48,7 +52,9 @@ export function HomePage() {
       <div className="space-y-5 mt-4">
         <QuickActions openTransactionForm={openTransactionForm} onScan={openOCR} />
 
-        <section className="space-y-2.5">
+        <HealthScoreWidget />
+
+        <section data-tour="wallets" className="space-y-2.5">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
               <Wallet size={14} className="text-text-muted" />
@@ -93,7 +99,7 @@ export function HomePage() {
           )}
         </section>
 
-        <BudgetRow />
+        <div data-tour="budget"><BudgetRow /></div>
         <RemindersRow />
 
         <section className="space-y-2.5">
@@ -148,5 +154,6 @@ export function HomePage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

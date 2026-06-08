@@ -10,6 +10,7 @@ import { ToastContainer } from "@/shared/components/Toast";
 import { SkeletonCard } from "@/shared/components/SkeletonCard";
 import { notificationService } from "@/shared/services/NotificationService";
 import { loadDisplaySettings } from "@/shared/hooks/useDisplaySettings";
+import { useKeyboardShortcuts } from "@/shared/hooks/useKeyboardShortcuts";
 import type { Transaction, TransactionType } from "@/shared/types";
 import type { OCRConfirmedData } from "@/features/ocr/OCRScanner";
 
@@ -74,6 +75,8 @@ export function AppShell() {
   );
 
   const openOCR = useCallback(() => setOcrOpen(true), []);
+
+  useKeyboardShortcuts({ openTransactionForm, openCalculator });
 
   const handleOCRConfirm = useCallback((data: OCRConfirmedData) => {
     setOcrOpen(false);

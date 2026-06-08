@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { AlertTriangle, Download, HardDriveDownload, Info, Lock, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, Download, FileText, HardDriveDownload, Info, Lock, Trash2, Upload } from "lucide-react";
 import { AppBar } from "@/shared/components/AppBar";
 import { BottomSheet } from "@/shared/components/BottomSheet";
 import { useAppData } from "@/app/AppDataContext";
@@ -142,6 +142,43 @@ export function BackupPage() {
     } catch {
       showToast("Gagal mengekspor data. Coba lagi.", "error");
     }
+  };
+
+  const handleExportCSV = () => {
+    const findWallet = (id: string) => wallets.find((w) => w.id === id);
+    const findCat = (id: string) => categories.find((c) => c.id === id);
+    const escapeCSV = (v: string): string =>
+      v.includes(",") || v.includes('"') || v.includes("\n")
+        ? `"${v.replace(/"/g, '""')}"`
+        : v;
+
+    const headers = ["Tanggal", "Jenis", "Jumlah", "Mata Uang", "Kategori", "Dompet", "Tujuan", "Catatan", "Tag"];
+    const rows = transactions.map((tx) => [
+      new Date(tx.date).toLocaleDateString("id-ID"),
+      tx.type,
+      String(tx.amount),
+      tx.currency ?? "",
+      findCat(tx.categoryId)?.name ?? "",
+      findWallet(tx.walletId)?.name ?? "",
+      tx.toWalletId !== undefined ? (findWallet(tx.toWalletId)?.name ?? "") : "",
+      tx.note ?? "",
+      (tx.tags ?? []).join("|"),
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(escapeCSV).join(","))
+      .join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    a.href = url;
+    a.download = `catatan-keuangan-${dateStr}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`${transactions.length} transaksi berhasil diekspor ke CSV`, "success");
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,6 +340,19 @@ export function BackupPage() {
               <p className="text-xs text-text-muted">Simpan sebagai file .catkeu terenkripsi</p>
             </div>
             <Lock size={14} className="text-text-muted flex-shrink-0" />
+          </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={transactions.length === 0}
+            className="w-full flex items-center gap-4 bg-bg-card rounded-xl p-4 shadow-card active:scale-[0.98] transition-transform disabled:opacity-50"
+          >
+            <div className="w-10 h-10 rounded-xl bg-accent-primary/15 flex items-center justify-center flex-shrink-0">
+              <FileText size={20} className="text-accent-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-sm font-semibold text-text-primary">Ekspor ke CSV</p>
+              <p className="text-xs text-text-muted">Kompatibel dengan Excel & Google Sheets</p>
+            </div>
           </button>
         </div>
 

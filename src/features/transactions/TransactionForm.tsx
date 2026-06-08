@@ -5,6 +5,7 @@ import {
   CheckCircle,
   ChevronLeft,
   DollarSign,
+  Hash,
   PiggyBank,
   Send,
   TrendingDown,
@@ -12,6 +13,7 @@ import {
   UserMinus,
   UserPlus,
   Wallet,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "@/shared/components/BottomSheet";
@@ -57,6 +59,7 @@ interface FormState {
   note: string;
   linkedPersonName: string;
   linkedPersonPhone: string;
+  tags: string[];
 }
 
 interface TransactionFormProps {
@@ -134,10 +137,12 @@ export function TransactionForm({
       note: editTransaction?.note ?? prefill?.note ?? "",
       linkedPersonName: editTransaction?.linkedPersonName ?? "",
       linkedPersonPhone: editTransaction?.linkedPersonPhone ?? "",
+      tags: editTransaction?.tags ?? [],
     };
     return def;
   });
   const [loading, setLoading] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   const update = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
@@ -175,6 +180,7 @@ export function TransactionForm({
         ...(form.toWalletId ? { toWalletId: form.toWalletId } : {}),
         ...(form.linkedPersonName ? { linkedPersonName: form.linkedPersonName } : {}),
         ...(form.linkedPersonPhone ? { linkedPersonPhone: form.linkedPersonPhone } : {}),
+        ...(form.tags.length > 0 ? { tags: form.tags } : {}),
       };
 
       if (editTransaction) {
@@ -358,6 +364,51 @@ export function TransactionForm({
               placeholder="Tambahkan catatan…"
               className="w-full bg-bg-card rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40"
               maxLength={200}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-text-muted flex items-center gap-1">
+              <Hash size={11} className="text-text-muted" /> Tag (opsional, maks 5)
+            </label>
+            {form.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 bg-accent-primary/15 text-accent-primary text-xs px-2.5 py-1 rounded-full font-medium"
+                  >
+                    #{tag}
+                    <button
+                      onClick={() => update("tags", form.tags.filter((t) => t !== tag))}
+                      aria-label={`Hapus tag ${tag}`}
+                      className="opacity-60 hover:opacity-100"
+                    >
+                      <X size={10} strokeWidth={3} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value.replace(/\s+/g, "-").replace(/^#/, ""))}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+                  e.preventDefault();
+                  const tag = tagInput.trim().replace(/^#/, "");
+                  if (tag && !form.tags.includes(tag) && form.tags.length < 5) {
+                    update("tags", [...form.tags, tag]);
+                    setTagInput("");
+                  }
+                } else if (e.key === "Backspace" && !tagInput && form.tags.length > 0) {
+                  update("tags", form.tags.slice(0, -1));
+                }
+              }}
+              placeholder={form.tags.length >= 5 ? "Maks 5 tag" : "Ketik lalu Enter…"}
+              disabled={form.tags.length >= 5}
+              className="w-full bg-bg-card rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-primary/40 disabled:opacity-40"
             />
           </div>
 

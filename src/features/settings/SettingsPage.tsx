@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Archive,
   Bell,
@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   Fingerprint,
   Layers,
   Lock,
@@ -42,6 +43,15 @@ export function SettingsPage() {
   const [darkMode, setDarkMode] = useState(() =>
     document.documentElement.classList.contains("dark"),
   );
+  const [darkScheduleEnabled, setDarkScheduleEnabled] = useState(() =>
+    localStorage.getItem("dark_schedule_enabled") === "true",
+  );
+  const [darkStart, setDarkStart] = useState(() =>
+    parseInt(localStorage.getItem("dark_schedule_start") ?? "20", 10),
+  );
+  const [darkEnd, setDarkEnd] = useState(() =>
+    parseInt(localStorage.getItem("dark_schedule_end") ?? "6", 10),
+  );
   const [autoLockOpen, setAutoLockOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editNameOpen, setEditNameOpen] = useState(false);
@@ -62,6 +72,22 @@ export function SettingsPage() {
 
   const supportsWebAuthn =
     typeof window !== "undefined" && "PublicKeyCredential" in window;
+
+  useEffect(() => {
+    if (!darkScheduleEnabled) return;
+    const checkSchedule = () => {
+      const hour = new Date().getHours();
+      const isDark = darkStart <= darkEnd
+        ? hour >= darkStart && hour < darkEnd
+        : hour >= darkStart || hour < darkEnd;
+      setDarkMode(isDark);
+      document.documentElement.classList.toggle("dark", isDark);
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+    checkSchedule();
+    const id = setInterval(checkSchedule, 60_000);
+    return () => clearInterval(id);
+  }, [darkScheduleEnabled, darkStart, darkEnd]);
 
   const toggleTheme = () => {
     const next = !darkMode;
@@ -216,6 +242,48 @@ export function SettingsPage() {
             right={<Toggle value={darkMode} />}
             onClick={toggleTheme}
           />
+          <SettingRow
+            icon={<Clock size={18} className={darkScheduleEnabled ? "text-accent-secondary" : "text-text-muted"} />}
+            label="Jadwal Mode Gelap"
+            description={darkScheduleEnabled ? `Aktif ${darkStart}:00 – ${darkEnd}:00` : "Otomatis sesuai jam"}
+            right={<Toggle value={darkScheduleEnabled} />}
+            onClick={() => {
+              const next = !darkScheduleEnabled;
+              setDarkScheduleEnabled(next);
+              localStorage.setItem("dark_schedule_enabled", String(next));
+            }}
+          />
+          {darkScheduleEnabled && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-bg-surface">
+              <span className="text-xs text-text-muted w-14">Mulai</span>
+              <input
+                type="number"
+                min={0}
+                max={23}
+                value={darkStart}
+                onChange={(e) => {
+                  const v = Math.max(0, Math.min(23, parseInt(e.target.value, 10) || 0));
+                  setDarkStart(v);
+                  localStorage.setItem("dark_schedule_start", String(v));
+                }}
+                className="w-16 bg-bg-card rounded-lg px-2 py-1.5 text-sm text-text-primary text-center outline-none focus:ring-2 focus:ring-accent-primary/40"
+              />
+              <span className="text-xs text-text-muted">:00 sampai</span>
+              <input
+                type="number"
+                min={0}
+                max={23}
+                value={darkEnd}
+                onChange={(e) => {
+                  const v = Math.max(0, Math.min(23, parseInt(e.target.value, 10) || 0));
+                  setDarkEnd(v);
+                  localStorage.setItem("dark_schedule_end", String(v));
+                }}
+                className="w-16 bg-bg-card rounded-lg px-2 py-1.5 text-sm text-text-primary text-center outline-none focus:ring-2 focus:ring-accent-primary/40"
+              />
+              <span className="text-xs text-text-muted">:00</span>
+            </div>
+          )}
           <SettingRow
             icon={<CircleDollarSign size={18} className="text-success" />}
             label="Mata Uang Dasar"

@@ -61,6 +61,7 @@ export function AppBar({
       )}
       {!hideCalculator && (
         <button
+          data-tour="calculator"
           onClick={openCalculator}
           className="p-2 rounded-full hover:bg-bg-card active:scale-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Kalkulator"

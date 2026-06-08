@@ -143,7 +143,7 @@ export function NetWorthHero({
   );
 
   return (
-    <div className="relative overflow-hidden">
+    <div data-tour="greeting" className="relative overflow-hidden">
       <div
         className="px-4 pt-5 pb-6"
         style={{

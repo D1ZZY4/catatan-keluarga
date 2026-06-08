@@ -136,6 +136,7 @@ export function FAB({ onAction }: FABProps) {
 
         {/* Main toggle button */}
         <button
+          data-tour="fab"
           onClick={handleToggle}
           aria-label={dialOpen ? "Tutup menu" : "Buka menu aksi cepat"}
           className={cn(

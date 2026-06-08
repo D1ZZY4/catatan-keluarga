@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Filter, Pencil, Search, Trash2 } from "lucide-react";
+import { Filter, Pencil, Search, Share2, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { useAppData } from "@/app/AppDataContext";
 import { AppBar } from "@/shared/components/AppBar";
@@ -278,6 +278,27 @@ export function TransactionPage() {
           >
             <Pencil size={16} className="flex-shrink-0" />
             Edit Transaksi
+          </button>
+          <button
+            onClick={() => {
+              if (!selectedTx) return;
+              const typeLabel = ["income", "debt_received", "savings_withdraw", "invest_sell"].includes(selectedTx.type)
+                ? "Pemasukan"
+                : "Pengeluaran";
+              const text = `${typeLabel} ${formatCurrency(selectedTx.amount, selectedTx.currency ?? "IDR")}${selectedTx.note ? ` — ${selectedTx.note}` : ""} (${new Date(selectedTx.date).toLocaleDateString("id-ID")})`;
+              if (typeof navigator.share !== "undefined") {
+                void navigator.share({ title: "Catatan Keuangan", text });
+              } else {
+                void navigator.clipboard.writeText(text).then(() =>
+                  showToast("Teks transaksi disalin ke clipboard", "success"),
+                );
+              }
+              setSelectedTx(null);
+            }}
+            className="w-full flex items-center gap-3 px-5 py-4 text-sm text-text-primary active:bg-bg-card"
+          >
+            <Share2 size={16} className="flex-shrink-0" />
+            Bagikan Transaksi
           </button>
           <button
             onClick={() => void handleDelete()}

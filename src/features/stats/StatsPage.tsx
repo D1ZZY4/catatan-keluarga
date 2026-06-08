@@ -9,6 +9,7 @@ import {
 } from "./StatsUtils";
 import { OverviewTab } from "./OverviewTab";
 import { DebtTab } from "./DebtTab";
+import { LocalInsights } from "./LocalInsights";
 
 export function StatsPage() {
   const { transactions, wallets } = useAppData();
@@ -143,6 +144,7 @@ export function StatsPage() {
             </div>
           )}
 
+          <LocalInsights />
           <OverviewTab
             period={period}
             {...(period === "custom" ? { customStart, customEnd } : {})}
