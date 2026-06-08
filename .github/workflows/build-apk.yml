@@ -28,8 +28,28 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install
+        env:
+          npm_config_fetch_timeout: 60000
+          npm_config_fetch_retry_mintimeout: 20000
+          npm_config_fetch_retry_maxtimeout: 120000
+
+      - name: Retry install if failed
+        if: failure()
+        run: bun install --force
+        env:
+          npm_config_fetch_timeout: 60000
+          npm_config_fetch_retry_mintimeout: 20000
+          npm_config_fetch_retry_maxtimeout: 120000
 
       - name: Build PWA
         run: bun run build
