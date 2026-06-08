@@ -115,7 +115,7 @@ const SLIDES: SlideData[] = [
   {
     illustration: <Slide3Illustration />,
     headline: "Semua jenis transaksi\ntercatat rapi",
-    subtitle: "Pemasukan, pengeluaran, transfer, piutang, investasi — semuanya ada.",
+    subtitle: "Pemasukan, pengeluaran, transfer, piutang, dan investasi. Semuanya ada.",
   },
   {
     illustration: <Slide4Illustration />,
@@ -375,10 +375,11 @@ export function OnboardingPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-[10vh] pb-4">
+      {/* Scrollable content area — padded so fixed bottom bar never covers it */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-36 pt-6 overflow-y-auto">
         {!isLast && slideData !== undefined ? (
           <div className="flex flex-col items-center gap-6 text-center animate-fade-in w-full max-w-sm">
-            <div className="flex items-center justify-center h-[200px]">
+            <div className="flex items-center justify-center h-[220px]">
               {slideData.illustration}
             </div>
             <div className="space-y-3">
@@ -402,38 +403,45 @@ export function OnboardingPage() {
         )}
       </div>
 
-      <div className="px-6 pb-10 safe-bottom space-y-4 max-w-sm mx-auto w-full">
-        <div className="flex justify-center gap-2">
-          {Array.from({ length: SLIDES.length + 1 }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={cn(
-                "rounded-full transition-all duration-300",
-                i === current
-                  ? "w-6 h-2 bg-accent-primary"
-                  : "w-2 h-2 bg-bg-card",
-              )}
-            />
-          ))}
-        </div>
-
-        {!isLast && (
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrent(SLIDES.length)}
-              className="text-sm text-text-muted py-2 active:opacity-60 transition-opacity"
-            >
-              Lewati
-            </button>
-            <button
-              onClick={goNext}
-              className="flex items-center gap-1.5 bg-accent-primary text-white px-5 py-2.5 rounded-2xl text-sm font-bold active:scale-95 transition-transform shadow-fab"
-            >
-              Lanjut <ChevronRight size={16} />
-            </button>
+      {/* Fixed bottom bar — same position as BottomNav floating pill */}
+      <div
+        className="fixed bottom-5 left-0 right-0 z-40 px-6"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="max-w-sm mx-auto space-y-3">
+          <div className="flex justify-center gap-2">
+            {Array.from({ length: SLIDES.length + 1 }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={cn(
+                  "rounded-full transition-all duration-300",
+                  i === current
+                    ? "w-6 h-2 bg-accent-primary"
+                    : "w-2 h-2 bg-bg-card",
+                )}
+              />
+            ))}
           </div>
-        )}
+
+          {!isLast && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrent(SLIDES.length)}
+                className="flex-1 py-3.5 rounded-2xl bg-bg-surface text-sm font-semibold text-text-muted active:opacity-60 transition-opacity"
+              >
+                Lewati
+              </button>
+              <button
+                onClick={goNext}
+                className="flex-1 flex items-center justify-center gap-1.5 py-3.5 bg-accent-primary text-white rounded-2xl text-sm font-bold active:scale-95 transition-transform shadow-fab"
+              >
+                Lanjut <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

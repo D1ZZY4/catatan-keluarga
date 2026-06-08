@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Filter, Pencil, Search, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { useAppData } from "@/app/AppDataContext";
@@ -47,6 +47,27 @@ export function TransactionPage() {
   });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [visibleCount, setVisibleCount] = useState(100);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleCount(100);
+  }, [filter]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((c) => c + 50);
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   const now = Date.now();
   const filtered = useMemo(() => {
@@ -81,7 +102,7 @@ export function TransactionPage() {
 
   const grouped = useMemo(() => {
     const g: Record<string, Transaction[]> = {};
-    for (const tx of filtered) {
+    for (const tx of filtered.slice(0, visibleCount)) {
       const d = new Date(tx.date);
       const key = d.toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
       const existing = g[key];
@@ -92,7 +113,7 @@ export function TransactionPage() {
       }
     }
     return g;
-  }, [filtered]);
+  }, [filtered, visibleCount]);
 
   const totalIncome = filtered
     .filter((tx) => INCOME_TYPES.includes(tx.type))
@@ -233,7 +254,10 @@ export function TransactionPage() {
               </div>
             </div>
           ))}
-          <div className="h-4" />
+          {filtered.length > visibleCount && (
+            <div ref={sentinelRef} className="h-4" />
+          )}
+          {filtered.length <= visibleCount && <div className="h-4" />}
         </div>
       )}
 

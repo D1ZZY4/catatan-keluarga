@@ -13,6 +13,7 @@ import {
   UserPlus,
   Wallet,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "@/shared/components/BottomSheet";
 import { CurrencyInput } from "@/shared/components/CurrencyInput";
 import { DatePicker } from "@/shared/components/DatePicker";
@@ -110,6 +111,8 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const { wallets, categories, addTransaction, updateTransaction } = useAppData();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const activeWallets = wallets.filter((w) => !w.isArchived);
 
   const hasPrefill = prefill !== undefined && (prefill.amount !== undefined || prefill.note !== undefined);
   const [step, setStep] = useState<Step>(editTransaction ? 3 : hasPrefill ? 3 : 1);
@@ -193,6 +196,28 @@ export function TransactionForm({
 
   const title = editTransaction ? "Edit Transaksi" : "Catat Transaksi";
 
+  if (activeWallets.length === 0) {
+    return (
+      <BottomSheet isOpen={isOpen} onClose={onClose} title={title} fullHeight>
+        <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-accent-primary/10 flex items-center justify-center">
+            <Wallet size={28} className="text-accent-primary" />
+          </div>
+          <div className="space-y-1">
+            <p className="font-semibold text-text-primary">Belum ada dompet aktif</p>
+            <p className="text-sm text-text-muted">Buat dompet terlebih dahulu sebelum mencatat transaksi.</p>
+          </div>
+          <button
+            onClick={() => { onClose(); void navigate("/wallets"); }}
+            className="px-6 py-3 rounded-full bg-accent-primary text-white font-semibold text-sm"
+          >
+            Buat Dompet Dulu
+          </button>
+        </div>
+      </BottomSheet>
+    );
+  }
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title={title} fullHeight>
       {step === 1 && (
@@ -241,6 +266,7 @@ export function TransactionForm({
               if (evaluated !== null) update("amount", evaluated);
             }}
             currency={wallets.find((w) => w.id === form.walletId)?.currency ?? "IDR"}
+            autoFocus
           />
           <div className="p-4">
             <button
@@ -357,7 +383,7 @@ export function TransactionForm({
 
           <button
             onClick={() => void handleSave()}
-            disabled={loading}
+            disabled={loading || form.amount <= 0}
             className="w-full py-4 bg-accent-primary text-white rounded-2xl font-semibold text-sm active:scale-[0.98] transition-transform disabled:opacity-50 shadow-fab"
           >
             {loading

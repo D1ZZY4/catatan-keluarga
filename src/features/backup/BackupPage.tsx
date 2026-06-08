@@ -370,7 +370,7 @@ export function BackupPage() {
           <div className="flex gap-3 bg-danger/10 rounded-xl p-3">
             <AlertTriangle size={20} className="text-danger flex-shrink-0" />
             <p className="text-sm text-text-primary">
-              Semua data — termasuk {wallets.length} dompet, {transactions.length} transaksi, dan semua kategori — akan dihapus permanen. Tindakan ini <strong>tidak bisa dibatalkan</strong>.
+              Semua data termasuk {wallets.length} dompet, {transactions.length} transaksi, dan semua kategori akan dihapus permanen. Tindakan ini <strong>tidak bisa dibatalkan</strong>.
             </p>
           </div>
           <p className="text-sm text-text-muted text-center">

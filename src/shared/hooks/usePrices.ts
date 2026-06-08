@@ -21,15 +21,25 @@ export function usePrices(currencies: string[], baseCurrency = "IDR"): UsePrices
 
   const key = currencies.slice().sort().join(",") + ":" + baseCurrency;
   const prevKey = useRef<string>("");
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     const uniqueNonBase = [...new Set(currencies.filter((c) => c !== baseCurrency))];
     if (uniqueNonBase.length === 0) {
-      setPrices({});
-      setLoading(false);
+      if (isMountedRef.current) {
+        setPrices({});
+        setLoading(false);
+      }
       return;
     }
-    setLoading(true);
+    if (isMountedRef.current) setLoading(true);
     try {
       const result: PriceMap = {};
       await Promise.all(
@@ -41,13 +51,15 @@ export function usePrices(currencies: string[], baseCurrency = "IDR"): UsePrices
           }
         }),
       );
-      setPrices(result);
-      setLastUpdated(Date.now());
-      setStale(false);
+      if (isMountedRef.current) {
+        setPrices(result);
+        setLastUpdated(Date.now());
+        setStale(false);
+      }
     } catch {
-      setStale(true);
+      if (isMountedRef.current) setStale(true);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 

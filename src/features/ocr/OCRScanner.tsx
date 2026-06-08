@@ -127,7 +127,7 @@ export function OCRScanner({ isOpen, onClose, onConfirm }: OCRScannerProps) {
             </div>
 
             <p className="text-xs text-text-muted text-center">
-              Struk akan diproses di perangkat ini — tidak ada data yang dikirim ke server
+              Struk akan diproses di perangkat ini. Tidak ada data yang dikirim ke server.
             </p>
 
             <input

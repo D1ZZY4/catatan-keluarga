@@ -125,7 +125,7 @@ class NotificationService {
             : `dalam ${dueInDays} hari`;
       const amountStr =
         reminder.amount !== undefined
-          ? ` — ${formatCurrency(reminder.amount, reminder.currency)}`
+          ? ` (${formatCurrency(reminder.amount, reminder.currency)})`
           : "";
 
       this.send(reminder.name, `Jatuh tempo ${whenStr}${amountStr}`);

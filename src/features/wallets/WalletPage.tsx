@@ -199,7 +199,7 @@ export function WalletPage() {
             {stale ? (
               <div className="flex items-center gap-1 text-[10px] text-warning">
                 <WifiOff size={10} />
-                <span>Mode Offline — harga tidak diperbarui</span>
+                <span>Mode Offline. Harga tidak diperbarui.</span>
               </div>
             ) : lastUpdated !== null ? (
               <p className="text-[10px] text-text-muted">
