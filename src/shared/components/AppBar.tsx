@@ -34,14 +34,14 @@ export function AppBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 safe-top px-4 pt-2 pb-1.5",
-        transparent ? "bg-transparent" : "bg-bg-page",
+        "sticky top-0 z-30 px-4 pb-3 bg-transparent pointer-events-none",
         className,
       )}
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 60px)" }}
     >
       <div
         className={cn(
-          "flex items-center h-12 px-2 gap-1",
+          "flex items-center h-12 px-2 gap-1 pointer-events-auto",
           !transparent &&
             "rounded-[22px] bg-bg-card/90 backdrop-blur-xl border border-black/[0.05] dark:border-white/[0.07] shadow-float",
         )}

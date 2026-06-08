@@ -28,7 +28,7 @@ export function BottomNav() {
       <div
         className="flex items-center justify-around h-16 px-2 rounded-[28px]"
         style={{
-          background: "rgba(var(--bg-card-rgb, 255,235,204), 0.85)",
+          background: "rgba(var(--bg-card-rgb, 245,238,200), 0.85)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",

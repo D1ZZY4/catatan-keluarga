@@ -224,6 +224,7 @@ export function IconPicker({ value, onChange, color = "var(--accent-primary)" }:
           {filteredBrands.map((entry) => {
             const fullName = `fab:${entry.key}`;
             const selected = value === fullName;
+            const iconColor = selected ? color : "var(--text-muted)";
             return (
               <button
                 key={entry.key}
@@ -238,14 +239,18 @@ export function IconPicker({ value, onChange, color = "var(--accent-primary)" }:
                 title={entry.label}
                 aria-label={entry.label}
               >
-                <FontAwesomeIcon
-                  icon={entry.icon}
-                  style={{
-                    width: 19,
-                    height: 19,
-                    color: selected ? color : "var(--text-muted)",
-                  }}
-                />
+                {entry.iconType === "fa" ? (
+                  <FontAwesomeIcon
+                    icon={entry.icon}
+                    style={{ width: 19, height: 19, color: iconColor }}
+                  />
+                ) : (
+                  <DynamicIcon
+                    name={entry.lucideName}
+                    size={19}
+                    style={{ color: iconColor }}
+                  />
+                )}
               </button>
             );
           })}

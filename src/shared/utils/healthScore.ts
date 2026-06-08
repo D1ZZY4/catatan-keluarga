@@ -8,6 +8,7 @@ export interface HealthScoreBreakdown {
   frequencyScore: number;
   diversityScore: number;
   savingsRate: number;
+  hasIncomeData: boolean;
   label: "Sangat Baik" | "Baik" | "Cukup" | "Perlu Perhatian";
 }
 
@@ -26,6 +27,7 @@ const EMPTY: HealthScoreBreakdown = {
   frequencyScore: 0,
   diversityScore: 0,
   savingsRate: 0,
+  hasIncomeData: false,
   label: "Perlu Perhatian",
 };
 
@@ -38,7 +40,6 @@ export function computeHealthScore(
   const thirtyDaysAgo = now - 30 * 86400000;
   const recent = transactions.filter((tx) => tx.date >= thirtyDaysAgo);
 
-  // Not enough data to produce a meaningful score
   if (recent.length === 0) return EMPTY;
 
   const income = recent
@@ -48,10 +49,15 @@ export function computeHealthScore(
     .filter((tx) => EXPENSE_TYPES.includes(tx.type))
     .reduce((s, tx) => s + tx.amount, 0);
 
-  const savingsRate = income > 0 ? Math.max(0, (income - expense) / income) : 0;
-  const savingsScore = clamp(Math.round((savingsRate / 0.2) * 30), 0, 30);
+  const hasIncomeData = income > 0;
 
-  // budgetScore: 0 when no budgets set (not a free 30 — encourage users to set budgets)
+  // Savings: only count when income data exists; if no income yet, skip component
+  const savingsRate = hasIncomeData ? Math.max(0, (income - expense) / income) : 0;
+  const savingsScore = hasIncomeData
+    ? clamp(Math.round((savingsRate / 0.2) * 30), 0, 30)
+    : 0;
+
+  // Budget score: 0 when no budgets (encourage user to set them)
   let budgetScore = 0;
   if (budgets.length > 0) {
     const startOfMonth = new Date(now).setDate(1);
@@ -71,12 +77,17 @@ export function computeHealthScore(
   const uniqueCats = new Set(recent.map((tx) => tx.categoryId)).size;
   const diversityScore = clamp(Math.round((uniqueCats / 5) * 20), 0, 20);
 
-  // When no budgets, scale up other components so max is still ~100
-  // savingsScore + frequencyScore + diversityScore = 70 max → scale to 100
-  const rawScore = budgets.length === 0
-    ? Math.round((savingsScore + frequencyScore + diversityScore) / 70 * 100)
-    : savingsScore + budgetScore + frequencyScore + diversityScore;
+  // Scale score based on which components have data available
+  // If no income data: max is 40 (frequency 20 + diversity 20) + budget 30 if set
+  // If income data: max is 70 (savings 30 + freq 20 + div 20) + budget 30 if set
+  const maxPossible =
+    (hasIncomeData ? 30 : 0) +
+    (budgets.length > 0 ? 30 : 0) +
+    20 + 20;
 
+  const actualScore = (hasIncomeData ? savingsScore : 0) + budgetScore + frequencyScore + diversityScore;
+
+  const rawScore = maxPossible > 0 ? Math.round((actualScore / maxPossible) * 100) : 0;
   const score = clamp(rawScore, 0, 100);
 
   const label =
@@ -96,6 +107,7 @@ export function computeHealthScore(
     frequencyScore,
     diversityScore,
     savingsRate,
+    hasIncomeData,
     label,
   };
 }

@@ -37,12 +37,30 @@ export function DynamicIcon({
     const key = name.slice(4);
     const entry = findBrandIcon(key);
     if (entry !== undefined) {
-      const faColor = color ?? (typeof style?.color === "string" ? style.color : undefined) ?? "currentColor";
+      const resolvedColor =
+        color ?? (typeof style?.color === "string" ? style.color : undefined) ?? "currentColor";
+
+      // Lucide-backed platform entry
+      if (entry.iconType === "lucide") {
+        const LucideComp = lucideMap[entry.lucideName] ?? lucideMap["CircleHelp"];
+        if (!LucideComp) return null;
+        return (
+          <LucideComp
+            size={size}
+            color={resolvedColor}
+            className={className}
+            style={style}
+            strokeWidth={strokeWidth}
+          />
+        );
+      }
+
+      // FA-backed brand entry
       return (
         <FontAwesomeIcon
           icon={entry.icon}
           className={className}
-          style={{ width: numSize, height: numSize, color: faColor, flexShrink: 0, ...style }}
+          style={{ width: numSize, height: numSize, color: resolvedColor, flexShrink: 0, ...style }}
         />
       );
     }
@@ -100,4 +118,3 @@ export function getIsaxIconNames(): string[] {
     return typeof val === "function" && k[0] !== undefined && k[0] === k[0].toUpperCase();
   });
 }
-
