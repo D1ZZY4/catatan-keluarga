@@ -15,6 +15,15 @@ const SALT_BYTES = 16;
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
+/** Copy a TextEncoder result into an ArrayBuffer-backed Uint8Array (strict BufferSource). */
+function utf8(text: string): Uint8Array<ArrayBuffer> {
+  const src = enc.encode(text);
+  const buf = new ArrayBuffer(src.byteLength);
+  const out = new Uint8Array(buf);
+  out.set(src);
+  return out;
+}
+
 export function toBase64(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let s = "";
