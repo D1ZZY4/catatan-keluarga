@@ -2,8 +2,10 @@ import React, { useCallback, useState } from "react";
 import { Delete } from "lucide-react";
 import { BottomSheet } from "@/shared/components/BottomSheet";
 import { useToast } from "@/shared/hooks/useToast";
-import { formatCurrency } from "@/shared/utils/format";
+import { create, all } from "mathjs";
 import { cn } from "@/shared/utils/misc";
+
+const math = create(all ?? {}, { number: "number" });
 
 interface HistoryEntry {
   expression: string;
@@ -25,7 +27,7 @@ function safeEval(expr: string): number | null {
       .replace(/÷/g, "/")
       .replace(/[^0-9+\-*/.()%]/g, "");
     if (!cleaned) return null;
-    const result = Function(`"use strict"; return (${cleaned})`)() as unknown;
+    const result: unknown = math.evaluate(cleaned);
     if (typeof result !== "number" || !isFinite(result)) return null;
     return result;
   } catch {

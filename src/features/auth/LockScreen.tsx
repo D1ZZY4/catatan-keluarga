@@ -106,7 +106,7 @@ export function LockScreen() {
         <div
           className={cn(
             "flex gap-4 transition-transform",
-            shaking && "animate-[shake_0.4s_ease-in-out]",
+            shaking && "animate-shake",
           )}
         >
           {Array.from({ length: 6 }, (_, i) => (

@@ -14,40 +14,42 @@ const NAV_ITEMS = [
 export function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-bg-surface border-t border-bg-card safe-bottom"
+      className="fixed bottom-0 left-0 right-0 z-40 safe-bottom"
       aria-label="Navigasi utama"
     >
-      <div className="flex items-center justify-around h-[58px] px-1">
-        {NAV_ITEMS.map(({ to, label, Icon, exact }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={exact}
-            className="flex-1 flex items-center justify-center min-h-[44px]"
-            aria-label={label}
-          >
-            {({ isActive }) => (
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200",
-                  isActive
-                    ? "bg-accent-primary/15 text-accent-primary"
-                    : "text-text-muted hover:text-text-primary active:scale-90",
-                )}
-              >
-                <Icon
-                  size={isActive ? 18 : 20}
-                  strokeWidth={isActive ? 2.5 : 1.75}
-                />
-                {isActive && (
-                  <span className="text-xs font-semibold leading-none whitespace-nowrap">
-                    {label}
-                  </span>
-                )}
-              </div>
-            )}
-          </NavLink>
-        ))}
+      <div className="mx-3 mb-2 bg-bg-surface/95 backdrop-blur-md rounded-2xl border border-bg-card shadow-[0_4px_24px_rgba(26,24,20,0.10)]">
+        <div className="flex items-center justify-around h-[56px] px-1">
+          {NAV_ITEMS.map(({ to, label, Icon, exact }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={exact}
+              className="flex-1 flex items-center justify-center min-h-[44px]"
+              aria-label={label}
+            >
+              {({ isActive }) => (
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200",
+                    isActive
+                      ? "bg-accent-primary/15 text-accent-primary"
+                      : "text-text-muted active:scale-90",
+                  )}
+                >
+                  <Icon
+                    size={isActive ? 17 : 20}
+                    strokeWidth={isActive ? 2.5 : 1.75}
+                  />
+                  {isActive && (
+                    <span className="text-[11px] font-semibold leading-none whitespace-nowrap">
+                      {label}
+                    </span>
+                  )}
+                </div>
+              )}
+            </NavLink>
+          ))}
+        </div>
       </div>
     </nav>
   );
