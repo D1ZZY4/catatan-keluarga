@@ -10,9 +10,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@capacitor/android": "7",
-    "@capacitor/cli": "7",
-    "@capacitor/core": "7",
+    "@capacitor/android": "^7.6.6",
+    "@capacitor/cli": "^7.6.6",
+    "@capacitor/core": "^7.6.6",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
