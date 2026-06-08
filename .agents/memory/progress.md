@@ -31,14 +31,26 @@
 - [x] Gap 4: Import CSV Bank di BackupPage — parser BCA/Mandiri/BNI/BRI/generic, preview sheet dengan baris pilihan, wallet selector, konfirmasi
 - [x] Gap 5: Transaksi Berulang Otomatis — Dexie version 3 `recurring_transactions` table, `useRecurringTransactions` hook, `RecurringDueSheet` (konfirmasi saat jatuh tempo), `RecurringPage` CRUD (tambah/toggle aktif/hapus), rute `/settings/recurring`, link di SettingsPage
 
+## Spec Bug-Hunt §30–§31 (Sesi Terbaru)
+
+- [x] KRITIS: Bundle 6.52 MB main chunk → manualChunks di vite.config.ts + maximumFileSizeToCacheInBytes:5MB; main index sekarang 19.98 kB gzipped
+- [x] TX_TYPES filter chips (Semua/Pemasukan/Pengeluaran/Transfer) tidak dirender di TransactionPage header → ditambahkan sebagai Baris 2 chips; type filter dihapus dari FilterSheet (hanya Dompet)
+- [x] activeFilterCount menghitung txType (tidak sesuai spec) → sekarang hanya menghitung walletId
+- [x] Dark schedule hanya dicek saat SettingsPage terbuka → global interval 60s ditambahkan di AppShell.tsx
+- [x] AppShell loading skeleton pakai h-screen (bukan h-[100dvh]) → diperbaiki
+- [x] OfflinePill component tidak diintegrasikan → sekarang dipakai di WalletPage.tsx (mengganti inline WifiOff indicator)
+
 ## Catatan
 - build-release/BUILD-INSTRUCTIONS.md tersedia sebagai pengganti APK
-- TypeScript: 0 error (verified post-sesi)
-- Production build: ✓ clean (26s)
-- Bundle main: 114.94 KB gzipped (batas spec 120 KB ✓)
-- PWA: 49 entries precached
+- TypeScript: 0 error (verified post-§30 sesi)
+- Production build: ✓ clean (30s), 4593 modules
+- Bundle main index: 19.98 kB gzipped (batas spec 120 KB ✓✓)
+- PWA: 42 entries precached, 7652 KB total
 - §28/§29 audit clean: no console.log, no `any`, no `100vh`, no `#FFFFFF`
-- BottomSheet: role="dialog" + aria-modal="true" + aria-labelledby ✓
+- BottomSheet: role="dialog" + aria-modal="true" + aria-labelledby + focus trap ✓
 - All routes lazy-loaded ✓
 - Fonts: DM Sans + Instrument Serif + JetBrains Mono, display=swap via Google Fonts ✓
 - index.html: lang="id", viewport-fit=cover, theme-color, apple-mobile-web-app-capable ✓
+- safe-area-inset: BottomNav, FAB, AppBar, OnboardingPage, styles.css ✓
+- data-tour attributes: greeting, wallets, fab, navbar, budget, calculator ✓
+- GuidedHomeTour: confetti on completion, focus restore ✓

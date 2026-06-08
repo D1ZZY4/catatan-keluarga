@@ -103,6 +103,25 @@ export function AppShell() {
     void loadDisplaySettings();
   }, []);
 
+  // Global dark schedule — runs every 60s regardless of which page is open
+  useEffect(() => {
+    const applySchedule = () => {
+      const enabled = localStorage.getItem("dark_schedule_enabled") === "true";
+      if (!enabled) return;
+      const start = parseInt(localStorage.getItem("dark_schedule_start") ?? "20", 10);
+      const end = parseInt(localStorage.getItem("dark_schedule_end") ?? "6", 10);
+      const hour = new Date().getHours();
+      const isDark = start <= end
+        ? hour >= start && hour < end
+        : hour >= start || hour < end;
+      document.documentElement.classList.toggle("dark", isDark);
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+    applySchedule();
+    const id = setInterval(applySchedule, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     if (state.status !== "unlocked") return;
     if (notifyRanRef.current) return;
@@ -118,7 +137,7 @@ export function AppShell() {
 
   if (state.status === "initializing") {
     return (
-      <div className="flex h-screen items-center justify-center bg-bg-page">
+      <div className="flex h-[100dvh] items-center justify-center bg-bg-page">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-accent-primary flex items-center justify-center shadow-fab">
             <span className="text-white font-bold text-lg">CK</span>

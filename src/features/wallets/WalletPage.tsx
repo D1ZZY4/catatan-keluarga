@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Archive, ChevronDown, ChevronRight, Copy, GripVertical, Pencil, Plus, RefreshCw, Trash2 as Trash, Undo2, WifiOff } from "lucide-react";
+import { Archive, ChevronDown, ChevronRight, Copy, GripVertical, Pencil, Plus, RefreshCw, Trash2 as Trash, Undo2 } from "lucide-react";
+import { OfflinePill } from "@/shared/components/OfflinePill";
 import { useNavigate } from "react-router-dom";
 import { useAppData, computeWalletBalance } from "@/app/AppDataContext";
 import { WalletCard } from "@/shared/components/WalletCard";
@@ -232,10 +233,7 @@ export function WalletPage() {
         {nonBaseCurrencies.length > 0 && (
           <div className="flex items-center gap-1.5 mt-1">
             {stale ? (
-              <div className="flex items-center gap-1 text-[10px] text-warning">
-                <WifiOff size={10} />
-                <span>Mode Offline. Harga tidak diperbarui.</span>
-              </div>
+              <OfflinePill lastUpdated={lastUpdated} />
             ) : lastUpdated !== null ? (
               <p className="text-[10px] text-text-muted">
                 Harga diperbarui {formatRelative(lastUpdated)}

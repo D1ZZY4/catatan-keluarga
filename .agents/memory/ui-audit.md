@@ -39,6 +39,13 @@
 - [x] Form transaksi judul hardcoded "Catat Transaksi" → sekarang menampilkan nama tipe ("Pengeluaran", "Pemasukan", dll.)
 - [x] Kartu dompet di beranda tidak bisa diklik → sekarang wrapped Link ke /wallets/:id
 
+### Diperbaiki (§30–§31 Bug-Hunt Sesi Ini)
+- [x] Build KRITIS: main chunk 6.52 MB → manualChunks Vite (vendor-lucide, vendor-iconsax, vendor-react, vendor-dexie, dll.) + Workbox 5MB limit; main index 19.98 kB gzipped
+- [x] TX_TYPES chips tidak dirender di header TransactionPage → chip row ditambahkan; filter sheet sekarang hanya Dompet
+- [x] Dark schedule global: AppShell.tsx interval 60s, tidak bergantung pada SettingsPage terbuka
+- [x] AppShell loading state pakai h-screen → diperbaiki ke h-[100dvh]
+- [x] OfflinePill komponen ada tapi tidak dipakai → diintegrasikan ke WalletPage.tsx (stale mode)
+
 ### Status Terbuka
 - Chunk DynamicIcon (Lucide) 165 KB gzipped — besar tapi lazy-loaded, tidak mempengaruhi initial load
 - Chunk Tesseract.js 190 KB gzipped — inherently besar karena WebAssembly OCR engine

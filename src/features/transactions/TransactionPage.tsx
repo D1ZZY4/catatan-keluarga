@@ -210,9 +210,7 @@ export function TransactionPage() {
     { id: "transfer", label: "Transfer" },
   ];
 
-  const activeFilterCount =
-    (filter.txType !== "all" ? 1 : 0) +
-    (filter.walletId !== "all" ? 1 : 0);
+  const activeFilterCount = filter.walletId !== "all" ? 1 : 0;
 
   return (
     <>
@@ -259,6 +257,24 @@ export function TransactionPage() {
                 )}
               >
                 {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Baris 2: Filter Jenis */}
+          <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar">
+            {TX_TYPES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setFilter((f) => ({ ...f, txType: t.id }))}
+                className={cn(
+                  "flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all",
+                  filter.txType === t.id
+                    ? "bg-accent-primary text-white"
+                    : "bg-bg-card text-text-muted",
+                )}
+              >
+                {t.label}
               </button>
             ))}
           </div>
@@ -460,29 +476,9 @@ export function TransactionPage() {
         </div>
       </BottomSheet>
 
-      {/* Filter sheet */}
-      <BottomSheet isOpen={filterOpen} onClose={() => setFilterOpen(false)} title="Filter">
+      {/* Filter sheet — hanya berisi pilihan Dompet sesuai spec §9 */}
+      <BottomSheet isOpen={filterOpen} onClose={() => setFilterOpen(false)} title="Filter Dompet">
         <div className="p-4 space-y-5 pb-8">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Jenis Transaksi</p>
-            <div className="grid grid-cols-2 gap-2">
-              {TX_TYPES.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setFilter((f) => ({ ...f, txType: t.id }))}
-                  className={cn(
-                    "flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                    filter.txType === t.id
-                      ? "bg-accent-primary/10 text-accent-primary ring-1 ring-accent-primary/30"
-                      : "bg-bg-card text-text-primary",
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="space-y-2">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Dompet</p>
             <div className="flex flex-col gap-1">
@@ -507,7 +503,7 @@ export function TransactionPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={() => {
-                  setFilter((f) => ({ ...f, txType: "all", walletId: "all" }));
+                  setFilter((f) => ({ ...f, walletId: "all" }));
                   setFilterOpen(false);
                 }}
                 className="flex-1 py-3 bg-bg-card text-text-muted rounded-2xl text-sm font-semibold"

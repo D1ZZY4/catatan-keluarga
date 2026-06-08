@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.frankfurter\.app\//,
@@ -88,5 +89,22 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "es2022",
     sourcemap: mode === "development",
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string): string | undefined {
+          if (id.includes("node_modules/lucide-react")) return "vendor-lucide";
+          if (id.includes("node_modules/iconsax-react")) return "vendor-iconsax";
+          if (id.includes("node_modules/react-dom")) return "vendor-react-dom";
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-router")) return "vendor-react";
+          if (id.includes("node_modules/dexie")) return "vendor-dexie";
+          if (id.includes("node_modules/mathjs") || id.includes("node_modules/fraction.js") || id.includes("node_modules/complex.js") || id.includes("node_modules/decimal.js")) return "vendor-math";
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-")) return "vendor-recharts";
+          if (id.includes("node_modules/tesseract")) return "vendor-tesseract";
+          if (id.includes("node_modules")) return "vendor-misc";
+          return undefined;
+        },
+      },
+    },
   },
 }));
