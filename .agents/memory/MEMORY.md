@@ -3,7 +3,7 @@
 - [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono); old Sora/Space Grotesk/DM Serif Display were wrong
 - [Calculator architecture](calculator-arch.md) — CalculatorContext wraps entire app; AppBar uses useCalculator() to open it; no fixed-positioned button
 - [Onboarding biometric redirect fix](onboarding-biometric.md) — must block redirect with parent-level state flag BEFORE calling completeOnboarding; lifting state up is required
-- [Progress & milestones](progress.md) — M0–M18 done; TS clean, 35 tests passing, all spec violations fixed
+- [Progress & milestones](progress.md) — M0–M19 done + sesi audit §28/§29 selesai; TS clean, semua spec gap ditutup
 - [Architecture decisions](architecture.md) — Context+useReducer, AES-GCM, font stack, exactOptionalPropertyTypes patterns
 - [UI audit findings](ui-audit.md) — all known UI bugs fixed (hasWebAuthn, Cell key, dead code, favicon, iOS PWA meta)
 - [Build & APK](build-log.md) — APK via Bubblewrap TWA; see build-release/BUILD-INSTRUCTIONS.md

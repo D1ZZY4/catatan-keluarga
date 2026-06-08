@@ -3,6 +3,7 @@ import { BottomSheet } from "@/shared/components/BottomSheet";
 import { useAuth } from "@/app/AuthContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { db } from "@/shared/db/db";
+import { hashPin } from "@/shared/crypto/crypto";
 
 interface DeleteAllSheetProps {
   isOpen: boolean;
@@ -25,9 +26,23 @@ export function DeleteAllSheet({ isOpen, onClose }: DeleteAllSheetProps) {
     onClose();
   };
 
-  const handleDelete = async () => {
+  const verifyAndDelete = async () => {
     setLoading(true);
     try {
+      if (hasPin) {
+        const saltRow = await db.auth.get("salt");
+        const storedHashRow = await db.auth.get("pinHash");
+        if (!saltRow || !storedHashRow) {
+          showToast("Gagal memverifikasi PIN.", "error");
+          return;
+        }
+        const enteredHash = await hashPin(pin, saltRow.value);
+        if (enteredHash !== storedHashRow.value) {
+          showToast("PIN salah. Coba lagi.", "error");
+          setPin("");
+          return;
+        }
+      }
       await db.wallets.clear();
       await db.transactions.clear();
       await db.categories.clear();
@@ -80,7 +95,7 @@ export function DeleteAllSheet({ isOpen, onClose }: DeleteAllSheetProps) {
                 if (hasPin) {
                   setStep("pin");
                 } else {
-                  void handleDelete();
+                  void verifyAndDelete();
                 }
               }}
               disabled={confirmText !== "HAPUS" || loading}
@@ -106,7 +121,7 @@ export function DeleteAllSheet({ isOpen, onClose }: DeleteAllSheetProps) {
               />
             </div>
             <button
-              onClick={() => void handleDelete()}
+              onClick={() => void verifyAndDelete()}
               disabled={pin.length < 4 || loading}
               className="w-full py-4 bg-danger text-white rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform disabled:opacity-40"
             >

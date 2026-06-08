@@ -9,6 +9,7 @@ import { FAB, type FABAction } from "@/shared/components/FAB";
 import { ToastContainer } from "@/shared/components/Toast";
 import { SkeletonCard } from "@/shared/components/SkeletonCard";
 import { notificationService } from "@/shared/services/NotificationService";
+import { loadDisplaySettings } from "@/shared/hooks/useDisplaySettings";
 import type { Transaction, TransactionType } from "@/shared/types";
 import type { OCRConfirmedData } from "@/features/ocr/OCRScanner";
 
@@ -85,6 +86,10 @@ export function AppShell() {
         ...(data.date !== undefined ? { date: data.date } : {}),
       },
     });
+  }, []);
+
+  useEffect(() => {
+    void loadDisplaySettings();
   }, []);
 
   useEffect(() => {

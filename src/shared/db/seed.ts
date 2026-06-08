@@ -37,6 +37,7 @@ const DEFAULT_WALLETS: Array<Omit<Wallet, "id" | "createdAt">> = [
     currency: "IDR",
     initialBalance: 0,
     isArchived: false,
+    sortOrder: 0,
   },
   {
     name: "Bank",
@@ -45,6 +46,7 @@ const DEFAULT_WALLETS: Array<Omit<Wallet, "id" | "createdAt">> = [
     currency: "IDR",
     initialBalance: 0,
     isArchived: false,
+    sortOrder: 1,
   },
   {
     name: "Tabungan",
@@ -53,6 +55,7 @@ const DEFAULT_WALLETS: Array<Omit<Wallet, "id" | "createdAt">> = [
     currency: "IDR",
     initialBalance: 0,
     isArchived: false,
+    sortOrder: 2,
   },
 ];
 

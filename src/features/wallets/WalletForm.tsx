@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BottomSheet } from "@/shared/components/BottomSheet";
 import { IconPicker } from "@/shared/components/IconPicker";
 import { ColorPicker } from "@/shared/components/ColorPicker";
@@ -7,6 +7,7 @@ import { useAppData } from "@/app/AppDataContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { evaluateAmount } from "@/shared/utils/math";
 import { getCurrencyInfo } from "@/shared/data/currencies";
+import { getSetting } from "@/shared/db/db";
 import { cn } from "@/shared/utils/misc";
 import type { Wallet } from "@/shared/types";
 
@@ -32,6 +33,13 @@ export function WalletForm({ isOpen, onClose, editWallet }: WalletFormProps) {
   );
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (editWallet) return;
+    void getSetting<string>("baseCurrency").then((c) => {
+      if (c) setCurrency(c);
+    });
+  }, [editWallet]);
 
   const currencyInfo = getCurrencyInfo(currency);
 

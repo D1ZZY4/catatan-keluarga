@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AppBar } from "@/shared/components/AppBar";
 import { EmptyState, StatsEmptyIllustration } from "@/shared/components/EmptyState";
 import { useAppData } from "@/app/AppDataContext";
@@ -11,7 +11,7 @@ import { OverviewTab } from "./OverviewTab";
 import { DebtTab } from "./DebtTab";
 
 export function StatsPage() {
-  const { transactions } = useAppData();
+  const { transactions, wallets } = useAppData();
   const [period, setPeriod] = useState<Period>("month");
   const [activeTab, setActiveTab] = useState<StatsTab>("overview");
   const [customStart, setCustomStart] = useState<number>(() => {
@@ -25,6 +25,18 @@ export function StatsPage() {
     d.setHours(23, 59, 59, 999);
     return d.getTime();
   });
+  const [selectedWalletIds, setSelectedWalletIds] = useState<string[]>([]);
+
+  const activeWallets = useMemo(
+    () => wallets.filter((w) => !w.isArchived),
+    [wallets],
+  );
+
+  const toggleWallet = (id: string) => {
+    setSelectedWalletIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
   if (transactions.length === 0) {
     return (
@@ -101,9 +113,40 @@ export function StatsPage() {
             </div>
           )}
 
+          {activeWallets.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-4 py-2.5 no-scrollbar border-b border-bg-card">
+              <button
+                onClick={() => setSelectedWalletIds([])}
+                className={cn(
+                  "flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all",
+                  selectedWalletIds.length === 0
+                    ? "bg-accent-secondary text-white"
+                    : "bg-bg-card text-text-muted",
+                )}
+              >
+                Semua
+              </button>
+              {activeWallets.map((w) => (
+                <button
+                  key={w.id}
+                  onClick={() => toggleWallet(w.id)}
+                  className={cn(
+                    "flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all",
+                    selectedWalletIds.includes(w.id)
+                      ? "bg-accent-secondary text-white"
+                      : "bg-bg-card text-text-muted",
+                  )}
+                >
+                  {w.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           <OverviewTab
             period={period}
             {...(period === "custom" ? { customStart, customEnd } : {})}
+            {...(selectedWalletIds.length > 0 ? { walletIds: selectedWalletIds } : {})}
           />
         </>
       )}

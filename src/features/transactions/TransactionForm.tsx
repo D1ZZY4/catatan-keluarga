@@ -115,7 +115,8 @@ export function TransactionForm({
   const activeWallets = wallets.filter((w) => !w.isArchived);
 
   const hasPrefill = prefill !== undefined && (prefill.amount !== undefined || prefill.note !== undefined);
-  const [step, setStep] = useState<Step>(editTransaction ? 3 : hasPrefill ? 3 : 1);
+  // skip step 1 (type selection) — type is always pre-set by the caller (quick actions / speed dial)
+  const [step, setStep] = useState<Step>(editTransaction ? 3 : hasPrefill ? 3 : 2);
   const [form, setForm] = useState<FormState>(() => {
     const def: FormState = {
       type: editTransaction?.type ?? defaultType,
@@ -232,7 +233,9 @@ export function TransactionForm({
               <button
                 key={opt.type}
                 onClick={() => {
-                  update("type", opt.type);
+                  const isInc = ["income", "debt_received", "savings_withdraw", "invest_sell"].includes(opt.type);
+                  const firstCat = categories.find((c) => c.type === (isInc ? "income" : "expense") || c.type === "both");
+                  setForm((s) => ({ ...s, type: opt.type, categoryId: firstCat?.id ?? "" }));
                   setStep(2);
                 }}
                 className="flex items-center gap-2 px-3 py-3 rounded-xl bg-bg-card text-sm font-medium text-text-primary active:scale-95 transition-transform"

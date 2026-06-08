@@ -3,7 +3,10 @@ import {
   Archive,
   Bell,
   BookOpen,
+  Calendar,
   Check,
+  ChevronRight,
+  CircleDollarSign,
   Fingerprint,
   Layers,
   Lock,
@@ -13,6 +16,7 @@ import {
   Sun,
   Tag,
   Trash2,
+  Type,
   User,
 } from "lucide-react";
 import { AppBar } from "@/shared/components/AppBar";
@@ -24,10 +28,15 @@ import { cn } from "@/shared/utils/misc";
 import { SettingRow, SectionHeader, Toggle } from "./SettingsComponents";
 import { PINSheet } from "./PINSheet";
 import { DeleteAllSheet } from "./DeleteAllSheet";
+import { useDisplaySettings, type TextSizeKey } from "@/shared/hooks/useDisplaySettings";
+import type { DateFormatKey } from "@/shared/utils/format";
+import { PINNED_CURRENCIES } from "@/shared/data/currencies";
 
 export function SettingsPage() {
   const { state, registerWebAuthn, unregisterWebAuthn, lock, refreshSettings } = useAuth();
   const { showToast } = useToast();
+  const { dateFormat, textSize, baseCurrency, updateDateFormat, updateTextSize, updateBaseCurrency } =
+    useDisplaySettings();
 
   const [pinSheet, setPinSheet] = useState<"setup" | "change" | "remove" | null>(null);
   const [darkMode, setDarkMode] = useState(() =>
@@ -40,6 +49,9 @@ export function SettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(() =>
     "Notification" in window && Notification.permission === "granted",
   );
+  const [dateFormatOpen, setDateFormatOpen] = useState(false);
+  const [textSizeOpen, setTextSizeOpen] = useState(false);
+  const [baseCurrencyOpen, setBaseCurrencyOpen] = useState(false);
 
   const isUnlocked = state.status === "unlocked";
   const userName = isUnlocked ? state.userName : "";
@@ -204,6 +216,42 @@ export function SettingsPage() {
             right={<Toggle value={darkMode} />}
             onClick={toggleTheme}
           />
+          <SettingRow
+            icon={<CircleDollarSign size={18} className="text-success" />}
+            label="Mata Uang Dasar"
+            description="Mata uang default untuk dompet baru"
+            right={
+              <span className="flex items-center gap-1 text-xs text-text-muted">
+                {baseCurrency}
+                <ChevronRight size={14} />
+              </span>
+            }
+            onClick={() => setBaseCurrencyOpen(true)}
+          />
+          <SettingRow
+            icon={<Calendar size={18} className="text-accent-secondary" />}
+            label="Format Tanggal"
+            description="Tampilan tanggal di seluruh aplikasi"
+            right={
+              <span className="flex items-center gap-1 text-xs text-text-muted">
+                {dateFormat === "id" ? "dd/MMM/yyyy" : dateFormat === "us" ? "MMM dd, yyyy" : "yyyy-MM-dd"}
+                <ChevronRight size={14} />
+              </span>
+            }
+            onClick={() => setDateFormatOpen(true)}
+          />
+          <SettingRow
+            icon={<Type size={18} className="text-accent-primary" />}
+            label="Ukuran Teks"
+            description="Ukuran huruf di seluruh aplikasi"
+            right={
+              <span className="flex items-center gap-1 text-xs text-text-muted">
+                {textSize === "sm" ? "Kecil" : textSize === "lg" ? "Besar" : "Normal"}
+                <ChevronRight size={14} />
+              </span>
+            }
+            onClick={() => setTextSizeOpen(true)}
+          />
         </div>
 
         <SectionHeader title="Notifikasi" />
@@ -310,6 +358,79 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`}
           </p>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet isOpen={baseCurrencyOpen} onClose={() => setBaseCurrencyOpen(false)} title="Mata Uang Dasar">
+        <div className="pb-6">
+          {PINNED_CURRENCIES.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => { void updateBaseCurrency(c.code); setBaseCurrencyOpen(false); showToast("Mata uang dasar diperbarui", "success"); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors",
+                baseCurrency === c.code ? "text-accent-primary bg-accent-primary/5" : "text-text-primary active:bg-bg-card",
+              )}
+            >
+              <span className="text-lg flex-shrink-0">{c.flag}</span>
+              <span className="flex-1 text-left">{c.code} — {c.name}</span>
+              {baseCurrency === c.code && <Check size={16} className="text-accent-primary" />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet isOpen={dateFormatOpen} onClose={() => setDateFormatOpen(false)} title="Format Tanggal">
+        <div className="pb-6">
+          {(
+            [
+              { key: "id" as DateFormatKey, label: "Indonesia", example: "12 Jan 2025" },
+              { key: "us" as DateFormatKey, label: "Amerika Serikat", example: "Jan 12, 2025" },
+              { key: "iso" as DateFormatKey, label: "ISO 8601", example: "2025-01-12" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => { void updateDateFormat(opt.key); setDateFormatOpen(false); showToast("Format tanggal diperbarui", "success"); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors",
+                dateFormat === opt.key ? "text-accent-primary bg-accent-primary/5" : "text-text-primary active:bg-bg-card",
+              )}
+            >
+              <span className="flex-1 text-left">
+                {opt.label}
+                <span className="block text-xs text-text-muted font-normal">{opt.example}</span>
+              </span>
+              {dateFormat === opt.key && <Check size={16} className="text-accent-primary" />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet isOpen={textSizeOpen} onClose={() => setTextSizeOpen(false)} title="Ukuran Teks">
+        <div className="pb-6">
+          {(
+            [
+              { key: "sm" as TextSizeKey, label: "Kecil", sub: "14px — untuk layar kecil" },
+              { key: "md" as TextSizeKey, label: "Normal", sub: "16px — standar" },
+              { key: "lg" as TextSizeKey, label: "Besar", sub: "18px — lebih mudah dibaca" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => { void updateTextSize(opt.key); setTextSizeOpen(false); showToast("Ukuran teks diperbarui", "success"); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors",
+                textSize === opt.key ? "text-accent-primary bg-accent-primary/5" : "text-text-primary active:bg-bg-card",
+              )}
+            >
+              <span className="flex-1 text-left">
+                {opt.label}
+                <span className="block text-xs text-text-muted font-normal">{opt.sub}</span>
+              </span>
+              {textSize === opt.key && <Check size={16} className="text-accent-primary" />}
+            </button>
+          ))}
         </div>
       </BottomSheet>
     </>

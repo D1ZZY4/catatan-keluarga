@@ -11,13 +11,13 @@ interface SparklineProps {
 
 function Sparkline({ data, color }: SparklineProps) {
   if (data.length < 2) {
-    return <div className="w-[60px] h-[20px]" />;
+    return <div className="w-[80px] h-[32px]" />;
   }
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const W = 60;
-  const H = 20;
+  const W = 80;
+  const H = 32;
   const pts = data
     .map((v, i) => {
       const x = (i / (data.length - 1)) * W;

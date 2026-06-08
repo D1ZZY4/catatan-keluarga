@@ -2,6 +2,18 @@
  * Locale formatters — Bahasa Indonesia first.
  */
 
+export type DateFormatKey = "id" | "us" | "iso";
+
+let _dateFormat: DateFormatKey = "id";
+
+export function setDateFormat(fmt: DateFormatKey): void {
+  _dateFormat = fmt;
+}
+
+export function getDateFormat(): DateFormatKey {
+  return _dateFormat;
+}
+
 const KNOWN_FIAT_FRACTION_DIGITS: Record<string, number> = {
   IDR: 0,
   JPY: 0,
@@ -37,9 +49,17 @@ export function formatNumber(value: number, fractionDigits = 0): string {
 }
 
 export function formatDate(timestampMs: number): string {
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(
-    new Date(timestampMs),
-  );
+  const d = new Date(timestampMs);
+  if (_dateFormat === "us") {
+    return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(d);
+  }
+  if (_dateFormat === "iso") {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(d);
 }
 
 export function formatDateTime(timestampMs: number): string {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Archive, ChevronDown, ChevronRight, Copy, Pencil, Plus, RefreshCw, Trash2 as Trash, Undo2, WifiOff } from "lucide-react";
+import { Archive, ChevronDown, ChevronRight, Copy, GripVertical, Pencil, Plus, RefreshCw, Trash2 as Trash, Undo2, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppData, computeWalletBalance } from "@/app/AppDataContext";
 import { WalletCard } from "@/shared/components/WalletCard";
@@ -10,8 +10,10 @@ import { AppBar } from "@/shared/components/AppBar";
 import { WalletForm } from "./WalletForm";
 import { useToast } from "@/shared/hooks/useToast";
 import { usePrices } from "@/shared/hooks/usePrices";
+import { useDragReorder } from "./useDragReorder";
 import { formatCurrency, formatRelative } from "@/shared/utils/format";
 import { countTransactionsByWallet } from "@/shared/db/repo";
+import { DynamicIcon } from "@/shared/components/DynamicIcon";
 import { cn } from "@/shared/utils/misc";
 import type { Wallet } from "@/shared/types";
 
@@ -64,17 +66,35 @@ export function WalletPage() {
   const [editWallet, setEditWallet] = useState<Wallet | undefined>();
   const [actionWallet, setActionWallet] = useState<Wallet | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [reorderMode, setReorderMode] = useState(false);
 
-  const activeWallets = wallets.filter((w) => !w.isArchived);
+  const activeWallets = useMemo(
+    () =>
+      wallets
+        .filter((w) => !w.isArchived)
+        .sort((a, b) => (a.sortOrder ?? a.createdAt) - (b.sortOrder ?? b.createdAt)),
+    [wallets],
+  );
   const archivedWallets = wallets.filter((w) => w.isArchived);
-  const netWorth = wallets
-    .filter((w) => !w.isArchived)
-    .reduce((sum, w) => sum + computeWalletBalance(w, transactions), 0);
+
+  const netWorth = activeWallets.reduce(
+    (sum, w) => sum + computeWalletBalance(w, transactions),
+    0,
+  );
+
+  const handleReorderSave = async (newOrder: Wallet[]) => {
+    await Promise.all(
+      newOrder.map((w, i) => updateWallet({ ...w, sortOrder: i })),
+    );
+  };
+
+  const { reordered, drag, handlePointerDown, handlePointerMove, handlePointerUp } =
+    useDragReorder(activeWallets, (newOrder) => { void handleReorderSave(newOrder); });
 
   const sparklines = useMemo(() => {
     const result: Record<string, number[]> = {};
     const now = new Date();
-    const DAYS = 30;
+    const DAYS = 7;
     for (const w of activeWallets) {
       const points: number[] = [];
       for (let d = DAYS - 1; d >= 0; d--) {
@@ -163,7 +183,20 @@ export function WalletPage() {
         title="Dompet"
         actions={
           <div className="flex items-center gap-2">
-            {nonBaseCurrencies.length > 0 && (
+            {activeWallets.length > 1 && (
+              <button
+                onClick={() => setReorderMode((v) => !v)}
+                className={cn(
+                  "px-3 h-8 rounded-full text-xs font-semibold transition-colors",
+                  reorderMode
+                    ? "bg-accent-primary text-white"
+                    : "bg-bg-card text-text-muted",
+                )}
+              >
+                {reorderMode ? "Selesai" : "Atur Urutan"}
+              </button>
+            )}
+            {nonBaseCurrencies.length > 0 && !reorderMode && (
               <button
                 onClick={() => void refresh()}
                 className={cn(
@@ -178,13 +211,15 @@ export function WalletPage() {
                 />
               </button>
             )}
-            <button
-              onClick={() => { setEditWallet(undefined); setFormOpen(true); }}
-              className="w-9 h-9 rounded-full bg-accent-primary flex items-center justify-center shadow-fab active:scale-90 transition-transform"
-              aria-label="Tambah dompet"
-            >
-              <Plus size={18} className="text-white" />
-            </button>
+            {!reorderMode && (
+              <button
+                onClick={() => { setEditWallet(undefined); setFormOpen(true); }}
+                className="w-9 h-9 rounded-full bg-accent-primary flex items-center justify-center shadow-fab active:scale-90 transition-transform"
+                aria-label="Tambah dompet"
+              >
+                <Plus size={18} className="text-white" />
+              </button>
+            )}
           </div>
         }
       />
@@ -213,10 +248,7 @@ export function WalletPage() {
       <div className="px-4 py-4 space-y-3">
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
           </div>
         ) : activeWallets.length === 0 ? (
           <EmptyState
@@ -228,6 +260,45 @@ export function WalletPage() {
               onClick: () => { setEditWallet(undefined); setFormOpen(true); },
             }}
           />
+        ) : reorderMode ? (
+          <div data-reorder-list className="space-y-2">
+            {reordered.map((w, i) => {
+              const isDragging = drag?.dragIndex === i;
+              const isOver = drag !== null && drag.overIndex === i && drag.dragIndex !== i;
+              return (
+                <div
+                  key={w.id}
+                  className={cn(
+                    "flex items-center gap-3 bg-bg-card rounded-2xl px-3 py-3 shadow-card transition-opacity",
+                    isDragging && "opacity-50",
+                    isOver && "ring-2 ring-accent-primary/40",
+                  )}
+                >
+                  <div
+                    className="p-2 cursor-grab active:cursor-grabbing touch-none"
+                    onPointerDown={handlePointerDown(i)}
+                    onPointerMove={handlePointerMove(i)}
+                    onPointerUp={handlePointerUp(i)}
+                    aria-label="Seret untuk mengubah urutan"
+                  >
+                    <GripVertical size={18} className="text-text-muted" />
+                  </div>
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${w.color}22` }}
+                  >
+                    <DynamicIcon name={w.icon} size={18} style={{ color: w.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-primary truncate">{w.name}</p>
+                    <p className="text-xs text-text-muted tabular-nums">
+                      {formatCurrency(computeWalletBalance(w, transactions), w.currency)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {activeWallets.map((w) => {
@@ -247,7 +318,7 @@ export function WalletPage() {
           </div>
         )}
 
-        {archivedWallets.length > 0 && (
+        {archivedWallets.length > 0 && !reorderMode && (
           <div className="pt-2">
             <button
               onClick={() => setShowArchived((v) => !v)}

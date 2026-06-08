@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Check, Users } from "lucide-react";
+import { Check } from "lucide-react";
+import { EmptyState, DebtEmptyIllustration } from "@/shared/components/EmptyState";
 import { useOutletContext } from "react-router-dom";
 import { useAppData } from "@/app/AppDataContext";
 import { formatCurrency } from "@/shared/utils/format";
@@ -39,15 +40,11 @@ export function DebtTab() {
 
   if (debtTx.length === 0) {
     return (
-      <div className="px-4 py-8 flex flex-col items-center gap-3 text-center">
-        <div className="w-16 h-16 rounded-full bg-bg-card flex items-center justify-center">
-          <Users size={28} className="text-text-muted" />
-        </div>
-        <p className="text-sm font-semibold text-text-primary">Tidak ada hutang/piutang</p>
-        <p className="text-xs text-text-muted max-w-xs">
-          Catat transaksi piutang atau hutang untuk melihat rekap di sini
-        </p>
-      </div>
+      <EmptyState
+        illustration={<DebtEmptyIllustration />}
+        title="Tidak ada hutang atau piutang"
+        description="Catat transaksi piutang atau hutang untuk melihat rekap di sini"
+      />
     );
   }
 

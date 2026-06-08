@@ -5,7 +5,7 @@ import { BottomSheet } from "@/shared/components/BottomSheet";
 import { IconPicker } from "@/shared/components/IconPicker";
 import { ColorPicker } from "@/shared/components/ColorPicker";
 import { DynamicIcon } from "@/shared/components/DynamicIcon";
-import { EmptyState } from "@/shared/components/EmptyState";
+import { EmptyState, CategoryEmptyIllustration } from "@/shared/components/EmptyState";
 import { useAppData } from "@/app/AppDataContext";
 import { useToast } from "@/shared/hooks/useToast";
 import { countTransactionsByCategory } from "@/shared/db/repo";
@@ -138,7 +138,10 @@ export function CategoryPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState title="Belum ada kategori"
+        <EmptyState
+          illustration={<CategoryEmptyIllustration />}
+          title="Belum ada kategori"
+          description="Tambahkan kategori untuk mengorganisir transaksi kamu"
           action={{ label: "+ Tambah Kategori", onClick: () => setFormOpen(true) }} />
       ) : (
         <div className="grid grid-cols-4 gap-3 p-4">

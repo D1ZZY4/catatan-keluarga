@@ -25,6 +25,7 @@ export interface Wallet {
   initialBalance: number;
   isArchived: boolean;
   createdAt: number;
+  sortOrder?: number;
 }
 
 export interface Transaction {

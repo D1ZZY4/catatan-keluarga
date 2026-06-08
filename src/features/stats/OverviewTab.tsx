@@ -35,9 +35,10 @@ interface OverviewTabProps {
   period: Period;
   customStart?: number;
   customEnd?: number;
+  walletIds?: string[];
 }
 
-export function OverviewTab({ period, customStart, customEnd }: OverviewTabProps) {
+export function OverviewTab({ period, customStart, customEnd, walletIds }: OverviewTabProps) {
   const { transactions, categories, wallets } = useAppData();
 
   const periodStart = period === "custom"
@@ -46,8 +47,14 @@ export function OverviewTab({ period, customStart, customEnd }: OverviewTabProps
   const periodEnd = period === "custom" ? (customEnd ?? Date.now()) : Date.now();
 
   const filtered = useMemo(
-    () => transactions.filter((tx) => tx.date >= periodStart && tx.date <= periodEnd),
-    [transactions, periodStart, periodEnd],
+    () => transactions.filter((tx) => {
+      if (tx.date < periodStart || tx.date > periodEnd) return false;
+      if (walletIds && walletIds.length > 0) {
+        return walletIds.includes(tx.walletId) || (tx.toWalletId !== undefined && walletIds.includes(tx.toWalletId));
+      }
+      return true;
+    }),
+    [transactions, periodStart, periodEnd, walletIds],
   );
 
   const totalIncome = filtered.filter(isIncome).reduce((s, tx) => s + tx.amount, 0);

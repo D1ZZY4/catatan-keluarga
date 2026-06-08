@@ -77,6 +77,50 @@ export function StatsEmptyIllustration() {
   );
 }
 
+export function BudgetEmptyIllustration() {
+  return (
+    <svg viewBox="0 0 120 100" className="w-28 h-28" fill="none" aria-hidden>
+      <rect x="20" y="20" width="80" height="65" rx="10" fill="var(--bg-card)" />
+      <rect x="32" y="34" width="56" height="8" rx="4" fill="var(--warning)" opacity="0.4" />
+      <rect x="32" y="50" width="40" height="6" rx="3" fill="var(--bg-surface)" />
+      <rect x="32" y="62" width="25" height="6" rx="3" fill="var(--bg-surface)" />
+      <circle cx="90" cy="18" r="16" fill="var(--success)" opacity="0.15" />
+      <path d="M83 18 L87 22 L97 12" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function CategoryEmptyIllustration() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+      <rect x="18" y="18" width="36" height="36" rx="10" fill="var(--accent-primary)" opacity="0.2" />
+      <rect x="66" y="18" width="36" height="36" rx="10" fill="var(--success)" opacity="0.2" />
+      <rect x="18" y="66" width="36" height="36" rx="10" fill="var(--warning)" opacity="0.2" />
+      <rect x="66" y="66" width="36" height="36" rx="10" fill="var(--danger)" opacity="0.2" />
+      <circle cx="36" cy="36" r="10" fill="var(--accent-primary)" opacity="0.35" />
+      <circle cx="84" cy="36" r="10" fill="var(--success)" opacity="0.35" />
+      <circle cx="36" cy="84" r="10" fill="var(--warning)" opacity="0.35" />
+      <path d="M74 84 L94 84 M84 74 L84 94" stroke="var(--text-muted)" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+
+export function DebtEmptyIllustration() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+      <circle cx="42" cy="48" r="18" fill="var(--bg-card)" />
+      <circle cx="78" cy="48" r="18" fill="var(--bg-card)" />
+      <circle cx="42" cy="48" r="10" fill="var(--accent-primary)" opacity="0.3" />
+      <circle cx="78" cy="48" r="10" fill="var(--success)" opacity="0.3" />
+      <path d="M55 48 L65 48" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3 2" />
+      <rect x="30" y="72" width="60" height="22" rx="8" fill="var(--bg-card)" />
+      <path d="M42 83 L55 83 M65 83 L78 83" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+      <circle cx="90" cy="30" r="14" fill="var(--success)" opacity="0.12" />
+      <path d="M85 30 L88 33 L95 26" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function EmptyState({
   illustration,
   title,

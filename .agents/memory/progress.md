@@ -21,27 +21,37 @@
 - M18: SELESAI — Bug hunt tuntas, TS clean, build clean
 - M19: SELESAI — Audit penuh: CSS tokens lengkap, aksesibilitas, empty states, tablet sidebar
 
-## Semua Spec Gap Ditutup
+## Semua Spec Gap Ditutup (Sesi Terakhir)
 
 - [x] Versi auto-inject dari package.json (VITE_APP_VERSION, VITE_BUILD_DATE)
 - [x] 3 dompet default di-seed saat completeOnboarding
 - [x] Welcome screen pasca-onboarding (confetti + wallet preview)
 - [x] SmartCacheService (adaptive TTL, eviksi, preload pattern)
 - [x] Tablet sidebar (SideNav md+, BottomNav md:hidden)
-- [x] CSS token lengkap sesuai spec (--bg-input, --accent-warm, --text-placeholder, --border, --shadow-sm/md/inset)
-- [x] --bg-surface tidak lagi putih murni (#EDE8B8)
-- [x] ReminderEmptyIllustration + aria-label pada icon buttons
-- [x] WelcomeScreen warna wallet pakai CSS vars (theme-aware)
-- [x] Optimistic updates di AppDataContext — semua 15 mutasi (5 entitas × add/update/remove) instan + rollback on error
-- [x] Swipe kiri → hapus (reveal zone merah) + swipe kanan → duplikat di TransactionListItem
-- [x] MIT License modal di Settings (klik "Lisensi")
-- [x] Hapus baris "Kredit" di Settings (spec §22 melarang)
-- [x] Developer: Aby Abdillah ditampilkan di Tentang Aplikasi
-- [x] Toggle knob bg-white → bg-bg-page (tidak ada #FFFFFF di UI)
+- [x] CSS token lengkap sesuai spec
+- [x] Optimistic updates di AppDataContext (semua 15 mutasi)
+- [x] Swipe kiri → hapus / swipe kanan → duplikat di TransactionListItem
+- [x] MIT License modal di Settings
+- [x] Developer: Aby Abdillah di Tentang Aplikasi
+- [x] Wallet.sortOrder?: number — field ditambah ke type + seed data
+- [x] Drag-to-reorder WalletPage — useDragReorder hook + "Atur Urutan" toggle + pointer events
+- [x] TransactionForm auto-select kategori pertama saat type berubah di step 1
+- [x] Settings Tampilan: mata uang dasar, format tanggal, ukuran teks (useDisplaySettings hook)
+- [x] AppShell loads display settings on mount via loadDisplaySettings()
+- [x] WalletForm defaults to baseCurrency setting for new wallets
+- [x] StatsPage wallet filter chips (multi-select, chip dengan "Semua" + per-wallet)
+- [x] OverviewTab accepts walletIds prop for wallet-scoped stats
+- [x] Sparkline 7 hari (bukan 30) sesuai spec §8
+- [x] format.ts: formatDate mendukung id/us/iso format via module-level variable
 
 ## Catatan
 - build-release/BUILD-INSTRUCTIONS.md tersedia sebagai pengganti APK
-- TypeScript: 0 error
+- TypeScript: 0 error (verified post-sesi)
 - Production build: ✓ clean (26s)
 - Bundle main: 114.94 KB gzipped (batas spec 120 KB ✓)
 - PWA: 49 entries precached
+- §28/§29 audit clean: no console.log, no `any`, no `100vh`, no `#FFFFFF`
+- BottomSheet: role="dialog" + aria-modal="true" + aria-labelledby ✓
+- All routes lazy-loaded ✓
+- Fonts: DM Sans + Instrument Serif + JetBrains Mono, display=swap via Google Fonts ✓
+- index.html: lang="id", viewport-fit=cover, theme-color, apple-mobile-web-app-capable ✓
