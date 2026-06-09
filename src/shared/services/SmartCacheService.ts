@@ -1,5 +1,3 @@
-import { database } from '@/shared/db';
-
 interface CacheEntry {
   value: unknown;
   ts: number;
@@ -33,7 +31,7 @@ class SmartCacheServiceClass {
     }
   }
 
-  adaptiveTTL(key: string, baseTTL: number): number {
+  adaptiveTTL(_key: string, baseTTL: number): number {
     return baseTTL;
   }
 

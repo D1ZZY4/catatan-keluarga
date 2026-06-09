@@ -167,7 +167,7 @@ export interface TransactionTypeOption {
   type: TransactionType;
   label: string;
   icon: string;
-  color: keyof import('./appColors').AppColorKey;
+  color: string;
 }
 
 export type FontScale = 1 | 1.15 | 1.3;

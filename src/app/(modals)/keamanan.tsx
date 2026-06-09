@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Switch, Pressable, Alert, TextInput,
+  View, Text, ScrollView, StyleSheet, Pressable, TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/shared/hooks/useTheme';
@@ -8,7 +8,7 @@ import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
 import { useToast } from '@/shared/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
-import { Shield, Fingerprint, Lock, RefreshCw } from 'lucide-react-native';
+import { Lock, RefreshCw } from 'lucide-react-native';
 
 const TIMEOUT_OPTIONS = [
   { label: 'Segera', value: 0 },

@@ -11,7 +11,7 @@ import { useToast } from '@/shared/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
 import { database } from '@/shared/db';
 import { SecureStorage } from '@/shared/utils/secureStorage';
-import { Trash2, AlertTriangle } from 'lucide-react-native';
+import { AlertTriangle } from 'lucide-react-native';
 
 export default function HapusDataScreen() {
   const { colors } = useTheme();

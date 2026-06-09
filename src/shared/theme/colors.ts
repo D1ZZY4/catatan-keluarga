@@ -18,7 +18,27 @@ export const lightColors = {
   overlay: 'rgba(0,0,0,0.4)',
 } as const;
 
-export const darkColors: typeof lightColors = {
+export type AppColors = {
+  bgPage: string;
+  bgCard: string;
+  bgSurface: string;
+  bgInput: string;
+  accentPrimary: string;
+  accentSecondary: string;
+  accentWarm: string;
+  textPrimary: string;
+  textMuted: string;
+  textPlaceholder: string;
+  success: string;
+  warning: string;
+  danger: string;
+  border: string;
+  white: string;
+  black: string;
+  overlay: string;
+};
+
+export const darkColors: AppColors = {
   bgPage: '#1A1910',
   bgCard: '#242218',
   bgSurface: '#2E2C20',
@@ -36,6 +56,4 @@ export const darkColors: typeof lightColors = {
   white: '#FFFFFF',
   black: '#000000',
   overlay: 'rgba(0,0,0,0.6)',
-} as const;
-
-export type AppColors = typeof lightColors;
+};

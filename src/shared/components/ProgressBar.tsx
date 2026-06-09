@@ -8,9 +8,10 @@ interface ProgressBarProps {
   sublabel?: string;
   showPercent?: boolean;
   height?: number;
+  color?: string;
 }
 
-export function ProgressBar({ progress, label, sublabel, showPercent = true, height = 8 }: ProgressBarProps) {
+export function ProgressBar({ progress, label, sublabel, showPercent = true, height = 8, color }: ProgressBarProps) {
   const { colors } = useTheme();
   const anim = useRef(new Animated.Value(0)).current;
   const clamped = Math.min(Math.max(progress, 0), 1);
@@ -19,7 +20,7 @@ export function ProgressBar({ progress, label, sublabel, showPercent = true, hei
     Animated.spring(anim, { toValue: clamped, useNativeDriver: false }).start();
   }, [clamped]);
 
-  const barColor = clamped >= 0.85 ? colors.danger : clamped >= 0.6 ? colors.warning : colors.success;
+  const barColor = color ?? (clamped >= 0.85 ? colors.danger : clamped >= 0.6 ? colors.warning : colors.success);
 
   return (
     <View style={styles.container}>

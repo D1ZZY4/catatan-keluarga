@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Pressable, Text, StyleSheet, View } from 'react-native';
+import { ScrollView, Pressable, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 
 export interface ChipOption<T extends string> {
@@ -14,7 +14,7 @@ interface ChipGroupProps<T extends string> {
   multiSelect?: boolean;
 }
 
-export function ChipGroup<T extends string>({ options, value, onChange, multiSelect = false }: ChipGroupProps<T>) {
+export function ChipGroup<T extends string>({ options, value, onChange, multiSelect: _multiSelect = false }: ChipGroupProps<T>) {
   const { colors } = useTheme();
 
   const isSelected = (v: T) =>

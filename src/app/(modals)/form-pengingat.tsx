@@ -47,7 +47,7 @@ export default function FormPengingatScreen() {
     setLoading(true);
     try {
       await database.write(async () => {
-        await database.get('reminders').create((record: import('@/shared/db').ReminderModel) => {
+        await database.get<import('@/shared/db').ReminderModel>('reminders').create((record) => {
           record.name = name.trim();
           if (amount) record.amount = parseFloat(amount);
           record.currency = 'IDR';

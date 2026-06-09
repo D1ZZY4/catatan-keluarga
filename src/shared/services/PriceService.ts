@@ -1,11 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import fallbackRates from '@/shared/data/exchange-rates-fallback.json';
 
-interface ExchangeRates {
-  base: string;
-  rates: Record<string, number>;
-  updatedAt: string;
-}
+const STATIC_RATES = fallbackRates.rates as Record<string, number>;
 
 interface GoldPrice {
   perGram: number;
@@ -95,7 +91,7 @@ class PriceServiceClass {
             results[symbol] = ticker.last;
           }
         } catch {
-          const staticPrice = fallbackRates.rates[symbol];
+          const staticPrice = STATIC_RATES[symbol];
           if (staticPrice !== undefined) results[symbol] = staticPrice;
         }
       }
@@ -125,20 +121,20 @@ class PriceServiceClass {
   }
 
   private getStaticExchangeRates(): Record<string, number> {
-    return { ...fallbackRates.rates };
+    return { ...STATIC_RATES };
   }
 
   private getStaticCryptoPrices(symbols: string[]): Record<string, number> {
     const result: Record<string, number> = {};
     for (const sym of symbols) {
-      const r = fallbackRates.rates[sym];
+      const r = STATIC_RATES[sym];
       if (r !== undefined) result[sym] = r;
     }
     return result;
   }
 
   private getStaticGoldPrice(): GoldPrice {
-    const xauRate = fallbackRates.rates['XAU'] ?? 0.000000041;
+    const xauRate = STATIC_RATES['XAU'] ?? 0.000000041;
     const idrPerOz = 1 / xauRate;
     return { perGram: idrPerOz / 31.1035, perOz: idrPerOz };
   }

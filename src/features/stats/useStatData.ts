@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { database } from '@/shared/db';
 import type { TransactionType } from '@/shared/types';
-import { startOfMonth, endOfMonth, safeDiv } from '@/shared/utils/helpers';
+import { startOfMonth, safeDiv } from '@/shared/utils/helpers';
 import { isIncomeType, isExpenseType } from '@/shared/constants/transactionTypes';
 
 type PeriodFilter = 'week' | 'month' | '3month' | '6month' | 'year';

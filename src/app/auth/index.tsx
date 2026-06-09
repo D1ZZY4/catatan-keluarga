@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator,
+  View, Text, TextInput, StyleSheet, Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -38,6 +38,7 @@ export default function AuthScreen() {
       }, 1000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [lockedUntil]);
 
   async function checkBiometric() {

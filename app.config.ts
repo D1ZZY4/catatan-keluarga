@@ -31,8 +31,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'RECEIVE_BOOT_COMPLETED',
     ],
     versionCode: 1,
-    minSdkVersion: 21,
-    targetSdkVersion: 35,
   },
   plugins: [
     'expo-router',

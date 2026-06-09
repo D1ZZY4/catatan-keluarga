@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import {
   User, Shield, Palette, Bell, Database, Trash2, Info,
-  ChevronRight, PiggyBank, CalendarClock,
+  ChevronRight, PiggyBank, CalendarClock, FileText,
+  ReceiptText, Layers, Tag, TrendingUp,
 } from 'lucide-react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useRouter } from 'expo-router';
@@ -41,7 +42,7 @@ function SettingItem({ icon, label, subtitle, onPress, right }: SettingRow) {
           </Text>
         )}
       </View>
-      {right ?? <ChevronRight size={18} color={colors.textMuted} />}
+      {right !== undefined ? right : <ChevronRight size={18} color={colors.textMuted} />}
     </Pressable>
   );
 }
@@ -105,6 +106,46 @@ export default function PengaturanScreen() {
           label="Tagihan & Pengingat"
           subtitle="Jadwal tagihan berulang"
           onPress={() => router.push('/(modals)/tagihan')}
+        />
+        <SettingItem
+          icon={<Layers size={18} color={colors.accentSecondary} />}
+          label="Kategori"
+          subtitle="Kelola kategori transaksi"
+          onPress={() => router.push('/(modals)/kategori')}
+        />
+        <SettingItem
+          icon={<FileText size={18} color={colors.accentPrimary} />}
+          label="Template Transaksi"
+          subtitle="Transaksi yang sering digunakan"
+          onPress={() => router.push('/(modals)/templates')}
+        />
+        <SettingItem
+          icon={<ReceiptText size={18} color={colors.success} />}
+          label="Hitung Bagi Tagihan"
+          subtitle="Kalkulator split bill"
+          onPress={() => router.push('/(modals)/kalkulator-tagihan')}
+        />
+        <SettingItem
+          icon={<Tag size={18} color={colors.accentWarm} />}
+          label="Kelola Tag"
+          subtitle="Tag untuk pengelompokan transaksi"
+          onPress={() => router.push('/(modals)/tags')}
+        />
+        <SettingItem
+          icon={<TrendingUp size={18} color={colors.success} />}
+          label="Kurs Mata Uang"
+          subtitle="Nilai tukar real-time dari Frankfurter"
+          onPress={() => router.push('/(modals)/kurs')}
+        />
+      </View>
+
+      <SectionHeader title="ALAT BANTU" />
+      <View style={styles.group}>
+        <SettingItem
+          icon={<ReceiptText size={18} color={colors.accentSecondary} />}
+          label="Kalkulator"
+          subtitle="Kalkulator cepat untuk transaksi"
+          onPress={() => router.push('/(modals)/kalkulator')}
         />
       </View>
 

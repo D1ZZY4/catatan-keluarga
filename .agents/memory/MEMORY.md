@@ -1,14 +1,11 @@
 - [Vite plugin-react version](vite-plugin-react-compat.md) — @vitejs/plugin-react v6 requires Vite 7; use v5 with Vite 6
 - [exactOptionalPropertyTypes pattern](exact-optional-props.md) — passing `T|undefined` to optional props needs conditional spread
-- [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono); old Sora/Space Grotesk/DM Serif Display were wrong
-- [Calculator architecture](calculator-arch.md) — CalculatorContext wraps entire app; AppBar uses useCalculator() to open it; no fixed-positioned button
-- [Onboarding biometric redirect fix](onboarding-biometric.md) — must block redirect with parent-level state flag BEFORE calling completeOnboarding; lifting state up is required
-- [Progress & milestones](progress.md) — M0–M21 + session fixes done: AppBar pill, OCR enhanced, Iconsax, realtime QuickActions, "Saldo Bersih"
-- [Iconsax integration](iconsax-integration.md) — isax: prefix in DynamicIcon; sync import * from iconsax-react; CURATED_ISAX_ICONS list in DynamicIcon.tsx; IconPicker has Lucide/Iconsax tabs
+- [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono)
+- [RN TypeScript fixes](rn-ts-fixes.md) — patterns used to resolve all 136 TS errors in Expo/RN codebase
+- [Progress & milestones](progress.md) — RN codebase: 0 TS errors; M2–M21 largely complete
 - [Architecture decisions](architecture.md) — Context+useReducer, AES-GCM, font stack, exactOptionalPropertyTypes patterns
-- [UI audit findings](ui-audit.md) — all known UI bugs fixed (hasWebAuthn, Cell key, dead code, favicon, iOS PWA meta)
-- [Build & APK](build-log.md) — APK via Bubblewrap TWA; see build-release/BUILD-INSTRUCTIONS.md
+- [Build & APK](build-log.md) — APK via EAS Build; see eas.json and EAS-BUILD.md
 - [BottomNav array type](bottomnav-spec.md) — use explicit Array<{center?:boolean}> instead of as const when array has optional prop on some items only
-- [Vitest config scoping](vitest-scoping.md) — must set include:["src/**/*.test.*"] and exclude:[".cache","dist"]; bun cache pollutes test discovery
-- [cn utility is not tailwind-merge](cn-utility.md) — cn() is simple filter+join; no deduplication; don't write tests that expect twmerge behavior
 - [React Router future flags TS](rr-future-flags.md) — v7_startTransition not in FutureConfig type; cast as Record<string,boolean> to suppress TS error
+- [AppBar prop name](appbar-props.md) — AppBar uses rightAction (not rightElement); ProgressBar now accepts color prop
+- [WatermelonDB model cast](wdb-model-cast.md) — cast via `as unknown as T` when TS rejects direct Model→typed cast due to _RawRecord incompatibility

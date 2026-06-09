@@ -1,48 +1,48 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, ScrollView, StyleSheet, Pressable, KeyboardAvoidingView, Platform,
+  View, Text, ScrollView, StyleSheet, Pressable, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { evaluate } from 'mathjs';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
+import { CurrencyInput } from '@/shared/components/CurrencyInput';
+import { DatePicker } from '@/shared/components/DatePicker';
 import { useToast } from '@/shared/components/Toast';
 import { database } from '@/shared/db';
 import {
-  TYPE_OPTIONS, requiresPersonFields,
-  type TransactionTypeOption,
+  TYPE_OPTIONS, requiresPersonFields, isExpenseType,
 } from '@/shared/constants/transactionTypes';
 import { useWalletList } from '@/features/wallets/useWalletList';
 import type { TransactionType } from '@/shared/types';
+import { TextInput } from 'react-native';
 
 export default function FormTransaksiScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { showToast } = useToast();
-  const params = useLocalSearchParams<{ type?: string }>();
+  const params = useLocalSearchParams<{ type?: string; amount?: string; note?: string }>();
 
   const [txType, setTxType] = useState<TransactionType>(
     (params.type as TransactionType) ?? 'expense'
   );
-  const [amountStr, setAmountStr] = useState('');
+  const [amountStr, setAmountStr] = useState(params.amount ?? '');
+  const [amountNum, setAmountNum] = useState(0);
   const [walletId, setWalletId] = useState('');
   const [toWalletId, setToWalletId] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState(params.note ?? '');
   const [personName, setPersonName] = useState('');
-  const [date] = useState(Date.now());
+  const [txDate, setTxDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; type: string; color: string }>>([]);
-  const amountRef = useRef<TextInput>(null);
   const { wallets } = useWalletList();
 
   useEffect(() => {
     void loadCategories();
-    setTimeout(() => amountRef.current?.focus(), 400);
   }, []);
 
   useEffect(() => {
@@ -60,52 +60,45 @@ export default function FormTransaksiScreen() {
     }
   }
 
-  function parseAmount(): number {
-    try {
-      const result = evaluate(amountStr.replace(/[Rp\s.]/g, '').replace(',', '.'));
-      if (typeof result === 'number' && isFinite(result) && result > 0) return result;
-      return 0;
-    } catch {
-      return parseFloat(amountStr.replace(/[^0-9.]/g, '')) || 0;
-    }
-  }
-
   const filteredCategories = categories.filter(c => {
-    if (['expense', 'transfer_external', 'debt_given', 'savings_deposit', 'invest_buy', 'debt_repay'].includes(txType)) {
-      return c.type === 'expense';
-    }
+    if (isExpenseType(txType)) return c.type === 'expense';
     return c.type === 'income';
   });
 
-  const isValid = parseAmount() > 0 && walletId;
+  const isValid = amountNum > 0 && walletId;
 
   const handleSave = async () => {
     if (!isValid) return;
     setLoading(true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const amount = parseAmount();
       await database.write(async () => {
-        await database.get('transactions').create((record: import('@/shared/db').TransactionModel) => {
+        await database.get<import('@/shared/db').TransactionModel>('transactions').create((record) => {
           record.type = txType;
           record.walletId = walletId;
           if (toWalletId && txType === 'transfer_internal') record.toWalletId = toWalletId;
           record.categoryId = categoryId || (filteredCategories[0]?.id ?? '');
-          record.amount = amount;
+          record.amount = amountNum;
           record.currency = wallets.find(w => w.id === walletId)?.currency ?? 'IDR';
           if (note) record.note = note;
           if (personName) record.personName = personName;
-          record.date = date;
+          record.date = txDate.getTime();
           // @ts-expect-error WatermelonDB handles this
           record._raw.created_at = Date.now();
         });
 
-        // Update wallet balance
         const walletRecord = await database.get('wallets').find(walletId) as import('@/shared/db').WalletModel;
         await walletRecord.update(() => {
-          const isDeduction = ['expense', 'transfer_external', 'debt_given', 'savings_deposit', 'invest_buy', 'debt_repay'].includes(txType);
-          walletRecord.balance = isDeduction ? walletRecord.balance - amount : walletRecord.balance + amount;
+          const isDeduction = isExpenseType(txType);
+          walletRecord.balance = isDeduction ? walletRecord.balance - amountNum : walletRecord.balance + amountNum;
         });
+
+        if (txType === 'transfer_internal' && toWalletId) {
+          const toWalletRecord = await database.get('wallets').find(toWalletId) as import('@/shared/db').WalletModel;
+          await toWalletRecord.update(() => {
+            toWalletRecord.balance = toWalletRecord.balance + amountNum;
+          });
+        }
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast('Transaksi berhasil disimpan', 'success');
@@ -129,13 +122,13 @@ export default function FormTransaksiScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Tipe Switcher */}
+        {/* Tipe */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeScroll}>
           <View style={styles.typeRow}>
             {TYPE_OPTIONS.map(opt => (
               <Pressable
                 key={opt.type}
-                onPress={() => setTxType(opt.type)}
+                onPress={() => { setTxType(opt.type); setCategoryId(''); }}
                 style={[
                   styles.typeChip,
                   { backgroundColor: txType === opt.type ? colors.accentPrimary : colors.bgSurface },
@@ -153,17 +146,21 @@ export default function FormTransaksiScreen() {
         {/* Nominal */}
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Nominal</Text>
-          <TextInput
-            ref={amountRef}
+          <CurrencyInput
             value={amountStr}
-            onChangeText={setAmountStr}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={colors.textPlaceholder}
-            style={[styles.amountInput, { color: colors.textPrimary, backgroundColor: colors.bgInput, fontFamily: 'InstrumentSerif-Regular' }]}
-            accessibilityLabel="Nominal transaksi"
+            onChangeText={(raw, num) => { setAmountStr(raw); setAmountNum(num); }}
+            currency={wallets.find(w => w.id === walletId)?.currency ?? 'IDR'}
+            large
           />
         </View>
+
+        {/* Tanggal */}
+        <DatePicker
+          value={txDate}
+          onChange={setTxDate}
+          label="Tanggal"
+          mode="datetime"
+        />
 
         {/* Dompet */}
         <View style={styles.field}>
@@ -191,7 +188,7 @@ export default function FormTransaksiScreen() {
           </ScrollView>
         </View>
 
-        {/* Dompet Tujuan (untuk transfer) */}
+        {/* Dompet Tujuan */}
         {txType === 'transfer_internal' && (
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Ke Dompet</Text>
@@ -245,7 +242,7 @@ export default function FormTransaksiScreen() {
           </View>
         )}
 
-        {/* Nama Orang (untuk hutang/piutang) */}
+        {/* Nama Orang */}
         {requiresPersonFields(txType) && (
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Nama Orang</Text>
@@ -299,14 +296,6 @@ const styles = StyleSheet.create({
   typeLabel: { fontSize: 13, lineHeight: 18 },
   field: { gap: 8 },
   label: { fontSize: 13, lineHeight: 18 },
-  amountInput: {
-    height: 64,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 32,
-    lineHeight: 40,
-    textAlign: 'right',
-  },
   input: { height: 48, borderRadius: 12, paddingHorizontal: 14, fontSize: 15, lineHeight: 22 },
   chipRow: { flexDirection: 'row', gap: 8 },
   walletChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },

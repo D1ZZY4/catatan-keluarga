@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, SectionList, StyleSheet, Pressable, RefreshControl,
 } from 'react-native';

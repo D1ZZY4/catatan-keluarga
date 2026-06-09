@@ -44,7 +44,7 @@ export default function FormAnggaranScreen() {
     setLoading(true);
     try {
       await database.write(async () => {
-        await database.get('budgets').create((record: import('@/shared/db').BudgetModel) => {
+        await database.get<import('@/shared/db').BudgetModel>('budgets').create((record) => {
           record.categoryId = categoryId;
           record.amount = parseFloat(amount);
           record.currency = 'IDR';

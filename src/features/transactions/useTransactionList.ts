@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { database } from '@/shared/db';
 import type { Transaction, TransactionType } from '@/shared/types';
-import { startOfDay, endOfDay, startOfMonth, endOfMonth, groupBy } from '@/shared/utils/helpers';
+import { startOfDay, startOfMonth, groupBy } from '@/shared/utils/helpers';
 import { isIncomeType, isExpenseType, isTransferType } from '@/shared/constants/transactionTypes';
 
 type PeriodFilter = 'today' | 'week' | 'month' | 'all';

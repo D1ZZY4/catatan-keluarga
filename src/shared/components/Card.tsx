@@ -1,10 +1,10 @@
 import React from 'react';
-import { Pressable, View, StyleSheet, type ViewStyle, type PressableProps } from 'react-native';
+import { Pressable, View, StyleSheet, type ViewStyle, type StyleProp, type PressableProps } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 
 interface CardProps extends Omit<PressableProps, 'style'> {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   onPress?: () => void;
   padding?: number;
   radius?: number;

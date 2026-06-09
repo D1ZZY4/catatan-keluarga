@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Switch,
+  View, Text, ScrollView, StyleSheet, Switch, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/shared/hooks/useTheme';
@@ -8,24 +8,37 @@ import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
 import { useToast } from '@/shared/components/Toast';
 import { Bell, DollarSign, Calendar } from 'lucide-react-native';
+import { useSettings } from '@/features/settings/useSettings';
 
 export default function NotifikasiScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
+  const { values, loading, set } = useSettings(['budget_alert', 'bill_reminder', 'weekly_report']);
   const [budgetAlerts, setBudgetAlerts] = useState(true);
   const [billReminders, setBillReminders] = useState(true);
   const [weeklyReport, setWeeklyReport] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setBudgetAlerts(values.budget_alert !== 'false');
+      setBillReminders(values.bill_reminder !== 'false');
+      setWeeklyReport(values.weekly_report === 'true');
+    }
+  }, [loading, values]);
 
   async function handleSave() {
-    setLoading(true);
+    setSaving(true);
     try {
+      await set('budget_alert', String(budgetAlerts));
+      await set('bill_reminder', String(billReminders));
+      await set('weekly_report', String(weeklyReport));
       showToast('Pengaturan notifikasi disimpan', 'success');
     } catch {
       showToast('Gagal menyimpan', 'error');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
@@ -53,6 +66,17 @@ export default function NotifikasiScreen() {
     },
   ];
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bgPage }]}>
+        <AppBar title="Notifikasi" showBack />
+        <View style={styles.loadingCenter}>
+          <ActivityIndicator color={colors.accentPrimary} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bgPage }]}>
       <AppBar title="Notifikasi" showBack />
@@ -60,6 +84,14 @@ export default function NotifikasiScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Info banner */}
+        <View style={[styles.infoBanner, { backgroundColor: `${colors.accentPrimary}14` }]}>
+          <Bell size={16} color={colors.accentPrimary} />
+          <Text style={[styles.infoBannerText, { color: colors.accentPrimary, fontFamily: 'DMSans-Regular' }]}>
+            Notifikasi akan dikirim jika izin diberikan di pengaturan sistem.
+          </Text>
+        </View>
+
         <View style={[styles.section, { backgroundColor: colors.bgCard }]}>
           {rows.map((row, i) => (
             <View key={row.label} style={[styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }]}>
@@ -85,8 +117,8 @@ export default function NotifikasiScreen() {
         <Button
           label="Simpan Pengaturan"
           onPress={() => void handleSave()}
-          loading={loading}
-          disabled={loading}
+          loading={saving}
+          disabled={saving}
           fullWidth
         />
       </ScrollView>
@@ -96,7 +128,10 @@ export default function NotifikasiScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 16 },
+  infoBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12 },
+  infoBannerText: { flex: 1, fontSize: 13, lineHeight: 18 },
   section: { padding: 16, borderRadius: 14, gap: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },

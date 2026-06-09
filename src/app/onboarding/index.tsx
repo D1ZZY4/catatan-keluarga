@@ -88,7 +88,7 @@ export default function OnboardingScreen() {
   async function seedInitialData() {
     await database.write(async () => {
       for (const cat of ALL_DEFAULT_CATEGORIES) {
-        await database.get('categories').create((record: import('@/shared/db').CategoryModel) => {
+        await database.get<import('@/shared/db').CategoryModel>('categories').create((record) => {
           record.name = cat.name;
           record.icon = cat.icon;
           record.color = cat.color;
@@ -97,7 +97,7 @@ export default function OnboardingScreen() {
         });
       }
       for (const wallet of DEFAULT_WALLETS) {
-        await database.get('wallets').create((record: import('@/shared/db').WalletModel) => {
+        await database.get<import('@/shared/db').WalletModel>('wallets').create((record) => {
           record.name = wallet.name;
           record.icon = wallet.icon;
           record.color = wallet.color;

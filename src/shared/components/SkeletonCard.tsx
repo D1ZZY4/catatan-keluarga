@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, type ViewStyle } from 'react-native';
+import { Animated, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 
 interface SkeletonCardProps {

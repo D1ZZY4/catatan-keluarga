@@ -1,15 +1,21 @@
-## Riwayat Build APK
+---
+name: Build & APK Log
+description: How to build APK for Catatan Keuangan (Expo + EAS)
+---
 
-### Catatan Lingkungan
-Android SDK tidak tersedia di lingkungan Replit. Build APK via Bubblewrap CLI memerlukan:
-- JDK 17+
-- Android SDK (Build Tools, Platform Tools)
-- Node.js 18+
-- Bubblewrap CLI
+## APK Build Method
+- Use **EAS Build** (cloud): `eas build --platform android --profile preview` → APK download link
+- Use `--profile production` for AAB (Play Store)
+- Local build: `npx expo prebuild` + `./gradlew assembleDebug`
 
-Lihat build-release/BUILD-INSTRUCTIONS.md untuk langkah lengkap.
+## Key Config
+- `eas.json`: profiles for development (APK debug), preview (APK release), production (AAB)
+- `app.config.ts`: package=`id.catkeu.app`, versionCode must increment per Play Store upload
+- `npm install --legacy-peer-deps` required (React 19 peer conflict with lucide-react-native)
 
-### Build PWA (dist/)
-- Setiap `bun run build` menghasilkan dist/ yang valid
-- Service worker via vite-plugin-pwa + Workbox
-- Manifest PWA sudah dikonfigurasi di vite.config.ts
+**Why:** EAS manages signing keystore automatically — much simpler than local Gradle signing setup.
+
+**How to apply:** Always use `--legacy-peer-deps` flag. Increment both `version` in package.json and `versionCode` in app.config.ts before each Play Store upload.
+
+## Docs
+See `build-release/EAS-BUILD.md` for full step-by-step instructions.

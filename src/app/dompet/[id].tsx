@@ -11,7 +11,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { formatCurrency, formatRelativeDate } from '@/shared/utils/formatters';
 import { database } from '@/shared/db';
 import type { Wallet, Transaction, TransactionType } from '@/shared/types';
-import { isIncomeType, isExpenseType } from '@/shared/constants/transactionTypes';
+import { isIncomeType } from '@/shared/constants/transactionTypes';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
 
 export default function WalletDetailScreen() {

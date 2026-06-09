@@ -156,7 +156,7 @@ export default function TransactionDetailScreen() {
             ...(tx.personName ? [{ label: 'Nama', value: tx.personName }] : []),
             ...(tx.note ? [{ label: 'Catatan', value: tx.note }] : []),
             { label: 'Mata Uang', value: tx.currency },
-          ].map((row, i, arr) => (
+          ].map((row, i) => (
             <View
               key={row.label}
               style={[

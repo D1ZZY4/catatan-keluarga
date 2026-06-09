@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, ScrollView, StyleSheet, Pressable, Alert,
+  View, Text, TextInput, ScrollView, StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
-import { useRouter } from 'expo-router';
+import { ColorPicker } from '@/shared/components/ColorPicker';
+import { ChipGroup } from '@/shared/components/ChipGroup';
+import { CurrencyInput } from '@/shared/components/CurrencyInput';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { database } from '@/shared/db';
-import { generateId } from '@/shared/utils/helpers';
 import { useToast } from '@/shared/components/Toast';
 import type { WalletType } from '@/shared/types';
 
@@ -23,59 +25,105 @@ const WALLET_TYPES: { value: WalletType; label: string }[] = [
   { value: 'other', label: 'Lainnya' },
 ];
 
-const COLORS = ['#4CAF50', '#8CC0EB', '#F4A35A', '#EF5350', '#CE93D8', '#80DEEA', '#FFD54F', '#BCAAA4'];
+const CURRENCY_OPTIONS = [
+  { value: 'IDR', label: 'IDR' },
+  { value: 'USD', label: 'USD' },
+  { value: 'SGD', label: 'SGD' },
+  { value: 'EUR', label: 'EUR' },
+  { value: 'MYR', label: 'MYR' },
+];
 
 export default function FormDompetScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { showToast } = useToast();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const isEdit = !!params.id;
 
   const [name, setName] = useState('');
   const [type, setType] = useState<WalletType>('cash');
   const [currency, setCurrency] = useState('IDR');
-  const [color, setColor] = useState(COLORS[0] ?? '#4CAF50');
-  const [initialBalance, setInitialBalance] = useState('0');
+  const [customCurrency, setCustomCurrency] = useState('');
+  const [color, setColor] = useState('#8CC0EB');
+  const [initialBalanceStr, setInitialBalanceStr] = useState('');
+  const [initialBalanceNum, setInitialBalanceNum] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
 
-  const isValid = name.trim().length > 0;
+  useEffect(() => {
+    if (isEdit && params.id) void loadExisting(params.id);
+  }, []);
+
+  async function loadExisting(id: string) {
+    try {
+      const record = await database.get<import('@/shared/db').WalletModel>('wallets').find(id);
+      setName(record.name);
+      setType(record.type as WalletType);
+      setCurrency(record.currency);
+      setColor(record.color);
+      setInitialBalanceStr(String(record.balance));
+      setInitialBalanceNum(record.balance);
+    } catch {
+      showToast('Dompet tidak ditemukan', 'error');
+      router.back();
+    } finally {
+      setInitialLoading(false);
+    }
+  }
+
+  const finalCurrency = CURRENCY_OPTIONS.some(o => o.value === currency) ? currency : (customCurrency || currency);
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (!name.trim()) { showToast('Nama dompet tidak boleh kosong', 'error'); return; }
     setLoading(true);
     try {
+      const bal = initialBalanceNum;
       await database.write(async () => {
-        await database.get('wallets').create((record: import('@/shared/db').WalletModel) => {
-          record.name = name.trim();
-          record.icon = 'Wallet';
-          record.color = color;
-          record.currency = currency;
-          record.balance = parseFloat(initialBalance) || 0;
-          record.initialBalance = parseFloat(initialBalance) || 0;
-          record.type = type;
-          record.isArchived = false;
-          record.showInDashboard = true;
-          record.includeInTotal = true;
-          record.sortOrder = Date.now();
-          // @ts-expect-error WatermelonDB sets created_at automatically
-          record._raw.created_at = Date.now();
-        });
+        if (isEdit && params.id) {
+          const record = await database.get<import('@/shared/db').WalletModel>('wallets').find(params.id);
+          await record.update(() => {
+            record.name = name.trim();
+            record.color = color;
+            record.currency = finalCurrency;
+            record.type = type;
+          });
+        } else {
+          await database.get<import('@/shared/db').WalletModel>('wallets').create((record) => {
+            record.name = name.trim();
+            record.icon = 'Wallet';
+            record.color = color;
+            record.currency = finalCurrency;
+            record.balance = bal;
+            record.initialBalance = bal;
+            record.type = type;
+            record.isArchived = false;
+            record.showInDashboard = true;
+            record.includeInTotal = true;
+            record.sortOrder = Date.now();
+            // @ts-expect-error WatermelonDB sets created_at automatically
+            record._raw.created_at = Date.now();
+          });
+        }
       });
-      showToast('Dompet berhasil dibuat', 'success');
+      showToast(isEdit ? 'Dompet diperbarui' : 'Dompet berhasil dibuat', 'success');
       router.back();
-    } catch (err) {
-      showToast('Gagal membuat dompet. Coba lagi.', 'error');
+    } catch {
+      showToast('Gagal menyimpan dompet. Coba lagi.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) return null;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bgPage }]}>
-      <AppBar title="Buat Dompet Baru" showBack />
+      <AppBar title={isEdit ? 'Edit Dompet' : 'Buat Dompet Baru'} showBack />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Nama */}
         <View style={styles.field}>
@@ -94,80 +142,61 @@ export default function FormDompetScreen() {
         {/* Jenis */}
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Jenis Dompet</Text>
-          <View style={styles.chipWrap}>
-            {WALLET_TYPES.map(wt => (
-              <Pressable
-                key={wt.value}
-                onPress={() => setType(wt.value)}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: type === wt.value ? colors.accentPrimary : colors.bgSurface,
-                    borderColor: type === wt.value ? colors.accentPrimary : colors.border,
-                  },
-                ]}
-                accessibilityLabel={wt.label}
-              >
-                <Text style={[styles.chipLabel, { color: type === wt.value ? colors.white : colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-                  {wt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <ChipGroup options={WALLET_TYPES} value={type} onChange={v => setType(v as WalletType)} />
         </View>
 
         {/* Mata Uang */}
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Mata Uang</Text>
+          <ChipGroup options={CURRENCY_OPTIONS} value={currency} onChange={setCurrency} />
           <TextInput
-            value={currency}
-            onChangeText={v => setCurrency(v.toUpperCase().slice(0, 3))}
-            placeholder="IDR"
+            value={customCurrency}
+            onChangeText={v => setCustomCurrency(v.toUpperCase().slice(0, 3))}
+            placeholder="Lainnya (cth. JPY)"
             placeholderTextColor={colors.textPlaceholder}
-            style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.bgInput, fontFamily: 'JetBrainsMono-Regular' }]}
+            style={[styles.currencyInput, { color: colors.textPrimary, backgroundColor: colors.bgInput, borderColor: colors.border, fontFamily: 'JetBrainsMono-Regular' }]}
             maxLength={3}
             autoCapitalize="characters"
-            accessibilityLabel="Mata uang"
+            accessibilityLabel="Mata uang lainnya"
           />
         </View>
 
         {/* Saldo Awal */}
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Saldo Awal</Text>
-          <TextInput
-            value={initialBalance}
-            onChangeText={setInitialBalance}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={colors.textPlaceholder}
-            style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.bgInput, fontFamily: 'JetBrainsMono-Regular' }]}
-            accessibilityLabel="Saldo awal dompet"
-          />
-        </View>
+        {!isEdit && (
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Saldo Awal</Text>
+            <CurrencyInput
+              value={initialBalanceStr}
+              onChangeText={(raw, num) => { setInitialBalanceStr(raw); setInitialBalanceNum(num); }}
+              currency={finalCurrency}
+            />
+          </View>
+        )}
 
         {/* Warna */}
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Warna</Text>
-          <View style={styles.colorRow}>
-            {COLORS.map(c => (
-              <Pressable
-                key={c}
-                onPress={() => setColor(c)}
-                style={[
-                  styles.colorDot,
-                  { backgroundColor: c, borderWidth: color === c ? 3 : 0, borderColor: colors.textPrimary },
-                ]}
-                accessibilityLabel={`Pilih warna ${c}`}
-              />
-            ))}
+          <ColorPicker value={color} onChange={setColor} />
+        </View>
+
+        {/* Preview */}
+        <View style={[styles.previewCard, { backgroundColor: `${color}18`, borderColor: color, borderWidth: 1 }]}>
+          <View style={[styles.previewDot, { backgroundColor: color }]} />
+          <View>
+            <Text style={[styles.previewName, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]}>
+              {name || 'Nama Dompet'}
+            </Text>
+            <Text style={[styles.previewType, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
+              {type} · {finalCurrency}
+            </Text>
           </View>
         </View>
 
         <Button
-          label="Simpan Dompet"
+          label={isEdit ? 'Simpan Perubahan' : 'Simpan Dompet'}
           onPress={() => void handleSave()}
           loading={loading}
-          disabled={!isValid || loading}
+          disabled={!name.trim() || loading}
           fullWidth
           style={styles.saveBtn}
         />
@@ -181,22 +210,14 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 20 },
   field: { gap: 8 },
   label: { fontSize: 13, lineHeight: 18 },
-  input: {
-    height: 48,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    lineHeight: 24,
+  input: { height: 48, borderRadius: 12, paddingHorizontal: 14, fontSize: 16, lineHeight: 24 },
+  currencyInput: { height: 40, borderRadius: 10, paddingHorizontal: 12, fontSize: 14, lineHeight: 20, borderWidth: 1 },
+  previewCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    padding: 16, borderRadius: 14,
   },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  chipLabel: { fontSize: 13, lineHeight: 18 },
-  colorRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
-  colorDot: { width: 32, height: 32, borderRadius: 16 },
+  previewDot: { width: 20, height: 20, borderRadius: 10 },
+  previewName: { fontSize: 16, lineHeight: 22 },
+  previewType: { fontSize: 12, lineHeight: 16 },
   saveBtn: { marginTop: 8 },
 });

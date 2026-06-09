@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, Pressable, Platform, ActivityIndicator, ScrollView,
+  View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -8,7 +8,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
 import { useToast } from '@/shared/components/Toast';
-import { ScanLine, Camera, Image as ImageIcon, CheckCircle2 } from 'lucide-react-native';
+import { ScanLine, CheckCircle2 } from 'lucide-react-native';
 
 interface ParsedItem {
   name: string;
@@ -58,17 +58,24 @@ export default function ScannerScreen() {
   const { showToast } = useToast();
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<OcrResult | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  async function runOcr(file: File) {
+  async function handlePickImage() {
     setScanning(true);
     setResult(null);
     try {
+      const DocumentPicker = await import('expo-document-picker');
+      const picked = await DocumentPicker.default.getDocumentAsync({
+        type: 'image/*',
+        copyToCacheDirectory: true,
+      });
+      if (picked.canceled || !picked.assets?.[0]) {
+        setScanning(false);
+        return;
+      }
+      const uri = picked.assets[0].uri;
       const Tesseract = await import('tesseract.js');
       const worker = await Tesseract.createWorker('ind+eng');
-      const url = URL.createObjectURL(file);
-      const { data } = await worker.recognize(url);
-      URL.revokeObjectURL(url);
+      const { data } = await worker.recognize(uri);
       await worker.terminate();
       const parsed = parseReceiptText(data.text);
       setResult(parsed);
@@ -77,28 +84,11 @@ export default function ScannerScreen() {
       } else {
         showToast(`Berhasil: ${parsed.items.length} item terdeteksi`, 'success');
       }
-    } catch (err) {
-      console.error('OCR error:', err);
+    } catch {
       showToast('Gagal memindai struk. Coba lagi.', 'error');
     } finally {
       setScanning(false);
     }
-  }
-
-  function handlePickImage() {
-    if (Platform.OS !== 'web') {
-      showToast('Fitur ini tersedia di web. Gunakan versi Android untuk kamera penuh.', 'info');
-      return;
-    }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) void runOcr(file);
-    };
-    input.click();
   }
 
   function handleUseTotal() {
@@ -116,9 +106,8 @@ export default function ScannerScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Scanner Area */}
         <Pressable
-          onPress={handlePickImage}
+          onPress={() => void handlePickImage()}
           style={[styles.scanArea, { backgroundColor: colors.bgCard, borderColor: colors.accentPrimary, borderWidth: 2, borderStyle: 'dashed' }]}
           accessibilityLabel="Ambil foto struk"
         >
@@ -143,16 +132,15 @@ export default function ScannerScreen() {
             <View style={styles.scanContent}>
               <ScanLine size={56} color={colors.accentPrimary} />
               <Text style={[styles.scanText, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]}>
-                Ambil Foto Struk
+                Pilih Foto Struk
               </Text>
               <Text style={[styles.scanSubtext, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-                Ketuk untuk memilih atau mengambil foto struk belanja
+                Ketuk untuk memilih foto struk belanja dari galeri
               </Text>
             </View>
           )}
         </Pressable>
 
-        {/* Tips */}
         {!result && !scanning && (
           <View style={[styles.tips, { backgroundColor: `${colors.accentPrimary}18` }]}>
             <Text style={[styles.tipsTitle, { color: colors.accentPrimary, fontFamily: 'DMSans-SemiBold' }]}>
@@ -165,13 +153,12 @@ export default function ScannerScreen() {
               'Pastikan seluruh tulisan terlihat jelas',
             ].map(tip => (
               <Text key={tip} style={[styles.tipItem, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-                • {tip}
+                {'\u2022'} {tip}
               </Text>
             ))}
           </View>
         )}
 
-        {/* Result */}
         {result && (
           <View style={styles.resultSection}>
             {result.total > 0 && (

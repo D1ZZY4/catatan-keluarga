@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, View, Pressable, Text, Platform } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { StyleSheet, View, Pressable, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, ArrowUpDown, BarChart3, Wallet, Settings } from 'lucide-react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
@@ -13,15 +14,7 @@ const TAB_CONFIG = [
   { name: 'pengaturan',  label: 'Pengaturan', Icon: Settings,    size: 22 },
 ] as const;
 
-function CustomTabBar({
-  state,
-  descriptors,
-  navigation,
-}: {
-  state: { index: number; routes: Array<{ key: string; name: string }> };
-  descriptors: Record<string, { options: { tabBarLabel?: string } }>;
-  navigation: { emit: (e: { type: string; target: string; canPreventDefault?: boolean }) => { defaultPrevented: boolean }; navigate: (name: string) => void };
-}) {
+function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { colors, shadows } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -34,7 +27,7 @@ function CustomTabBar({
           shadows.float,
         ]}
       >
-        {state.routes.map((route, index) => {
+        {(state.routes as Array<{ key: string; name: string }>).map((route, index) => {
           const isFocused = state.index === index;
           const tabConf = TAB_CONFIG[index];
           if (!tabConf) return null;
@@ -87,13 +80,7 @@ export default function TabsLayout() {
   return (
     <>
       <Tabs
-        tabBar={(props) => (
-          <CustomTabBar
-            state={props.state}
-            descriptors={props.descriptors}
-            navigation={props.navigation}
-          />
-        )}
+        tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen name="beranda" />

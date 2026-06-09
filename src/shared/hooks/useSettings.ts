@@ -43,7 +43,7 @@ export function useSettings() {
         if (found) {
           await found.update(() => { found.value = value; });
         } else {
-          await database.get('settings').create((record: SettingModel) => {
+          await database.get<SettingModel>('settings').create((record) => {
             record.key = key;
             record.value = value;
           });
