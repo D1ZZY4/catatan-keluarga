@@ -1,90 +1,83 @@
-import React from "react";
-import { Calculator, ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useCalculator } from "@/app/CalculatorContext";
-import { cn } from "@/shared/utils/misc";
+import React from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowLeft } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 interface AppBarProps {
   title: string;
+  subtitle?: string;
   showBack?: boolean;
+  rightAction?: React.ReactNode;
   onBack?: () => void;
-  actions?: React.ReactNode;
-  className?: string;
-  transparent?: boolean;
-  hideCalculator?: boolean;
 }
 
-const FROSTED_STYLE: React.CSSProperties = {
-  background: "rgba(var(--bg-card-rgb, 245,238,200), 0.88)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06)",
-  border: "1px solid rgba(255,255,255,0.38)",
-  borderRadius: "22px",
-};
-
-export function AppBar({
-  title,
-  showBack,
-  onBack,
-  actions,
-  className,
-  transparent,
-  hideCalculator,
-}: AppBarProps) {
-  const navigate = useNavigate();
-  const { openCalculator } = useCalculator();
+export function AppBar({ title, subtitle, showBack = false, rightAction, onBack }: AppBarProps) {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const handleBack = () => {
     if (onBack) onBack();
-    else navigate(-1);
+    else router.back();
   };
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-30 px-4 pb-3 bg-transparent pointer-events-none",
-        className,
-      )}
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
-    >
-      <div
-        className="flex items-center h-12 px-2 gap-1 pointer-events-auto"
-        style={transparent ? undefined : FROSTED_STYLE}
-      >
-        {showBack && (
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-full hover:bg-bg-surface active:scale-95 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Kembali"
+    <View style={[styles.container, { paddingTop: insets.top + 8, backgroundColor: colors.bgPage }]}>
+      <View style={styles.row}>
+        {showBack ? (
+          <Pressable
+            onPress={handleBack}
+            style={styles.backBtn}
+            accessibilityLabel="Kembali"
+            accessibilityRole="button"
           >
-            <ChevronLeft size={22} className="text-text-primary" />
-          </button>
+            <ArrowLeft size={22} color={colors.textPrimary} />
+          </Pressable>
+        ) : (
+          <View style={styles.placeholder} />
         )}
-        <h1
-          className={cn(
-            "flex-1 text-[15px] font-semibold text-text-primary truncate",
-            showBack ? "ml-0" : "ml-3",
+
+        <View style={styles.titleContainer}>
+          <Text style={[styles.title, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
           )}
-        >
-          {title}
-        </h1>
-        {actions !== undefined && (
-          <div className="flex items-center gap-1">{actions}</div>
-        )}
-        {!hideCalculator && (
-          <button
-            data-tour="calculator"
-            onClick={openCalculator}
-            className="p-2 rounded-full hover:bg-bg-surface active:scale-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Kalkulator"
-          >
-            <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-bg-surface border border-black/[0.06] dark:border-white/5">
-              <Calculator size={15} className="text-text-muted" />
-            </div>
-          </button>
-        )}
-      </div>
-    </header>
+        </View>
+
+        <View style={styles.rightSlot}>
+          {rightAction ?? <View style={styles.placeholder} />}
+        </View>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  placeholder: { width: 40 },
+  titleContainer: { flex: 1, alignItems: 'center' },
+  title: { fontSize: 18, lineHeight: 26 },
+  subtitle: { fontSize: 12, lineHeight: 16 },
+  rightSlot: { width: 40, alignItems: 'flex-end' },
+});

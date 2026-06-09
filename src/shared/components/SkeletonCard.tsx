@@ -1,40 +1,48 @@
-import React from "react";
-import { cn } from "@/shared/utils/misc";
+import React, { useEffect, useRef } from 'react';
+import { View, Animated, StyleSheet, type ViewStyle } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 
-interface SkeletonProps {
-  className?: string;
+interface SkeletonCardProps {
+  height?: number;
+  width?: number | string;
+  borderRadius?: number;
+  style?: ViewStyle;
 }
 
-export function Skeleton({ className }: SkeletonProps) {
+export function SkeletonCard({ height = 80, width, borderRadius = 12, style }: SkeletonCardProps) {
+  const { colors } = useTheme();
+  const shimmer = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.8] });
+
   return (
-    <div
-      className={cn(
-        "rounded-sm skeleton-shimmer animate-shimmer bg-bg-card",
-        className,
-      )}
+    <Animated.View
+      style={[
+        styles.base,
+        {
+          height,
+          width: width as number | `${number}%` | undefined,
+          borderRadius,
+          backgroundColor: colors.bgSurface,
+          opacity,
+        },
+        style,
+      ]}
     />
   );
 }
 
-export function SkeletonCard({ className }: SkeletonProps) {
-  return (
-    <div className={cn("rounded-xl bg-bg-card p-4 shadow-card space-y-3", className)}>
-      <Skeleton className="h-4 w-2/3" />
-      <Skeleton className="h-6 w-1/2" />
-      <Skeleton className="h-3 w-full" />
-    </div>
-  );
-}
-
-export function SkeletonTransactionItem() {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-      <Skeleton className="h-4 w-16" />
-    </div>
-  );
-}
+const styles = StyleSheet.create({
+  base: { overflow: 'hidden' },
+});

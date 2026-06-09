@@ -1,51 +1,130 @@
-import React from "react";
-import { AlertCircle, CheckCircle, Info, X, XCircle } from "lucide-react";
-import { useToast } from "@/shared/hooks/useToast";
-import { cn } from "@/shared/utils/misc";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, Animated, StyleSheet, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ToastType } from '@/shared/types';
+import { generateId } from '@/shared/utils/helpers';
 
-const ICONS = {
-  success: CheckCircle,
-  error: XCircle,
-  warning: AlertCircle,
-  info: Info,
-} as const;
+interface ToastItem {
+  id: string;
+  message: string;
+  type: ToastType;
+}
 
-const COLORS = {
-  success: "bg-success text-white",
-  error: "bg-danger text-white",
-  warning: "bg-warning text-white",
-  info: "bg-accent-primary text-white",
-} as const;
+interface ToastContextValue {
+  showToast: (message: string, type?: ToastType) => void;
+}
 
-export function ToastContainer() {
-  const { toasts, dismissToast } = useToast();
+const ToastContext = createContext<ToastContextValue | null>(null);
 
-  if (toasts.length === 0) return null;
+function ToastItemView({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) {
+  const { colors } = useTheme();
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(opacity, { toValue: 1, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -20, duration: 250, useNativeDriver: true }),
+      ]).start(onDismiss);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const iconColor = {
+    success: colors.success,
+    error: colors.danger,
+    warning: colors.warning,
+    info: colors.accentPrimary,
+  }[item.type];
+
+  const Icon = {
+    success: CheckCircle,
+    error: XCircle,
+    warning: AlertCircle,
+    info: Info,
+  }[item.type];
 
   return (
-    <div className="fixed bottom-[80px] left-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
-      {toasts.map((toast) => {
-        const Icon = ICONS[toast.type];
-        return (
-          <div
-            key={toast.id}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl shadow-fab animate-fade-in pointer-events-auto",
-              COLORS[toast.type],
-            )}
-          >
-            <Icon size={18} className="flex-shrink-0" />
-            <span className="flex-1 text-sm font-medium">{toast.message}</span>
-            <button
-              onClick={() => dismissToast(toast.id)}
-              className="flex-shrink-0 opacity-80 hover:opacity-100 active:scale-90 transition-all"
-              aria-label="Tutup notifikasi"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
+    <Animated.View
+      style={[
+        styles.toast,
+        { backgroundColor: colors.bgCard, opacity, transform: [{ translateY }] },
+      ]}
+    >
+      <Icon size={18} color={iconColor} />
+      <Text style={[styles.message, { color: colors.textPrimary, fontFamily: 'DMSans-Regular' }]}>
+        {item.message}
+      </Text>
+      <Pressable onPress={onDismiss} accessibilityLabel="Tutup notifikasi">
+        <X size={16} color={colors.textMuted} />
+      </Pressable>
+    </Animated.View>
   );
 }
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const insets = useSafeAreaInsets();
+
+  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+    const id = generateId();
+    setToasts(prev => [...prev.slice(-2), { id, message, type }]);
+  }, []);
+
+  const dismiss = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      <View style={[styles.container, { top: insets.top + 8 }]} pointerEvents="box-none">
+        {toasts.map(item => (
+          <ToastItemView key={item.id} item={item} onDismiss={() => dismiss(item.id)} />
+        ))}
+      </View>
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast harus digunakan di dalam ToastProvider');
+  return ctx;
+}
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 9999,
+    gap: 8,
+  },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  message: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});

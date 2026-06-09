@@ -1,29 +1,17 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
-    "target": "ES2022",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "target": "ES2023",
     "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
+      "ES2023"
     ],
-    "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": false,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "types": [
-      "vite/client",
-      "vite-plugin-pwa/client"
-    ],
+    "jsx": "react-native",
     "paths": {
       "@/*": [
         "./src/*"
@@ -32,6 +20,9 @@
   },
   "include": [
     "src",
-    "vite.config.ts"
+    "app.config.ts",
+    "expo-entry.js",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }

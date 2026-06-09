@@ -1,177 +1,200 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { MoreVertical, Settings2, X } from "lucide-react";
-import { DynamicIcon } from "./DynamicIcon";
-import { cn } from "@/shared/utils/misc";
-import { useQuickActions } from "@/features/home/useQuickActions";
-import { QUICK_ACTION_META } from "@/features/home/quickActionsConfig";
-import { EditQuickActionsSheet } from "@/features/home/EditQuickActionsSheet";
-import type { TransactionType } from "@/shared/types";
+import React, { useRef, useState, useCallback } from 'react';
+import {
+  View, Pressable, StyleSheet, Animated, Text, Modal,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlignJustify, TrendingDown, TrendingUp, ArrowLeftRight, ScanLine, X } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { useRouter } from 'expo-router';
 
-export type FABAction = TransactionType | "scan";
-
-interface FABProps {
-  onAction: (action: FABAction) => void;
+interface QuickAction {
+  label: string;
+  icon: React.ReactNode;
+  onPress: () => void;
 }
 
-export function FAB({ onAction }: FABProps) {
-  const [dialOpen, setDialOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const { actions } = useQuickActions();
+export function FAB() {
+  const { colors, shadows } = useTheme();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const itemAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
 
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
+  const openFAB = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setOpen(true);
+    Animated.parallel([
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ...itemAnims.map((anim, i) =>
+        Animated.spring(anim, {
+          toValue: 1,
+          delay: i * 60,
+          useNativeDriver: true,
+        })
+      ),
+    ]).start();
   }, []);
 
-  useEffect(() => {
-    if (!dialOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDialOpen(false);
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [dialOpen]);
-
-  const handleToggle = useCallback(() => {
-    setDialOpen((v) => !v);
+  const closeFAB = useCallback((cb?: () => void) => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ...itemAnims.map(anim =>
+        Animated.timing(anim, { toValue: 0, duration: 150, useNativeDriver: true })
+      ),
+    ]).start(() => {
+      setOpen(false);
+      cb?.();
+    });
   }, []);
 
-  const handleDialAction = useCallback(
-    (type: FABAction) => {
-      setDialOpen(false);
-      onAction(type);
+  const handleAction = useCallback((action: () => void) => {
+    closeFAB(action);
+  }, [closeFAB]);
+
+  const quickActions: QuickAction[] = [
+    {
+      label: 'Pengeluaran',
+      icon: <TrendingDown size={20} color={colors.danger} />,
+      onPress: () => handleAction(() => router.push('/(modals)/form-transaksi?type=expense')),
     },
-    [onAction],
-  );
+    {
+      label: 'Pemasukan',
+      icon: <TrendingUp size={20} color={colors.success} />,
+      onPress: () => handleAction(() => router.push('/(modals)/form-transaksi?type=income')),
+    },
+    {
+      label: 'Transfer',
+      icon: <ArrowLeftRight size={20} color={colors.accentPrimary} />,
+      onPress: () => handleAction(() => router.push('/(modals)/form-transaksi?type=transfer_internal')),
+    },
+    {
+      label: 'Scan Struk',
+      icon: <ScanLine size={20} color={colors.accentWarm} />,
+      onPress: () => handleAction(() => router.push('/(modals)/scanner')),
+    },
+  ];
 
-  const handleEditOpen = useCallback(() => {
-    setDialOpen(false);
-    setEditOpen(true);
-  }, []);
+  const fabBottom = insets.bottom + 92;
 
   return (
     <>
-      {dialOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setDialOpen(false)}
-          aria-hidden
-        />
+      {open && (
+        <Modal transparent animationType="none" statusBarTranslucent>
+          <Animated.View
+            style={[styles.backdrop, { opacity: backdropAnim, backgroundColor: colors.overlay }]}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => closeFAB()} accessibilityLabel="Tutup menu" />
+          </Animated.View>
+
+          <View style={[styles.actionsContainer, { bottom: fabBottom + 68 }]} pointerEvents="box-none">
+            {[...quickActions].reverse().map((action, reverseIndex) => {
+              const index = quickActions.length - 1 - reverseIndex;
+              const anim = itemAnims[index];
+              if (!anim) return null;
+              return (
+                <Animated.View
+                  key={action.label}
+                  style={[
+                    styles.actionRow,
+                    {
+                      opacity: anim,
+                      transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+                    },
+                  ]}
+                >
+                  <Text style={[styles.actionLabel, { color: colors.textPrimary, fontFamily: 'DMSans-Medium' }]}>
+                    {action.label}
+                  </Text>
+                  <Pressable
+                    onPress={action.onPress}
+                    style={[styles.actionBtn, { backgroundColor: colors.bgCard }, shadows.md]}
+                    accessibilityLabel={action.label}
+                  >
+                    {action.icon}
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
+          </View>
+        </Modal>
       )}
 
-      <div
-        className={cn(
-          "fixed right-4 z-50 flex flex-col items-end gap-2.5 transition-all duration-300",
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
-        )}
-        style={{ bottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
-      >
-        {/* Edit Aksi Cepat — always last (topmost) */}
-        <div
-          className={cn(
-            "flex items-center gap-2.5 transition-all",
-            dialOpen
-              ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 translate-y-4 pointer-events-none",
-          )}
-          style={{
-            transitionDuration: "180ms",
-            transitionDelay: dialOpen ? `${(actions.length) * 50}ms` : "0ms",
-          }}
+      <View style={[styles.fabWrapper, { bottom: fabBottom, right: 20 }]} pointerEvents="box-none">
+        <Pressable
+          onPress={open ? () => closeFAB() : openFAB}
+          style={({ pressed }) => [
+            styles.fab,
+            { backgroundColor: colors.accentPrimary },
+            shadows.float,
+            pressed && { transform: [{ scale: 0.95 }] },
+          ]}
+          accessibilityLabel="Menu aksi cepat"
+          accessibilityRole="button"
         >
-          <span
-            className="text-xs font-semibold text-text-primary bg-bg-surface/95 backdrop-blur-sm px-2.5 py-1 rounded-full whitespace-nowrap"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
-          >
-            Edit Aksi Cepat
-          </span>
-          <button
-            onClick={handleEditOpen}
-            aria-label="Edit aksi cepat"
-            className="w-11 h-11 rounded-full flex items-center justify-center bg-bg-surface ring-1 ring-black/[0.08] active:scale-90 transition-transform shadow-card"
-          >
-            <Settings2 size={18} className="text-text-muted" />
-          </button>
-        </div>
-
-        {/* Quick action items — reversed so first action is closest to button */}
-        {[...actions].reverse().map((action, revIdx) => {
-          const idx = actions.length - 1 - revIdx;
-          const meta = QUICK_ACTION_META[action.type];
-          const delay = dialOpen ? `${idx * 50}ms` : "0ms";
-          return (
-            <div
-              key={action.id}
-              className={cn(
-                "flex items-center gap-2.5 transition-all",
-                dialOpen
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 translate-y-4 pointer-events-none",
-              )}
-              style={{ transitionDuration: "180ms", transitionDelay: delay }}
-            >
-              <span
-                className="text-xs font-semibold text-text-primary bg-bg-surface/95 backdrop-blur-sm px-2.5 py-1 rounded-full whitespace-nowrap"
-                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
-              >
-                {meta.label}
-              </span>
-              <button
-                onClick={() => handleDialAction(action.type as FABAction)}
-                aria-label={meta.label}
-                className="w-11 h-11 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-card ring-1 ring-black/[0.08]"
-                style={{ background: meta.iconBg }}
-              >
-                <DynamicIcon
-                  name={meta.iconName}
-                  size={19}
-                  strokeWidth={2}
-                  style={{ color: meta.iconColor }}
-                />
-              </button>
-            </div>
-          );
-        })}
-
-        {/* Main toggle button */}
-        <button
-          data-tour="fab"
-          onClick={handleToggle}
-          aria-label={dialOpen ? "Tutup menu" : "Buka menu aksi cepat"}
-          className={cn(
-            "w-14 h-14 rounded-full flex items-center justify-center",
-            "active:scale-90 transition-all duration-200 select-none",
-            dialOpen ? "bg-text-muted/70" : "bg-accent-primary",
-          )}
-          style={
-            !dialOpen
-              ? {
-                  boxShadow:
-                    "0 4px 20px rgba(140,192,235,0.55), 0 2px 8px rgba(140,192,235,0.30)",
-                }
-              : undefined
-          }
-        >
-          <div
-            className={cn(
-              "transition-transform duration-200",
-              dialOpen ? "rotate-90" : "rotate-0",
-            )}
-          >
-            {dialOpen ? (
-              <X size={22} strokeWidth={2.5} className="text-white" />
-            ) : (
-              <MoreVertical size={22} strokeWidth={2.5} className="text-white" />
-            )}
-          </div>
-        </button>
-      </div>
-
-      <EditQuickActionsSheet
-        isOpen={editOpen}
-        onClose={() => setEditOpen(false)}
-      />
+          <Animated.View style={{ transform: [{ rotate: open ? '45deg' : '0deg' }] }}>
+            {open
+              ? <X size={24} color={colors.white} />
+              : <AlignJustify size={24} color={colors.white} />
+            }
+          </Animated.View>
+        </Pressable>
+      </View>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+  fabWrapper: {
+    position: 'absolute',
+    zIndex: 200,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionsContainer: {
+    position: 'absolute',
+    right: 20,
+    zIndex: 200,
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  actionLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  actionBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

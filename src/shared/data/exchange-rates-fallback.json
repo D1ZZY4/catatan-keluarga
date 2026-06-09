@@ -1,0 +1,20 @@
+{
+  "base": "IDR",
+  "updatedAt": "2025-01-01",
+  "note": "Data statis, perbarui berkala saat rilis versi baru",
+  "rates": {
+    "USD": 0.000064,
+    "EUR": 0.000059,
+    "SGD": 0.000086,
+    "MYR": 0.000300,
+    "JPY": 0.0096,
+    "GBP": 0.000050,
+    "AUD": 0.000098,
+    "CNY": 0.000465,
+    "BTC": 0.0000000016,
+    "ETH": 0.000000026,
+    "BNB": 0.00000021,
+    "USDT": 0.000064,
+    "XAU": 0.000000041
+  }
+}
