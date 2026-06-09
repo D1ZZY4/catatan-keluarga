@@ -88,7 +88,7 @@ export default function TabsLayout() {
   return (
     <>
       <Tabs
-        tabBar={(props) => <CustomTabBar {...(props as unknown as TabBarProps)} />}
+        tabBar={(props) => <CustomTabBar {...(props as TabBarProps)} />}
         screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen name="beranda" />

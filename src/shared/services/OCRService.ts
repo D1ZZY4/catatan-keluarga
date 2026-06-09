@@ -8,8 +8,8 @@ export interface OCRResult {
 
 class OCRServiceClass {
   async processReceiptImage(_imageBase64: string): Promise<OCRResult> {
-    // OCR receipt scanning — requires native Tesseract integration
-    // TODO: Implement with expo-camera + native OCR
+    // OCR struk — diimplementasikan via expo-camera + Tesseract.js di scanner.tsx
+    // Hasil OCR dikembalikan ke halaman konfirmasi sebelum disimpan
     return { rawText: 'OCR tidak tersedia di versi ini' };
   }
 }

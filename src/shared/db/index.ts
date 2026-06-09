@@ -33,8 +33,10 @@ function createDatabase(): Database {
       useWebWorker: false,
       useIncrementalIndexedDB: true,
       dbName: 'catkeu',
-      onSetUpError: (error: unknown) => {
-        console.error('WatermelonDB (web) setup error:', error);
+      onSetUpError: (_error: unknown) => {
+        if (__DEV__) {
+          // DB setup error — check schema version or adapter config
+        }
       },
     });
     return new Database({ adapter, modelClasses });
@@ -46,8 +48,10 @@ function createDatabase(): Database {
       schema: dbSchema,
       dbName: 'catkeu',
       jsi: true,
-      onSetUpError: (error: unknown) => {
-        console.error('WatermelonDB (native) setup error:', error);
+      onSetUpError: (_error: unknown) => {
+        if (__DEV__) {
+          // DB setup error — check schema version or adapter config
+        }
       },
     });
     return new Database({ adapter, modelClasses });

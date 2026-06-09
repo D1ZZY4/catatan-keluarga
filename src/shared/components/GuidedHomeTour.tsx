@@ -79,7 +79,7 @@ export function GuidedHomeTour({ steps, onComplete, onSkip }: GuidedHomeTourProp
     ? { top: 80 }
     : step.bubble.position === 'bottom'
     ? { bottom: 160 }
-    : { top: '35%' as unknown as number };
+    : { top: '35%' };
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={handleSkip}>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   bubble: {
     position: 'absolute',
     marginHorizontal: 20,
-    width: '88%' as unknown as number,
+    width: '88%',
     borderRadius: 20,
     padding: 20,
     gap: 10,

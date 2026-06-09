@@ -7,60 +7,52 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { AppBar } from '@/shared/components/AppBar';
 import { Button } from '@/shared/components/Button';
 import { useToast } from '@/shared/components/Toast';
-import { database } from '@/shared/db';
+import { database, WalletModel, TransactionModel, CategoryModel } from '@/shared/db';
 import { Download, Upload, Info, FileText } from 'lucide-react-native';
 import { formatDate } from '@/shared/utils/formatters';
 
-interface RawWallet { id: string; name: string; currency: string; balance: number; type: string }
-interface RawTransaction { id: string; type: string; amount: number; currency: string; note?: string; date: number; category_id: string; wallet_id: string }
+type RawModelRecord = Record<string, unknown>;
 
 async function buildBackupJson(): Promise<string> {
   const [wallets, transactions, categories, budgets, reminders, settings] = await Promise.all([
-    database.get('wallets').query().fetch(),
-    database.get('transactions').query().fetch(),
-    database.get('categories').query().fetch(),
+    database.get<WalletModel>('wallets').query().fetch(),
+    database.get<TransactionModel>('transactions').query().fetch(),
+    database.get<CategoryModel>('categories').query().fetch(),
     database.get('budgets').query().fetch(),
     database.get('reminders').query().fetch(),
     database.get('settings').query().fetch(),
   ]);
+  const toRaw = (m: { _raw: RawModelRecord }) => m._raw;
   const backup = {
     version: '1.0.0',
     createdAt: Date.now(),
-    wallets: wallets.map(w => (w as { _raw: unknown })._raw),
-    transactions: transactions.map(t => (t as { _raw: unknown })._raw),
-    categories: categories.map(c => (c as { _raw: unknown })._raw),
-    budgets: budgets.map(b => (b as { _raw: unknown })._raw),
-    reminders: reminders.map(r => (r as { _raw: unknown })._raw),
-    settings: settings.map(s => (s as { _raw: unknown })._raw),
+    wallets: (wallets as Array<{ _raw: RawModelRecord }>).map(toRaw),
+    transactions: (transactions as Array<{ _raw: RawModelRecord }>).map(toRaw),
+    categories: (categories as Array<{ _raw: RawModelRecord }>).map(toRaw),
+    budgets: (budgets as Array<{ _raw: RawModelRecord }>).map(toRaw),
+    reminders: (reminders as Array<{ _raw: RawModelRecord }>).map(toRaw),
+    settings: (settings as Array<{ _raw: RawModelRecord }>).map(toRaw),
   };
   return JSON.stringify(backup, null, 2);
 }
 
 async function buildCsvString(): Promise<string> {
   const [transactions, wallets, categories] = await Promise.all([
-    database.get('transactions').query().fetch(),
-    database.get('wallets').query().fetch(),
-    database.get('categories').query().fetch(),
+    database.get<TransactionModel>('transactions').query().fetch(),
+    database.get<WalletModel>('wallets').query().fetch(),
+    database.get<CategoryModel>('categories').query().fetch(),
   ]);
 
-  type WModel = { id: string; _raw: RawWallet };
-  type CModel = { id: string; _raw: { name: string } };
-  type TModel = { _raw: RawTransaction };
-  const walletMap = new Map<string, string>(
-    wallets.map(w => [(w as unknown as WModel).id, (w as unknown as WModel)._raw.name])
-  );
-  const categoryMap = new Map<string, string>(
-    categories.map(c => [(c as unknown as CModel).id, (c as unknown as CModel)._raw.name])
-  );
+  const walletMap = new Map<string, string>(wallets.map(w => [w.id, w.name]));
+  const categoryMap = new Map<string, string>(categories.map(c => [c.id, c.name]));
 
   const header = 'Tanggal,Tipe,Dompet,Kategori,Nominal,Mata Uang,Catatan\n';
   const rows = transactions.map(t => {
-    const raw = (t as unknown as TModel)._raw;
-    const date = formatDate(raw.date);
-    const wallet = walletMap.get(raw.wallet_id) ?? '';
-    const category = categoryMap.get(raw.category_id) ?? '';
-    const note = (raw.note ?? '').replace(/,/g, ';');
-    return `"${date}","${raw.type}","${wallet}","${category}",${raw.amount},"${raw.currency}","${note}"`;
+    const date = formatDate(t.date);
+    const wallet = walletMap.get(t.walletId) ?? '';
+    const category = categoryMap.get(t.categoryId) ?? '';
+    const note = (t.note ?? '').replace(/,/g, ';');
+    return `"${date}","${t.type}","${wallet}","${category}",${t.amount},"${t.currency}","${note}"`;
   });
   return header + rows.join('\n');
 }
@@ -167,14 +159,11 @@ export default function BackupScreen() {
         for (const table of tables) {
           const collection = database.get(table.name);
           const existing = await collection.query().fetch();
-          type BatchOp = Parameters<typeof database.batch>[0];
-          const deleteOps: BatchOp[] = existing.map(r =>
-            (r as unknown as { prepareDestroyPermanently: () => BatchOp }).prepareDestroyPermanently()
-          );
-          const createOps: BatchOp[] = table.rows.map(raw =>
-            collection.prepareCreate((record: unknown) => {
+          const deleteOps = existing.map(r => r.prepareDestroyPermanently());
+          const createOps = table.rows.map(raw =>
+            collection.prepareCreate((record) => {
               (record as { _raw: RawRecord })._raw = { ...raw };
-            }) as unknown as BatchOp
+            })
           );
           await database.batch(...deleteOps, ...createOps);
         }
