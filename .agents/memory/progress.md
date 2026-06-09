@@ -58,6 +58,23 @@
 - data-tour attributes: greeting, wallets, fab, navbar, budget, calculator ✓
 - GuidedHomeTour: confetti on completion, focus restore ✓
 
+## SDK 56 Upgrade (sesi ini)
+
+- `npx expo install expo@latest` → expo@56.0.9 (dari 53.0)
+- `npx expo install --fix` → 31 packages upgraded (RN 0.85.3, reanimated v4, expo-router v56, dll)
+- `bun add -d @types/react@~19.2.14 typescript@~6.0.3` → TS 6.0 + types terbaru
+- 6 TypeScript errors diperbaiki:
+  1. `app.config.ts` — hapus `splash` (pindah ke expo-splash-screen plugin)
+  2. `_layout.tsx` — ganti `BottomTabBarProps` import dengan custom `TabBarProps` + cast `as unknown`
+  3. `backup.tsx` + `BackupService.ts` — ganti `documentDirectory/writeAsStringAsync/readAsStringAsync` ke `new File(Paths.document, name)` + `file.write()/file.text()` API
+  4. `FAB.tsx` — ganti `StyleSheet.absoluteFillObject` (dihapus di RN 0.85) dengan explicit values
+  5. `crypto/index.ts` — cast `ArrayBufferLike as ArrayBuffer` (TS 6 lebih ketat)
+- `react-native-worklets@0.8.3` diinstall (required by reanimated v4)
+- `@react-navigation/native` dihapus dari direct deps (expo-router v56 sudah include)
+- Workflow command: `bun install && BROWSER=none npx expo start --web --port 5000`
+- expo-doctor: 20/21 (satu warning `.expo/` gitignore sudah ditambahkan ke .gitignore)
+- TypeScript 0 errors setelah semua fix
+
 ## Verifikasi Loop (sesi terbaru — Expo RN codebase)
 
 - tsc --noEmit: bersih (0 error) ✓

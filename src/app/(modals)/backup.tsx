@@ -77,16 +77,14 @@ export default function BackupScreen() {
     setExporting(true);
     try {
       const json = await buildBackupJson();
-      const FileSystem = await import('expo-file-system');
+      const { Paths, File: EFile } = await import('expo-file-system');
       const Sharing = await import('expo-sharing');
       const filename = `catkeu-backup-${new Date().toISOString().split('T')[0]}.catkeu`;
-      const path = `${FileSystem.default.documentDirectory ?? ''}${filename}`;
-      await FileSystem.default.writeAsStringAsync(path, json, {
-        encoding: FileSystem.default.EncodingType.UTF8,
-      });
+      const file = new EFile(Paths.document, filename);
+      file.write(json);
       const canShare = await Sharing.default.isAvailableAsync();
       if (canShare) {
-        await Sharing.default.shareAsync(path, {
+        await Sharing.default.shareAsync(file.uri, {
           mimeType: 'application/json',
           dialogTitle: 'Simpan file backup',
         });
@@ -103,16 +101,14 @@ export default function BackupScreen() {
     setExportingCsv(true);
     try {
       const csv = await buildCsvString();
-      const FileSystem = await import('expo-file-system');
+      const { Paths, File: EFile } = await import('expo-file-system');
       const Sharing = await import('expo-sharing');
       const filename = `catkeu-transaksi-${new Date().toISOString().split('T')[0]}.csv`;
-      const path = `${FileSystem.default.documentDirectory ?? ''}${filename}`;
-      await FileSystem.default.writeAsStringAsync(path, csv, {
-        encoding: FileSystem.default.EncodingType.UTF8,
-      });
+      const file = new EFile(Paths.document, filename);
+      file.write(csv);
       const canShare = await Sharing.default.isAvailableAsync();
       if (canShare) {
-        await Sharing.default.shareAsync(path, {
+        await Sharing.default.shareAsync(file.uri, {
           mimeType: 'text/csv',
           dialogTitle: 'Simpan file CSV',
         });
@@ -129,7 +125,7 @@ export default function BackupScreen() {
     setImporting(true);
     try {
       const DocumentPicker = await import('expo-document-picker');
-      const FileSystem = await import('expo-file-system');
+      const { File: EFile } = await import('expo-file-system');
       const result = await DocumentPicker.default.getDocumentAsync({
         type: '*/*',
         copyToCacheDirectory: true,
@@ -139,9 +135,7 @@ export default function BackupScreen() {
         return;
       }
       const uri = result.assets[0].uri;
-      const text = await FileSystem.default.readAsStringAsync(uri, {
-        encoding: FileSystem.default.EncodingType.UTF8,
-      });
+      const text = await new EFile(uri).text();
 
       type RawRecord = Record<string, unknown> & { id: string };
       type BackupFile = {

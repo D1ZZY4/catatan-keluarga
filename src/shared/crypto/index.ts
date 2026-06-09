@@ -29,12 +29,12 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 
 export async function initEncryptionKey(pin: string): Promise<void> {
   const salt = await generateSalt();
-  const saltBase64 = arrayBufferToBase64(salt.buffer);
+  const saltBase64 = arrayBufferToBase64(salt.buffer as ArrayBuffer);
   await SecureStorage.setItemAsync(SALT_STORE_KEY, saltBase64);
 
   const pinBytes = new TextEncoder().encode(pin);
   const pinDigest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, pinBytes);
-  const keyBase64 = arrayBufferToBase64(pinDigest);
+  const keyBase64 = arrayBufferToBase64(pinDigest as ArrayBuffer);
   await SecureStorage.setItemAsync(KEY_STORE_KEY, keyBase64);
 }
 

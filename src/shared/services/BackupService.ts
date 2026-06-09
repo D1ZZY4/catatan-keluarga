@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { Paths, File as EFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { database } from '@/shared/db';
@@ -37,15 +37,12 @@ class BackupServiceClass {
 
       const json = JSON.stringify(backup, null, 2);
       const filename = `catkeu-backup-${new Date().toISOString().split('T')[0]}.catkeu`;
-      const path = `${FileSystem.documentDirectory ?? ''}${filename}`;
-
-      await FileSystem.writeAsStringAsync(path, json, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
+      const file = new EFile(Paths.document, filename);
+      file.write(json);
 
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(path, {
+        await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
           dialogTitle: 'Simpan file backup',
           UTI: 'public.json',
@@ -70,9 +67,7 @@ class BackupServiceClass {
       const uri = result.assets[0]?.uri;
       if (!uri) return { success: false, message: 'File tidak valid' };
 
-      const json = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
+      const json = await new EFile(uri).text();
 
       const data = JSON.parse(json) as BackupData;
 
@@ -80,7 +75,6 @@ class BackupServiceClass {
         return { success: false, message: 'Format file tidak valid' };
       }
 
-      // Import logic would go here
       return { success: true, message: 'Data berhasil diimpor' };
     } catch (error) {
       return { success: false, message: `Gagal mengimpor: ${String(error)}` };

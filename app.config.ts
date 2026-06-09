@@ -12,11 +12,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './src/assets/icons/icon.png',
   scheme: 'catkeu',
   userInterfaceStyle: 'automatic',
-  splash: {
-    image: './src/assets/icons/splash.png',
-    resizeMode: 'contain',
-    backgroundColor: '#FFF9D2',
-  },
   android: {
     package: 'id.catkeu.app',
     adaptiveIcon: {
@@ -40,6 +35,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-camera', { cameraPermission: 'Izinkan kamera untuk scan struk.' }],
     ['expo-secure-store'],
     '@react-native-community/datetimepicker',
+    ['expo-splash-screen', {
+      image: './src/assets/icons/splash.png',
+      imageWidth: 200,
+      resizeMode: 'contain',
+      backgroundColor: '#FFF9D2',
+    }],
   ],
   experiments: {
     typedRoutes: true,
