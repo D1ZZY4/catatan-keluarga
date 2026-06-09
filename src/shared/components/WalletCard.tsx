@@ -22,6 +22,7 @@ interface WalletCardProps {
 
 export const WalletCard = memo(function WalletCard({ wallet, onPress }: WalletCardProps) {
   const { colors, shadows } = useTheme();
+  const accentColor = wallet.color || colors.accentPrimary;
 
   return (
     <Pressable
@@ -35,25 +36,44 @@ export const WalletCard = memo(function WalletCard({ wallet, onPress }: WalletCa
       accessibilityLabel={`Dompet ${wallet.name}, saldo ${formatCurrency(wallet.balance, wallet.currency)}`}
       accessibilityRole="button"
     >
-      <View style={styles.header}>
-        <View style={[styles.iconBadge, { backgroundColor: `${wallet.color}22` }]}>
-          <View style={[styles.colorDot, { backgroundColor: wallet.color }]} />
+      {/* Color accent stripe at top */}
+      <View style={[styles.accentBar, { backgroundColor: `${accentColor}30` }]} />
+
+      <View style={styles.body}>
+        {/* Header row: icon + type badge */}
+        <View style={styles.header}>
+          <View style={[styles.iconBadge, { backgroundColor: `${accentColor}25` }]}>
+            <View style={[styles.colorDot, { backgroundColor: accentColor }]} />
+          </View>
+          <View style={[styles.typePill, { backgroundColor: `${accentColor}15` }]}>
+            <Text style={[styles.typePillText, { color: accentColor, fontFamily: 'DMSans-SemiBold' }]}>
+              {WALLET_TYPE_LABELS[wallet.type] ?? wallet.type}
+            </Text>
+          </View>
         </View>
-        <View style={styles.typeLabel}>
-          <Text style={[styles.typeLabelText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-            {WALLET_TYPE_LABELS[wallet.type] ?? wallet.type}
-          </Text>
-        </View>
+
+        {/* Wallet name */}
+        <Text
+          style={[styles.walletName, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]}
+          numberOfLines={1}
+        >
+          {wallet.name}
+        </Text>
+
+        {/* Balance */}
+        <Text
+          style={[styles.balance, { color: colors.textPrimary, fontFamily: 'InstrumentSerif-Regular' }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
+          {formatCurrency(wallet.balance, wallet.currency)}
+        </Text>
+
+        {/* Currency */}
+        <Text style={[styles.currency, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
+          {wallet.currency}
+        </Text>
       </View>
-      <Text style={[styles.walletName, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]} numberOfLines={1}>
-        {wallet.name}
-      </Text>
-      <Text style={[styles.balance, { color: colors.textPrimary, fontFamily: 'InstrumentSerif-Regular' }]}>
-        {formatCurrency(wallet.balance, wallet.currency)}
-      </Text>
-      <Text style={[styles.currency, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-        {wallet.currency}
-      </Text>
     </Pressable>
   );
 });
@@ -61,17 +81,29 @@ export const WalletCard = memo(function WalletCard({ wallet, onPress }: WalletCa
 const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    padding: 18,
-    gap: 6,
-    minWidth: 160,
+    overflow: 'hidden',
+    minWidth: 150,
   },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  iconBadge: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.8, transform: [{ scale: 0.97 }] },
+  accentBar: { height: 5, width: '100%' },
+  body: { padding: 14, gap: 5 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  iconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   colorDot: { width: 14, height: 14, borderRadius: 7 },
-  typeLabel: {},
-  typeLabelText: { fontSize: 12, lineHeight: 16 },
-  walletName: { fontSize: 15, lineHeight: 22 },
-  balance: { fontSize: 28, lineHeight: 36 },
-  currency: { fontSize: 12, lineHeight: 16 },
+  typePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99 },
+  typePillText: { fontSize: 10 },
+  walletName: { fontSize: 14, lineHeight: 20 },
+  balance: { fontSize: 22, lineHeight: 28 },
+  currency: { fontSize: 11, lineHeight: 16 },
 });

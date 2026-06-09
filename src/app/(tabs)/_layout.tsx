@@ -15,11 +15,11 @@ type TabBarProps = {
 };
 
 const TAB_CONFIG = [
-  { name: 'beranda',     label: 'Beranda',    Icon: Home,        size: 22 },
-  { name: 'transaksi',   label: 'Transaksi',  Icon: ArrowUpDown, size: 22 },
-  { name: 'statistik',   label: 'Statistik',  Icon: BarChart3,   size: 26 },
-  { name: 'dompet',      label: 'Dompet',     Icon: Wallet,      size: 22 },
-  { name: 'pengaturan',  label: 'Pengaturan', Icon: Settings,    size: 22 },
+  { name: 'beranda',    label: 'Beranda',    Icon: Home,       size: 22 },
+  { name: 'transaksi',  label: 'Transaksi',  Icon: ArrowUpDown, size: 22 },
+  { name: 'statistik',  label: 'Statistik',  Icon: BarChart3,  size: 22 },
+  { name: 'dompet',     label: 'Dompet',     Icon: Wallet,     size: 22 },
+  { name: 'pengaturan', label: 'Pengaturan', Icon: Settings,   size: 22 },
 ] as const;
 
 function CustomTabBar({ state, navigation }: TabBarProps) {
@@ -27,30 +27,26 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBarOuter, { paddingBottom: insets.bottom + 8 }]}>
+    <View style={[styles.outerWrap, { paddingBottom: insets.bottom + 8 }]}>
       <View
         style={[
-          styles.tabBarContainer,
-          { backgroundColor: colors.bgCard },
+          styles.pill,
+          {
+            backgroundColor: `${colors.bgCard}E8`,
+          },
           shadows.float,
         ]}
       >
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const tabConf = TAB_CONFIG[index];
-          if (!tabConf) return null;
-          const { Icon, label, size } = tabConf;
+          const conf = TAB_CONFIG[index];
+          if (!conf) return null;
+          const { Icon, label, size } = conf;
           const color = isFocused ? colors.accentPrimary : colors.textMuted;
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
           };
 
           return (
@@ -60,17 +56,20 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
               style={styles.tabItem}
               accessibilityLabel={label}
               accessibilityRole="button"
+              accessibilityState={{ selected: isFocused }}
             >
-              <Icon size={size} color={color} strokeWidth={isFocused ? 2.5 : 1.8} />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color,
-                    fontFamily: isFocused ? 'DMSans-SemiBold' : 'DMSans-Regular',
-                  },
-                ]}
-              >
+              <Icon
+                size={size}
+                color={color}
+                strokeWidth={isFocused ? 2.5 : 1.8}
+              />
+              <Text style={[
+                styles.tabLabel,
+                {
+                  color,
+                  fontFamily: isFocused ? 'DMSans-SemiBold' : 'DMSans-Regular',
+                },
+              ]}>
                 {label}
               </Text>
               {isFocused && (
@@ -103,19 +102,20 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBarOuter: {
+  outerWrap: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    pointerEvents: 'box-none',
   },
-  tabBarContainer: {
+  pill: {
     flexDirection: 'row',
     borderRadius: 28,
     paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     width: '100%',
     maxWidth: 480,
   },
@@ -125,14 +125,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 4,
     minHeight: 44,
-    minWidth: 44,
     position: 'relative',
+    gap: 3,
   },
-  tabLabel: {
-    fontSize: 10,
-    lineHeight: 14,
-    marginTop: 2,
-  },
+  tabLabel: { fontSize: 10, lineHeight: 14 },
   activeDot: {
     position: 'absolute',
     bottom: -2,

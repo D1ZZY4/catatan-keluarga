@@ -9,3 +9,4 @@
 - [React Router future flags TS](rr-future-flags.md) — v7_startTransition not in FutureConfig type; cast as Record<string,boolean> to suppress TS error
 - [AppBar prop name](appbar-props.md) — AppBar uses rightAction (not rightElement); ProgressBar now accepts color prop
 - [WatermelonDB model cast](wdb-model-cast.md) — cast via `as unknown as T` when TS rejects direct Model→typed cast due to _RawRecord incompatibility
+- [UI redesign patterns](ui-redesign.md) — old-code design language: grouped tx card containers, NetWorthHero bgCard header, pill BottomNav, WalletCard color accent stripe, BookOpen not in lucide-react-native

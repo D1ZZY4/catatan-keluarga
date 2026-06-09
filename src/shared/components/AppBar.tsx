@@ -14,32 +14,36 @@ interface AppBarProps {
 }
 
 export function AppBar({ title, subtitle, showBack = false, rightAction, onBack }: AppBarProps) {
-  const { colors } = useTheme();
+  const { colors, shadows } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const handleBack = () => {
-    if (onBack) onBack();
-    else router.back();
-  };
+  const handleBack = () => { if (onBack) onBack(); else router.back(); };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8, backgroundColor: colors.bgPage }]}>
+    <View style={[
+      styles.container,
+      {
+        paddingTop: insets.top + 8,
+        backgroundColor: `${colors.bgCard}E0`,
+      },
+      shadows.sm,
+    ]}>
       <View style={styles.row}>
         {showBack ? (
           <Pressable
             onPress={handleBack}
-            style={styles.backBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.bgSurface }]}
             accessibilityLabel="Kembali"
             accessibilityRole="button"
           >
-            <ArrowLeft size={22} color={colors.textPrimary} />
+            <ArrowLeft size={20} color={colors.textPrimary} />
           </Pressable>
         ) : (
           <View style={styles.placeholder} />
         )}
 
-        <View style={styles.titleContainer}>
+        <View style={styles.titleWrap}>
           <Text style={[styles.title, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]} numberOfLines={1}>
             {title}
           </Text>
@@ -60,7 +64,7 @@ export function AppBar({ title, subtitle, showBack = false, rightAction, onBack 
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 12,
+    paddingBottom: 14,
     paddingHorizontal: 16,
   },
   row: {
@@ -68,16 +72,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
   },
-  placeholder: { width: 40 },
-  titleContainer: { flex: 1, alignItems: 'center' },
-  title: { fontSize: 18, lineHeight: 26 },
+  placeholder: { width: 38 },
+  titleWrap: { flex: 1, alignItems: 'center' },
+  title: { fontSize: 17, lineHeight: 24 },
   subtitle: { fontSize: 12, lineHeight: 16 },
-  rightSlot: { width: 40, alignItems: 'flex-end' },
+  rightSlot: { width: 38, alignItems: 'flex-end' },
 });

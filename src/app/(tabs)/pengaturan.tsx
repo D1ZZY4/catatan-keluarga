@@ -5,44 +5,46 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import {
-  User, Shield, Palette, Bell, Database, Trash2, Info,
+  User, Shield, Palette, Bell, Database, Trash2,
   ChevronRight, PiggyBank, CalendarClock, FileText,
-  ReceiptText, Layers, Tag, TrendingUp,
+  ReceiptText, Layers, Tag, TrendingUp, Info,
 } from 'lucide-react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useRouter } from 'expo-router';
 
-interface SettingRow {
+interface SettingRowProps {
   icon: React.ReactNode;
   label: string;
-  subtitle?: string;
+  description?: string;
   onPress?: () => void;
   right?: React.ReactNode;
+  danger?: boolean;
 }
 
-function SettingItem({ icon, label, subtitle, onPress, right }: SettingRow) {
+function SettingRow({ icon, label, description, onPress, right, danger = false }: SettingRowProps) {
   const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.settingRow,
-        { backgroundColor: colors.bgCard, opacity: pressed ? 0.85 : 1 },
+        styles.row,
+        { backgroundColor: colors.bgSurface, opacity: pressed && onPress ? 0.75 : 1 },
       ]}
       accessibilityLabel={label}
+      disabled={!onPress}
     >
-      <View style={[styles.settingIcon, { backgroundColor: colors.bgSurface }]}>{icon}</View>
-      <View style={styles.settingText}>
-        <Text style={[styles.settingLabel, { color: colors.textPrimary, fontFamily: 'DMSans-Medium' }]}>
+      <View style={[styles.rowIcon, { backgroundColor: colors.bgPage }]}>{icon}</View>
+      <View style={styles.rowText}>
+        <Text style={[styles.rowLabel, { color: danger ? colors.danger : colors.textPrimary, fontFamily: 'DMSans-Medium' }]}>
           {label}
         </Text>
-        {subtitle && (
-          <Text style={[styles.settingSubtitle, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-            {subtitle}
+        {description && (
+          <Text style={[styles.rowDesc, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
+            {description}
           </Text>
         )}
       </View>
-      {right !== undefined ? right : <ChevronRight size={18} color={colors.textMuted} />}
+      {right !== undefined ? right : onPress ? <ChevronRight size={16} color={colors.textMuted} /> : null}
     </Pressable>
   );
 }
@@ -50,17 +52,25 @@ function SettingItem({ icon, label, subtitle, onPress, right }: SettingRow) {
 function SectionHeader({ title }: { title: string }) {
   const { colors } = useTheme();
   return (
-    <Text style={[styles.sectionHeader, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>
+    <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: 'DMSans-SemiBold' }]}>
       {title}
     </Text>
   );
 }
 
+function SettingGroup({ children }: { children: React.ReactNode }) {
+  const { colors, shadows } = useTheme();
+  return (
+    <View style={[styles.group, { backgroundColor: colors.bgSurface, overflow: 'hidden' }, shadows.sm]}>
+      {children}
+    </View>
+  );
+}
+
 export default function PengaturanScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
   const version = Constants.expoConfig?.version ?? '1.0.0';
   const buildDate = (Constants.expoConfig?.extra?.buildDate as string | undefined) ?? '-';
 
@@ -77,132 +87,154 @@ export default function PengaturanScreen() {
         Pengaturan
       </Text>
 
-      <SectionHeader title="AKUN" />
-      <View style={styles.group}>
-        <SettingItem
+      <SectionHeader title="PROFIL" />
+      <SettingGroup>
+        <SettingRow
           icon={<User size={18} color={colors.accentPrimary} />}
           label="Profil"
-          subtitle="Nama pengguna dan avatar"
+          description="Nama pengguna dan avatar"
           onPress={() => router.push('/(modals)/profil')}
         />
-        <SettingItem
+      </SettingGroup>
+
+      <SectionHeader title="KEAMANAN" />
+      <SettingGroup>
+        <SettingRow
           icon={<Shield size={18} color={colors.success} />}
           label="Keamanan"
-          subtitle="PIN, biometrik, kunci otomatis"
+          description="PIN, biometrik, kunci otomatis"
           onPress={() => router.push('/(modals)/keamanan')}
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="KEUANGAN" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<PiggyBank size={18} color={colors.accentWarm} />}
           label="Anggaran"
-          subtitle="Batas pengeluaran per kategori"
+          description="Batas pengeluaran per kategori"
           onPress={() => router.push('/(modals)/anggaran')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<CalendarClock size={18} color={colors.warning} />}
           label="Tagihan & Pengingat"
-          subtitle="Jadwal tagihan berulang"
+          description="Jadwal tagihan berulang"
           onPress={() => router.push('/(modals)/tagihan')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<Layers size={18} color={colors.accentSecondary} />}
           label="Kategori"
-          subtitle="Kelola kategori transaksi"
+          description="Kelola kategori transaksi"
           onPress={() => router.push('/(modals)/kategori')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<FileText size={18} color={colors.accentPrimary} />}
           label="Template Transaksi"
-          subtitle="Transaksi yang sering digunakan"
+          description="Transaksi yang sering digunakan"
           onPress={() => router.push('/(modals)/templates')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<ReceiptText size={18} color={colors.success} />}
           label="Hitung Bagi Tagihan"
-          subtitle="Kalkulator split bill"
+          description="Kalkulator split bill"
           onPress={() => router.push('/(modals)/kalkulator-tagihan')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<Tag size={18} color={colors.accentWarm} />}
           label="Kelola Tag"
-          subtitle="Tag untuk pengelompokan transaksi"
+          description="Tag untuk pengelompokan transaksi"
           onPress={() => router.push('/(modals)/tags')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<TrendingUp size={18} color={colors.success} />}
           label="Kurs Mata Uang"
-          subtitle="Nilai tukar real-time dari Frankfurter"
+          description="Nilai tukar real-time"
           onPress={() => router.push('/(modals)/kurs')}
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="ALAT BANTU" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<ReceiptText size={18} color={colors.accentSecondary} />}
           label="Kalkulator"
-          subtitle="Kalkulator cepat untuk transaksi"
+          description="Kalkulator cepat untuk transaksi"
           onPress={() => router.push('/(modals)/kalkulator')}
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="TAMPILAN" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<Palette size={18} color={colors.accentWarm} />}
           label="Mode Tampilan"
-          subtitle={isDark ? 'Mode Gelap' : 'Mode Terang'}
+          description="Tema terang / gelap"
           onPress={() => router.push('/(modals)/tampilan')}
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="NOTIFIKASI" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<Bell size={18} color={colors.warning} />}
           label="Pengingat dan Notifikasi"
           onPress={() => router.push('/(modals)/notifikasi')}
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="DATA" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<Database size={18} color={colors.accentSecondary} />}
           label="Cadangan dan Pemulihan"
-          subtitle="Ekspor / Impor file .catkeu"
+          description="Ekspor / Impor file .catkeu"
           onPress={() => router.push('/(modals)/backup')}
         />
-        <SettingItem
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
           icon={<Trash2 size={18} color={colors.danger} />}
           label="Hapus Semua Data"
+          description="Menghapus seluruh data secara permanen"
           onPress={() => router.push('/(modals)/hapus-data')}
+          danger
         />
-      </View>
+      </SettingGroup>
 
       <SectionHeader title="TENTANG" />
-      <View style={styles.group}>
-        <SettingItem
+      <SettingGroup>
+        <SettingRow
           icon={<Info size={18} color={colors.textMuted} />}
           label="Tentang Aplikasi"
-          subtitle={`Catatan Keuangan v${version}`}
+          description={`Catatan Keuangan v${version}`}
           onPress={() => router.push('/(modals)/tentang')}
-          right={null}
         />
-      </View>
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
+          icon={<FileText size={18} color={colors.accentPrimary} />}
+          label="Lisensi"
+          description="MIT License"
+          onPress={() => router.push('/(modals)/tentang')}
+        />
+      </SettingGroup>
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-          Catatan Keuangan v{version}
+        <Text style={[styles.footerApp, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]}>
+          Catatan Keuangan
         </Text>
         <Text style={[styles.footerText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-          Build: {buildDate}
+          Versi {version} · Build: {buildDate}
         </Text>
         <Text style={[styles.footerText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
           Developer: Aby Abdillah
+        </Text>
+        <Text style={[styles.footerNote, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
+          Data sepenuhnya tersimpan di perangkat Anda. Tidak ada server.
         </Text>
       </View>
     </ScrollView>
@@ -211,22 +243,25 @@ export default function PengaturanScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 16, gap: 8 },
+  content: { paddingHorizontal: 16, gap: 6 },
   title: { fontSize: 24, lineHeight: 32, marginBottom: 8 },
-  sectionHeader: { fontSize: 11, lineHeight: 16, marginTop: 16, marginBottom: 4, letterSpacing: 1 },
-  group: { gap: 2 },
-  settingRow: {
+  sectionLabel: { fontSize: 11, letterSpacing: 1, marginTop: 14, marginBottom: 6 },
+  group: { borderRadius: 20 },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 60 },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     gap: 12,
     minHeight: 60,
   },
-  settingIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  settingText: { flex: 1 },
-  settingLabel: { fontSize: 15, lineHeight: 22 },
-  settingSubtitle: { fontSize: 12, lineHeight: 16 },
-  footer: { alignItems: 'center', gap: 4, marginTop: 24, paddingBottom: 8 },
-  footerText: { fontSize: 12, lineHeight: 16 },
+  rowIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  rowText: { flex: 1 },
+  rowLabel: { fontSize: 15, lineHeight: 22 },
+  rowDesc: { fontSize: 12, lineHeight: 16, marginTop: 1 },
+  footer: { alignItems: 'center', gap: 4, marginTop: 28, paddingBottom: 8 },
+  footerApp: { fontSize: 14 },
+  footerText: { fontSize: 12 },
+  footerNote: { fontSize: 11, textAlign: 'center', marginTop: 4 },
 });
