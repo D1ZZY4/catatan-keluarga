@@ -142,14 +142,53 @@ export default function BackupScreen() {
       const text = await FileSystem.default.readAsStringAsync(uri, {
         encoding: FileSystem.default.EncodingType.UTF8,
       });
-      const data = JSON.parse(text) as { version?: string; wallets?: unknown[] };
+
+      type RawRecord = Record<string, unknown> & { id: string };
+      type BackupFile = {
+        version?: string;
+        wallets?: RawRecord[];
+        transactions?: RawRecord[];
+        categories?: RawRecord[];
+        budgets?: RawRecord[];
+        reminders?: RawRecord[];
+        settings?: RawRecord[];
+      };
+
+      const data = JSON.parse(text) as BackupFile;
       if (!data.version || !data.wallets) {
         showToast('Format file tidak valid', 'error');
         return;
       }
-      showToast('Data berhasil diimpor', 'success');
+
+      const tables: Array<{ name: string; rows: RawRecord[] }> = [
+        { name: 'wallets', rows: data.wallets ?? [] },
+        { name: 'transactions', rows: data.transactions ?? [] },
+        { name: 'categories', rows: data.categories ?? [] },
+        { name: 'budgets', rows: data.budgets ?? [] },
+        { name: 'reminders', rows: data.reminders ?? [] },
+        { name: 'settings', rows: data.settings ?? [] },
+      ];
+
+      await database.write(async () => {
+        for (const table of tables) {
+          const collection = database.get(table.name);
+          const existing = await collection.query().fetch();
+          type BatchOp = Parameters<typeof database.batch>[0];
+          const deleteOps: BatchOp[] = existing.map(r =>
+            (r as unknown as { prepareDestroyPermanently: () => BatchOp }).prepareDestroyPermanently()
+          );
+          const createOps: BatchOp[] = table.rows.map(raw =>
+            collection.prepareCreate((record: unknown) => {
+              (record as { _raw: RawRecord })._raw = { ...raw };
+            }) as unknown as BatchOp
+          );
+          await database.batch(...deleteOps, ...createOps);
+        }
+      });
+
+      showToast('Data berhasil dipulihkan', 'success');
     } catch {
-      showToast('File tidak dapat dibaca', 'error');
+      showToast('File tidak dapat dibaca atau rusak', 'error');
     } finally {
       setImporting(false);
     }

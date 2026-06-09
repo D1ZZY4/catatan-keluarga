@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, Pressable, Alert,
+  View, Text, StyleSheet, Pressable,
 } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
-import { formatCurrency, formatDateShort } from '@/shared/utils/formatters';
+import { formatCurrency } from '@/shared/utils/formatters';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { useRouter } from 'expo-router';
 import type { DebtEntry } from '@/features/stats/useStatData';

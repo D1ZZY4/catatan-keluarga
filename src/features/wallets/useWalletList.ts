@@ -29,8 +29,8 @@ export function useWalletList() {
           createdAt: w.createdAt.getTime(),
         }));
       setWallets(mapped);
-    } catch (err) {
-      console.error('useWalletList error:', err);
+    } catch {
+      // keep previous state
     } finally {
       setLoading(false);
       setRefreshing(false);

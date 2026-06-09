@@ -3,11 +3,11 @@ import {
   View, Text, ScrollView, StyleSheet, Pressable, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RefreshCw, Wifi, WifiOff, Clock } from 'lucide-react-native';
+import { RefreshCw } from 'lucide-react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { AppBar } from '@/shared/components/AppBar';
+import { OfflinePill } from '@/shared/components/OfflinePill';
 import { useExchangeRates } from '@/features/exchange/useExchangeRates';
-import { formatDateTime } from '@/shared/utils/formatters';
 import { formatNumber } from '@/shared/utils/formatters';
 
 const DISPLAYED_CURRENCIES = [
@@ -46,17 +46,11 @@ export default function KursScreen() {
         }
       />
 
-      <View style={[styles.statusBar, { backgroundColor: colors.bgCard }]}>
-        {fromCache
-          ? <WifiOff size={14} color={colors.warning} />
-          : <Wifi size={14} color={colors.success} />
-        }
-        <Text style={[styles.statusText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
-          {fromCache ? 'Data dari cache' : 'Data terkini'}{cachedAt ? ` · ${formatDateTime(cachedAt)}` : ''}
-        </Text>
-        <Clock size={12} color={colors.textMuted} />
-        <Text style={[styles.statusText, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>Refresh tiap 6 jam</Text>
-      </View>
+      {fromCache && (
+        <View style={styles.offlinePillWrap}>
+          <OfflinePill lastUpdated={cachedAt ? new Date(cachedAt) : null} />
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 32 }]}
@@ -91,11 +85,7 @@ export default function KursScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  statusBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 16, paddingVertical: 8,
-  },
-  statusText: { fontSize: 11, lineHeight: 16 },
+  offlinePillWrap: { paddingVertical: 8, alignItems: 'center' },
   list: { paddingHorizontal: 16, paddingTop: 12, gap: 6 },
   baseLabel: { fontSize: 12, lineHeight: 16, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, gap: 12 },

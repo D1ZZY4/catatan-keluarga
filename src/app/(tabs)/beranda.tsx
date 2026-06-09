@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl, Pressable,
 } from 'react-native';
@@ -8,13 +8,39 @@ import { Card } from '@/shared/components/Card';
 import { SkeletonCard } from '@/shared/components/SkeletonCard';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ProgressBar } from '@/shared/components/ProgressBar';
+import { GuidedHomeTour, type TourStep } from '@/shared/components/GuidedHomeTour';
 import { useRouter } from 'expo-router';
 import { useHomeData } from '@/features/home/useHomeData';
 import { formatCompact, formatCurrency } from '@/shared/utils/formatters';
+import { SecureStorage } from '@/shared/utils/secureStorage';
 import {
   TrendingUp, TrendingDown, Wallet, Plus, ScanLine,
   ArrowLeftRight, Heart, PiggyBank, Eye, EyeOff,
 } from 'lucide-react-native';
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    bubble: { title: 'Selamat Datang! 🎉', body: 'Ini adalah Beranda — pusat informasi keuangan harian kamu. Saldo bersih, pemasukan, dan pengeluaran ada di sini.', position: 'bottom' },
+    autoAdvanceMs: 6000,
+  },
+  {
+    bubble: { title: 'Aksi Cepat', body: 'Gunakan tombol Catat, Transfer, Scan, dan Dompet untuk melakukan aksi paling umum dengan satu ketukan.', position: 'bottom' },
+    pulse: true,
+    autoAdvanceMs: 6000,
+  },
+  {
+    bubble: { title: 'Skor Kesehatan Keuangan', body: 'Pantau kesehatan keuangan keluarga secara real-time. Skor dihitung dari rasio tabungan, dana darurat, dan arus kas.', position: 'center' },
+    autoAdvanceMs: 6000,
+  },
+  {
+    bubble: { title: 'Dompet & Transaksi', body: 'Ketuk kartu dompet untuk melihat detail. Transaksi terbaru ditampilkan langsung di sini untuk rekap cepat.', position: 'center' },
+    autoAdvanceMs: 6000,
+  },
+  {
+    bubble: { title: 'Siap digunakan! ✅', body: 'Jelajahi fitur lain: Statistik, Anggaran, Pengingat tagihan, dan Scanner struk di menu navigasi bawah.', position: 'center' },
+    autoAdvanceMs: 5000,
+  },
+];
 
 const MORNING_GREETS = ['Selamat pagi', 'Pagi yang cerah', 'Hai, selamat pagi', 'Semangat pagi'];
 const AFTERNOON_GREETS = ['Selamat siang', 'Hai, selamat siang', 'Siang yang produktif', 'Halo'];
@@ -108,6 +134,18 @@ export default function BerandaScreen() {
   const { wallets, totalBalance, monthIncome, monthExpense, recentTransactions, loading, reload } = useHomeData();
   const [refreshing, setRefreshing] = useState(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    SecureStorage.getItemAsync('tour_done').then(v => {
+      if (!v) setShowTour(true);
+    }).catch(() => undefined);
+  }, []);
+
+  const handleTourDone = useCallback(async () => {
+    setShowTour(false);
+    await SecureStorage.setItemAsync('tour_done', 'true');
+  }, []);
 
   const now = useMemo(() => new Date(), []);
   const { prefix, sub } = useMemo(() => getSmartGreeting(now), [now]);
@@ -149,17 +187,25 @@ export default function BerandaScreen() {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgPage }]}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 140 },
-      ]}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} tintColor={colors.accentPrimary} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <>
+      {showTour && (
+        <GuidedHomeTour
+          steps={TOUR_STEPS}
+          onComplete={() => void handleTourDone()}
+          onSkip={() => void handleTourDone()}
+        />
+      )}
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.bgPage }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 140 },
+        ]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} tintColor={colors.accentPrimary} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       {/* Smart Greeting Header */}
       <View style={styles.header}>
         <View style={styles.greetingRow}>
@@ -363,6 +409,7 @@ export default function BerandaScreen() {
         </>
       )}
     </ScrollView>
+    </>
   );
 }
 

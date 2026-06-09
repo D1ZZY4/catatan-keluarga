@@ -67,8 +67,8 @@ export function useHomeData(): HomeData {
 
       setMonthlyIncome(income);
       setMonthlyExpense(expense);
-    } catch (err) {
-      console.error('useHomeData error:', err);
+    } catch {
+      // keep previous state
     } finally {
       setLoading(false);
       setRefreshing(false);

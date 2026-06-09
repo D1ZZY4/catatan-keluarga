@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import RNConfettiCannon from 'react-native-confetti-cannon';
+import { Platform } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 
 export interface ConfettiCannonRef {
@@ -20,6 +21,8 @@ export const ConfettiCannon = forwardRef<ConfettiCannonRef, ConfettiCannonProps>
         cannonRef.current?.start();
       },
     }));
+
+    if (Platform.OS === 'web') return null;
 
     return (
       <RNConfettiCannon

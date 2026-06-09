@@ -95,8 +95,8 @@ export function useTransactionList({ period, typeFilter, search }: Params) {
         .sort((a, b) => b.date - a.date);
 
       setSections(sectionList);
-    } catch (err) {
-      console.error('useTransactionList error:', err);
+    } catch {
+      // keep previous state
     } finally {
       setLoading(false);
       setRefreshing(false);

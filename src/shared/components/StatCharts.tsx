@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { formatCompact } from '@/shared/utils/formatters';
 import type { CategoryExpense, MonthlyPoint } from '@/features/stats/useStatData';

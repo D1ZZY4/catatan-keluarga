@@ -58,12 +58,17 @@
 - data-tour attributes: greeting, wallets, fab, navbar, budget, calculator ✓
 - GuidedHomeTour: confetti on completion, focus restore ✓
 
-## Verifikasi Loop (sesi terbaru)
+## Verifikasi Loop (sesi terbaru — Expo RN codebase)
 
-- tsc --noEmit: bersih (0 error)
-- vite build: clean (19.46s, 4593 modules, PWA 42 precache)
-- Bundle main index: 20.43 kB gzipped (batas spec 120 KB ✓)
-- vendor-iconsax: 688 KB gzipped — lazy-loaded chunk (hanya termuat bila ada nama ikon `isax:`)
-- Dev server: port 8080, preview hidup, onboarding tampil sesuai harapan
-- Tidak ada milestone tersisa; semua M0–M21 sudah ditandai selesai
-- APK: BUILD-INSTRUCTIONS.md di build-release/ (Bubblewrap butuh Android SDK lokal)
+- tsc --noEmit: bersih (0 error) ✓
+- Tidak ada console.log / console.error / console.warn di kode kita ✓
+- Semua @ts-expect-error hanya untuk WatermelonDB `created_at` pattern yang legitimate ✓
+- Assets: src/assets/fonts/ (5 TTF), src/assets/icons/ (icon, splash, adaptive-icon) ✓
+- app.config.ts: icon/splash paths benar, Android permissions lengkap ✓
+- _layout.tsx: useFonts lewat @expo-google-fonts + JetBrainsMono lokal ✓
+- 22 modals, 5 tabs, onboarding, auth, dompet/[id], transaksi/[id] semua ada ✓
+- kurs.tsx: OfflinePill integrated ✓
+- backup.tsx: WatermelonDB batch delete+create restore logic ✓
+- eas.json: dev/preview/production profiles, EAS-BUILD.md tersedia ✓
+- 83 accessibilityLabel di seluruh codebase ✓
+- Semua M0–M21 selesai; siap EAS Build APK
