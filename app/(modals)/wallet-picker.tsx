@@ -10,15 +10,25 @@ import { useWallets } from '../../src/shared/hooks/useWallets';
 import { AppLabels } from '../../src/shared/config/labels';
 import { formatCurrencyCompact } from '../../src/shared/utils/formatters';
 import type { Wallet } from '../../src/shared/types';
+import { PickerBridge } from '../../src/shared/utils/pickerBridge';
 
 export default function WalletPickerModal(): React.ReactElement {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { data: walletList } = useWallets();
 
-  function handleSelect(_wallet: Wallet): void {
+  function handleSelect(wallet: Wallet): void {
+    PickerBridge.resolveWallet({
+      id: wallet.id,
+      name: wallet.name,
+      icon: wallet.icon,
+      color: wallet.color,
+      currency: wallet.currency,
+    });
     router.back();
   }
+
+  const activeWallets = walletList.filter((w) => !w.isArchived);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgPage }}>
@@ -42,15 +52,17 @@ export default function WalletPickerModal(): React.ReactElement {
       </View>
 
       <FlatList
-        data={walletList}
+        data={activeWallets}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 8, flexGrow: 1 }}
         ListEmptyComponent={
-          <EmptyState
-            icon="wallet"
-            title={AppLabels.emptyState.wallets.title}
-            body={AppLabels.emptyState.wallets.body}
-          />
+          <View style={{ flex: 1, justifyContent: 'center', marginTop: 24 }}>
+            <EmptyState
+              icon="wallet"
+              title={AppLabels.emptyState.wallets.title}
+              body={AppLabels.emptyState.wallets.body}
+            />
+          </View>
         }
         renderItem={({ item: wallet }) => (
           <TouchableOpacity

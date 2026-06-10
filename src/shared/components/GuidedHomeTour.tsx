@@ -199,7 +199,7 @@ export function GuidedHomeTour({ onComplete }: GuidedHomeTourProps): React.React
               },
               bubbleStyle,
             ]}
-            accessibilityRole="dialog"
+            accessibilityViewIsModal
             accessibilityLabel={`Tur panduan: langkah ${step + 1} dari ${STEPS.length}`}
           >
             <View style={styles.bubbleHeader}>

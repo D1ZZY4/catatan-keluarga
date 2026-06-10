@@ -28,4 +28,4 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bunx expo start --port 8081"
+args = "bunx tsc --noEmit --watch --pretty"

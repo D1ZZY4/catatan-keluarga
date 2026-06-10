@@ -49,12 +49,12 @@ export function DatePickerWrapper({
             borderWidth: show ? 1.5 : StyleSheet.hairlineWidth,
           },
         ]}
-        accessibilityLabel={`Pilih tanggal: ${formatDate(value)}`}
+        accessibilityLabel={`Pilih tanggal: ${formatDate(value.getTime())}`}
         accessibilityRole="button"
       >
         <AppIcon name="calendar" size={18} color={colors.textMuted} />
         <AppText variant="bodyMedium" color={colors.textPrimary} style={styles.dateText}>
-          {formatDate(value)}
+          {formatDate(value.getTime())}
         </AppText>
         <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
       </TouchableOpacity>

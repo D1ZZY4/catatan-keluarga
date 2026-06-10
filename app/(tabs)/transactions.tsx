@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   FlatList,
@@ -11,11 +11,13 @@ import { AppText } from '../../src/shared/components/AppText';
 import { AppIcon } from '../../src/shared/components/AppIcon';
 import { FAB } from '../../src/shared/components/FAB';
 import { EmptyState } from '../../src/shared/components/EmptyState';
+import { TransactionListItem } from '../../src/shared/components/TransactionListItem';
 import { useTheme } from '../../src/shared/theme/ThemeContext';
+import { useTransactions } from '../../src/shared/hooks/useTransactions';
 import { AppLabels } from '../../src/shared/config/labels';
-import type { TransactionType } from '../../src/shared/types';
-import type { PeriodKey } from '../../src/shared/config/periods';
 import { AppConfig } from '../../src/shared/config/periods';
+import type { Transaction, TransactionType } from '../../src/shared/types';
+import type { PeriodKey } from '../../src/shared/config/periods';
 
 export default function TransactionsScreen(): React.ReactElement {
   const { colors } = useTheme();
@@ -23,11 +25,44 @@ export default function TransactionsScreen(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState('');
   const [activePeriod, setActivePeriod] = useState<PeriodKey>('thisMonth');
 
+  const { data, loading, deleteTransaction } = useTransactions(activePeriod);
+
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    const q = searchQuery.toLowerCase();
+    return data.filter(
+      (tx) =>
+        (tx.note ?? '').toLowerCase().includes(q) ||
+        (tx.categoryId ?? '').toLowerCase().includes(q) ||
+        tx.amount.toString().includes(q),
+    );
+  }, [data, searchQuery]);
+
   function handleFabSelect(type: TransactionType): void {
     router.push({
       pathname: '/(modals)/transaction-form',
       params: { type },
     });
+  }
+
+  function handlePress(tx: Transaction): void {
+    router.push({
+      pathname: '/(modals)/transaction-detail',
+      params: {
+        id: tx.id,
+        type: tx.type,
+        amount: tx.amount.toString(),
+        currency: tx.currency,
+        note: tx.note ?? '',
+        date: tx.date.toString(),
+        walletId: tx.walletId,
+        categoryId: tx.categoryId,
+      },
+    });
+  }
+
+  async function handleDelete(id: string): Promise<void> {
+    await deleteTransaction(id);
   }
 
   return (
@@ -96,6 +131,11 @@ export default function TransactionsScreen(): React.ReactElement {
               color: colors.textPrimary,
             }}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <AppIcon name="x" size={14} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <FlatList
@@ -139,23 +179,52 @@ export default function TransactionsScreen(): React.ReactElement {
       </View>
 
       <FlatList
-        data={[]}
-        keyExtractor={(item) => (item as { id: string }).id}
+        data={filtered}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={{
-          paddingHorizontal: 16,
           paddingBottom: 120,
           flexGrow: 1,
         }}
         ListEmptyComponent={
           <View style={{ flex: 1, justifyContent: 'center', marginTop: 40 }}>
-            <EmptyState
-              icon="activity"
-              title={AppLabels.emptyState.transactions.title}
-              body={AppLabels.emptyState.transactions.body}
-            />
+            {loading ? (
+              <AppText variant="bodyMedium" color={colors.textMuted} center>
+                Memuat...
+              </AppText>
+            ) : (
+              <EmptyState
+                icon="activity"
+                title={
+                  searchQuery
+                    ? 'Tidak ada hasil'
+                    : AppLabels.emptyState.transactions.title
+                }
+                body={
+                  searchQuery
+                    ? `Tidak ada transaksi yang cocok dengan "${searchQuery}"`
+                    : AppLabels.emptyState.transactions.body
+                }
+              />
+            )}
           </View>
         }
-        renderItem={() => null}
+        renderItem={({ item }) => (
+          <TransactionListItem
+            id={item.id}
+            type={item.type}
+            amount={item.amount}
+            currency={item.currency}
+            date={item.date}
+            note={item.note}
+            categoryName={item.categoryId}
+            tags={item.tags}
+            onPress={() => handlePress(item)}
+            onDelete={() => void handleDelete(item.id)}
+          />
+        )}
+        ItemSeparatorComponent={() => (
+          <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }} />
+        )}
       />
 
       <FAB onSelect={handleFabSelect} />

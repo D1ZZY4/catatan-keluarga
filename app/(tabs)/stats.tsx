@@ -7,15 +7,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  VictoryPie,
-  VictoryBar,
-  VictoryArea,
-  VictoryChart,
-  VictoryAxis,
-  VictoryTooltip,
-  VictoryVoronoiContainer,
-} from 'victory-native';
+import Svg, { G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { AppText } from '../../src/shared/components/AppText';
 import { AppCard } from '../../src/shared/components/AppCard';
 import { AppBar } from '../../src/shared/components/AppBar';
@@ -31,6 +23,7 @@ import {
   formatCurrencyCompact,
   formatMonthKey,
 } from '../../src/shared/utils/formatters';
+import type { Transaction } from '../../src/shared/types';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CHART_W = SCREEN_W - 64;
@@ -64,13 +57,186 @@ function StatCard({ label, value, valueColor }: StatCardProps): React.ReactEleme
   );
 }
 
+// ─── Simple Pie Chart via react-native-svg ───────────────────────────────────
+interface PieSlice { name: string; value: number; color: string }
+
+function SimplePieChart({ data, size = 200 }: { data: PieSlice[]; size?: number }): React.ReactElement {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return <View style={{ height: size }} />;
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size * 0.38;
+  const inner = size * 0.22;
+
+  let startAngle = -Math.PI / 2;
+  const slices = data.map((d) => {
+    const angle = (d.value / total) * 2 * Math.PI;
+    const endAngle = startAngle + angle;
+    const slice = { ...d, startAngle, endAngle };
+    startAngle = endAngle;
+    return slice;
+  });
+
+  function describeArc(sa: number, ea: number, outerR: number, innerR: number): string {
+    const gap = 0.02;
+    const s = sa + gap;
+    const e = ea - gap;
+    const x1 = cx + outerR * Math.cos(s);
+    const y1 = cy + outerR * Math.sin(s);
+    const x2 = cx + outerR * Math.cos(e);
+    const y2 = cy + outerR * Math.sin(e);
+    const x3 = cx + innerR * Math.cos(e);
+    const y3 = cy + innerR * Math.sin(e);
+    const x4 = cx + innerR * Math.cos(s);
+    const y4 = cy + innerR * Math.sin(s);
+    const large = ea - sa > Math.PI ? 1 : 0;
+    return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${large} 0 ${x4} ${y4} Z`;
+  }
+
+  return (
+    <Svg width={size} height={size}>
+      {slices.map((s) => (
+        <Path
+          key={s.name}
+          d={describeArc(s.startAngle, s.endAngle, r, inner)}
+          fill={s.color}
+        />
+      ))}
+    </Svg>
+  );
+}
+
+// ─── Simple Bar Chart via react-native-svg ────────────────────────────────────
+interface BarGroup { label: string; income: number; expense: number }
+
+function SimpleBarChart({ data, width, height, incomeColor, expenseColor }: {
+  data: BarGroup[];
+  width: number;
+  height: number;
+  incomeColor: string;
+  expenseColor: string;
+}): React.ReactElement {
+  if (data.length === 0) return <View style={{ height }} />;
+  const PAD_L = 44;
+  const PAD_B = 28;
+  const PAD_T = 8;
+  const PAD_R = 8;
+  const chartW = width - PAD_L - PAD_R;
+  const chartH = height - PAD_T - PAD_B;
+  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expense]), 1);
+  const groupW = chartW / data.length;
+  const barW = Math.max(4, groupW * 0.3);
+
+  return (
+    <Svg width={width} height={height}>
+      {data.map((d, i) => {
+        const x = PAD_L + i * groupW + groupW / 2;
+        const incH = (d.income / maxVal) * chartH;
+        const expH = (d.expense / maxVal) * chartH;
+        return (
+          <G key={d.label}>
+            <Rect
+              x={x - barW - 2}
+              y={PAD_T + chartH - incH}
+              width={barW}
+              height={incH}
+              fill={incomeColor}
+              rx={2}
+            />
+            <Rect
+              x={x + 2}
+              y={PAD_T + chartH - expH}
+              width={barW}
+              height={expH}
+              fill={expenseColor}
+              rx={2}
+            />
+            <SvgText
+              x={x}
+              y={PAD_T + chartH + 14}
+              fontSize={8}
+              fill="#999"
+              textAnchor="middle"
+            >
+              {d.label}
+            </SvgText>
+          </G>
+        );
+      })}
+      {[0, 0.5, 1].map((frac) => {
+        const y = PAD_T + chartH - frac * chartH;
+        const val = frac * maxVal;
+        return (
+          <G key={frac}>
+            <Path
+              d={`M ${PAD_L} ${y} L ${width - PAD_R} ${y}`}
+              stroke="#ccc"
+              strokeWidth={0.5}
+              strokeDasharray="4,4"
+            />
+            <SvgText x={PAD_L - 4} y={y + 4} fontSize={8} fill="#999" textAnchor="end">
+              {val >= 1_000_000 ? `${(val / 1_000_000).toFixed(0)}jt` : `${(val / 1_000).toFixed(0)}rb`}
+            </SvgText>
+          </G>
+        );
+      })}
+    </Svg>
+  );
+}
+
+// ─── Simple Area Chart via react-native-svg ──────────────────────────────────
+function SimpleAreaChart({ data, width, height, color }: {
+  data: Array<{ label: string; value: number }>;
+  width: number;
+  height: number;
+  color: string;
+}): React.ReactElement {
+  if (data.length < 2) return <View style={{ height }} />;
+  const PAD_L = 44;
+  const PAD_B = 28;
+  const PAD_T = 8;
+  const PAD_R = 8;
+  const chartW = width - PAD_L - PAD_R;
+  const chartH = height - PAD_T - PAD_B;
+  const maxVal = Math.max(...data.map((d) => Math.abs(d.value)), 1);
+  const midY = PAD_T + chartH / 2;
+
+  const pts = data.map((d, i) => ({
+    x: PAD_L + (i / (data.length - 1)) * chartW,
+    y: midY - (d.value / maxVal) * (chartH / 2),
+    label: d.label,
+  }));
+
+  const linePts = pts.map((p) => `${p.x},${p.y}`).join(' L ');
+  const areaPath = `M ${pts[0]!.x} ${midY} L ${linePts.replace('M ', '')} L ${pts[pts.length - 1]!.x} ${midY} Z`;
+  const linePath = `M ${linePts}`;
+
+  return (
+    <Svg width={width} height={height}>
+      <Path d={areaPath} fill={`${color}30`} />
+      <Path d={linePath} stroke={color} strokeWidth={2} fill="none" />
+      {pts.map((p) => (
+        <SvgText key={p.label} x={p.x} y={PAD_T + chartH + 14} fontSize={8} fill="#999" textAnchor="middle">
+          {p.label}
+        </SvgText>
+      ))}
+    </Svg>
+  );
+}
+
+const PIE_COLORS = [
+  '#8CC0EB', '#F4A261', '#2A9D8F', '#E76F51', '#E9C46A',
+  '#AB47BC', '#00ACC1', '#6D4C41',
+];
+
 export default function StatsScreen(): React.ReactElement {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [activePeriod, setActivePeriod] = useState<PeriodKey>('thisMonth');
   const [activeTab, setActiveTab] = useState<StatsTab>('overview');
 
-  const { transactions } = useTransactions('all');
+  const { data: transactions } = useTransactions('all');
 
   const periodRange = useMemo(() => {
     const def = AppConfig.periods.find((p) => p.key === activePeriod);
@@ -85,11 +251,11 @@ export default function StatsScreen(): React.ReactElement {
   }, [transactions, periodRange]);
 
   const totalIncome = useMemo(
-    () => filtered.filter((tx) => isIncomeType(tx.type)).reduce((s, tx) => s + tx.amount, 0),
+    () => filtered.filter((tx) => isIncomeType(tx.type)).reduce((s: number, tx: Transaction) => s + tx.amount, 0),
     [filtered],
   );
   const totalExpense = useMemo(
-    () => filtered.filter((tx) => isExpenseType(tx.type)).reduce((s, tx) => s + tx.amount, 0),
+    () => filtered.filter((tx) => isExpenseType(tx.type)).reduce((s: number, tx: Transaction) => s + tx.amount, 0),
     [filtered],
   );
   const netBalance = totalIncome - totalExpense;
@@ -97,7 +263,7 @@ export default function StatsScreen(): React.ReactElement {
 
   const expenseByCategory = useMemo(() => {
     const map = new Map<string, { name: string; value: number }>();
-    for (const tx of filtered.filter((t) => isExpenseType(t.type))) {
+    for (const tx of filtered.filter((t: Transaction) => isExpenseType(t.type))) {
       const key = tx.categoryId ?? 'Lain-lain';
       const ex = map.get(key);
       if (ex !== undefined) ex.value += tx.amount;
@@ -107,7 +273,7 @@ export default function StatsScreen(): React.ReactElement {
   }, [filtered]);
 
   const last6MonthsData = useMemo(() => {
-    const months: Array<{ month: string; income: number; expense: number }> = [];
+    const months: BarGroup[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setDate(1);
@@ -115,41 +281,35 @@ export default function StatsScreen(): React.ReactElement {
       const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
       const inc = transactions
-        .filter((tx) => tx.date >= start && tx.date <= end && isIncomeType(tx.type))
-        .reduce((s, tx) => s + tx.amount, 0);
+        .filter((tx: Transaction) => tx.date >= start && tx.date <= end && isIncomeType(tx.type))
+        .reduce((s: number, tx: Transaction) => s + tx.amount, 0);
       const exp = transactions
-        .filter((tx) => tx.date >= start && tx.date <= end && isExpenseType(tx.type))
-        .reduce((s, tx) => s + tx.amount, 0);
-      months.push({ month: formatMonthKey(d), income: inc, expense: exp });
+        .filter((tx: Transaction) => tx.date >= start && tx.date <= end && isExpenseType(tx.type))
+        .reduce((s: number, tx: Transaction) => s + tx.amount, 0);
+      months.push({ label: formatMonthKey(d), income: inc, expense: exp });
     }
     return months;
   }, [transactions]);
 
+  const areaData = useMemo(
+    () => last6MonthsData.map((d) => ({ label: d.label, value: d.income - d.expense })),
+    [last6MonthsData],
+  );
+
   const openDebts = useMemo(
-    () => transactions.filter((tx) => tx.type === 'debt_given' || tx.type === 'debt_received'),
+    () => transactions.filter((tx: Transaction) => tx.type === 'debt_given' || tx.type === 'debt_received'),
     [transactions],
   );
 
-  const pieColors = [
-    colors.accentPrimary,
-    colors.accentWarm,
-    colors.success,
-    colors.danger,
-    colors.warning,
-    '#AB47BC',
-    '#00ACC1',
-    '#6D4C41',
-  ];
+  const pieData: PieSlice[] = expenseByCategory.map((d, i) => ({
+    name: d.name,
+    value: d.value,
+    color: PIE_COLORS[i % PIE_COLORS.length]!,
+  }));
 
   const periodItems = AppConfig.periods
     .filter((p) => p.key !== 'custom')
     .map((p) => ({ key: p.key, label: p.label }));
-
-  const axesStyle = {
-    axis: { stroke: colors.border },
-    tickLabels: { fill: colors.textMuted, fontSize: 9, fontFamily: 'DMSans-Regular' },
-    grid: { stroke: `${colors.border}40`, strokeDasharray: '4,4' },
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgPage }}>
@@ -166,7 +326,7 @@ export default function StatsScreen(): React.ReactElement {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tabs */}
+        {/* Tab Row */}
         <View style={[styles.tabRow, { borderBottomColor: colors.border }]}>
           {(['overview', 'debt', 'tags'] as StatsTab[]).map((tab) => (
             <TouchableOpacity
@@ -226,24 +386,12 @@ export default function StatsScreen(): React.ReactElement {
                       Pengeluaran per Kategori
                     </AppText>
                     <View style={{ alignItems: 'center' }}>
-                      <VictoryPie
-                        width={CHART_W}
-                        height={200}
-                        data={expenseByCategory.map((d, i) => ({
-                          x: d.name.slice(0, 8),
-                          y: d.value,
-                        }))}
-                        colorScale={pieColors}
-                        innerRadius={55}
-                        padAngle={2}
-                        style={{ labels: { fontSize: 7, fill: colors.textMuted } }}
-                        animate={false}
-                      />
+                      <SimplePieChart data={pieData} size={CHART_W > 300 ? 240 : 200} />
                     </View>
                     <View style={styles.legend}>
-                      {expenseByCategory.slice(0, 6).map((d, i) => (
+                      {pieData.slice(0, 6).map((d) => (
                         <View key={d.name} style={styles.legendItem}>
-                          <View style={[styles.dot, { backgroundColor: pieColors[i % pieColors.length] }]} />
+                          <View style={[styles.dot, { backgroundColor: d.color }]} />
                           <AppText variant="labelSmall" color={colors.textMuted} style={{ flex: 1 }} numberOfLines={1}>
                             {d.name}
                           </AppText>
@@ -260,35 +408,13 @@ export default function StatsScreen(): React.ReactElement {
                   <AppText variant="headingSmall" color={colors.textPrimary} style={styles.chartTitle}>
                     Pemasukan vs Pengeluaran (6 Bulan)
                   </AppText>
-                  <VictoryChart
+                  <SimpleBarChart
+                    data={last6MonthsData}
                     width={CHART_W}
                     height={200}
-                    domainPadding={{ x: 20 }}
-                    padding={{ top: 10, bottom: 40, left: 52, right: 10 }}
-                  >
-                    <VictoryAxis style={axesStyle} />
-                    <VictoryAxis
-                      dependentAxis
-                      style={axesStyle}
-                      tickFormat={(v: number) => `${(v / 1_000_000).toFixed(0)}jt`}
-                    />
-                    <VictoryBar
-                      data={last6MonthsData}
-                      x="month"
-                      y="income"
-                      style={{ data: { fill: colors.success, opacity: 0.9 } }}
-                      cornerRadius={{ top: 4 }}
-                      animate={false}
-                    />
-                    <VictoryBar
-                      data={last6MonthsData}
-                      x="month"
-                      y="expense"
-                      style={{ data: { fill: colors.danger, opacity: 0.9 } }}
-                      cornerRadius={{ top: 4 }}
-                      animate={false}
-                    />
-                  </VictoryChart>
+                    incomeColor={colors.success}
+                    expenseColor={colors.danger}
+                  />
                   <View style={styles.legend}>
                     <View style={styles.legendItem}>
                       <View style={[styles.dot, { backgroundColor: colors.success }]} />
@@ -305,24 +431,12 @@ export default function StatsScreen(): React.ReactElement {
                   <AppText variant="headingSmall" color={colors.textPrimary} style={styles.chartTitle}>
                     Tren Total Kas
                   </AppText>
-                  <VictoryChart
+                  <SimpleAreaChart
+                    data={areaData}
                     width={CHART_W}
                     height={160}
-                    padding={{ top: 10, bottom: 40, left: 55, right: 10 }}
-                    containerComponent={<VictoryVoronoiContainer />}
-                  >
-                    <VictoryAxis style={axesStyle} />
-                    <VictoryAxis
-                      dependentAxis
-                      style={axesStyle}
-                      tickFormat={(v: number) => `${(v / 1_000_000).toFixed(0)}jt`}
-                    />
-                    <VictoryArea
-                      data={last6MonthsData.map((d) => ({ x: d.month, y: d.income - d.expense }))}
-                      style={{ data: { fill: `${colors.success}33`, stroke: colors.success, strokeWidth: 2 } }}
-                      animate={false}
-                    />
-                  </VictoryChart>
+                    color={colors.success}
+                  />
                 </AppCard>
               </>
             )}
@@ -339,7 +453,7 @@ export default function StatsScreen(): React.ReactElement {
                 style={styles.empty}
               />
             ) : (
-              openDebts.map((tx) => (
+              openDebts.map((tx: Transaction) => (
                 <AppCard key={tx.id} style={styles.debtCard}>
                   <View style={styles.debtRow}>
                     <AppText variant="bodyMedium" color={colors.textPrimary}>

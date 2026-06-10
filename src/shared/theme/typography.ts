@@ -29,6 +29,21 @@ export const typography = {
     fontSize: 14,
     lineHeight: 20,
   },
+  headingSmall: {
+    fontFamily: 'DMSans-SemiBold',
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  bodySmall: {
+    fontFamily: 'DMSans-Regular',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  labelMedium: {
+    fontFamily: 'DMSans-Medium',
+    fontSize: 13,
+    lineHeight: 18,
+  },
   labelSmall: {
     fontFamily: 'DMSans-Medium',
     fontSize: 12,
