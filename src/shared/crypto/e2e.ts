@@ -47,7 +47,7 @@ async function deriveKeyFromPinString(
   const salt = base64ToBuffer(saltB64);
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    enc.encode(pin),
+    enc.encode(pin) as unknown as BufferSource,
     'PBKDF2',
     false,
     ['deriveKey'],
@@ -55,7 +55,7 @@ async function deriveKeyFromPinString(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as unknown as BufferSource,
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },
@@ -73,7 +73,7 @@ async function deriveDeviceKey(): Promise<CryptoKey> {
     const raw = base64ToBuffer(stored);
     return crypto.subtle.importKey(
       'raw',
-      raw,
+      raw as unknown as BufferSource,
       { name: 'AES-GCM', length: 256 },
       false,
       ['encrypt', 'decrypt'],
@@ -84,7 +84,7 @@ async function deriveDeviceKey(): Promise<CryptoKey> {
   await SecureStore.setItemAsync(SECURE_KEY, bufferToBase64(raw));
   return crypto.subtle.importKey(
     'raw',
-    raw,
+    raw as unknown as BufferSource,
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt'],
@@ -167,9 +167,9 @@ export const e2e = {
     const enc = new TextEncoder();
     const plaintext = enc.encode(JSON.stringify(value));
     const cipher = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as unknown as BufferSource },
       _cryptoKey,
-      plaintext,
+      plaintext as unknown as BufferSource,
     );
     // Format: base64(iv) + ':' + base64(ciphertext)
     return `${bufferToBase64(iv)}:${bufferToBase64(new Uint8Array(cipher))}`;
@@ -183,9 +183,9 @@ export const e2e = {
     const iv = base64ToBuffer(ivB64);
     const cipher = base64ToBuffer(cipherPartB64);
     const plain = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as unknown as BufferSource },
       _cryptoKey,
-      cipher,
+      cipher as unknown as BufferSource,
     );
     const dec = new TextDecoder();
     return JSON.parse(dec.decode(plain)) as T;

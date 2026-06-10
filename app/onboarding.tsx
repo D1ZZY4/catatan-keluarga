@@ -368,5 +368,3 @@ const ps = StyleSheet.create({
   },
   keyText: { fontSize: 24, fontFamily: 'DM-Sans-Medium' },
 });
-
-const DOT_SIZE = 12;

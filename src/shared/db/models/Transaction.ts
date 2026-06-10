@@ -4,16 +4,16 @@ import { field, readonly, date } from '@nozbe/watermelondb/decorators';
 export class TransactionModel extends Model {
   static table = 'transactions';
 
-  @field('type') type!: string;
-  @field('wallet_id') walletId!: string;
-  @field('to_wallet_id') toWalletId!: string | null;
-  @field('category_id') categoryId!: string;
-  @field('amount_enc') amountEnc!: string;
-  @field('currency') currency!: string;
-  @field('note_enc') noteEnc!: string | null;
-  @field('person_name_enc') personNameEnc!: string | null;
-  @field('person_phone_enc') personPhoneEnc!: string | null;
-  @field('date') date!: number;
-  @readonly @date('created_at') createdAt!: Date;
-  @field('updated_at') updatedAt!: number;
+  @field('type') declare type: string;
+  @field('wallet_id') declare walletId: string;
+  @field('to_wallet_id') declare toWalletId: string | null;
+  @field('category_id') declare categoryId: string;
+  @field('amount_enc') declare amountEnc: string;
+  @field('currency') declare currency: string;
+  @field('note_enc') declare noteEnc: string | null;
+  @field('person_name_enc') declare personNameEnc: string | null;
+  @field('person_phone_enc') declare personPhoneEnc: string | null;
+  @field('date') declare date: number;
+  @readonly @date('created_at') declare createdAt: Date;
+  @field('updated_at') declare updatedAt: number;
 }

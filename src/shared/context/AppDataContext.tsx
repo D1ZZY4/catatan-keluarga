@@ -29,6 +29,7 @@ import {
   listReminders,
   putReminder,
   deleteReminder,
+  clearAllData,
 } from '../db/repo';
 import { newId } from '../utils/misc';
 import { INCOME_TYPES, EXPENSE_TYPES } from '../constants/transactionTypes';
@@ -62,6 +63,7 @@ export interface AppDataContextValue extends AppData {
   removeReminder: (id: string) => Promise<void>;
   getWalletBalance: (walletId: string) => number;
   reload: () => Promise<void>;
+  clearAll: () => Promise<void>;
 }
 
 // ---- Balance helper --------------------------------------------------------
@@ -346,6 +348,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // ---- Clear All -------------------------------------------------------------
+
+  const clearAll = useCallback(async () => {
+    await clearAllData();
+    dispatch({
+      type: 'LOADED',
+      data: { wallets: [], transactions: [], categories: [], budgets: [], reminders: [] },
+    });
+  }, []);
+
   // ---- Derived -------------------------------------------------------------
 
   const getWalletBalance = useCallback(
@@ -378,6 +390,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         removeReminder,
         getWalletBalance,
         reload,
+        clearAll,
       }}
     >
       {children}

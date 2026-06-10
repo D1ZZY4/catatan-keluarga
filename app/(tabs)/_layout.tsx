@@ -1,16 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, TrendingUp, BarChart2, Wallet, Settings } from 'lucide-react-native';
-import { AppColorsLight, AppColorsDark } from '../../src/shared/config/colors';
 import { AppLabels } from '../../src/shared/config/labels';
-
-// TODO: Connect to ThemeContext
-const isDark = false;
-const colors = isDark ? AppColorsDark : AppColorsLight;
+import { useTheme } from '../../src/shared/context/ThemeContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   return (
     <Tabs

@@ -13,6 +13,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import BottomSheet, {
   BottomSheetScrollView,
@@ -164,7 +165,7 @@ export function TransactionForm({
       }
       onClose();
     } catch {
-      // error toast TODO
+      Alert.alert('Gagal', 'Transaksi gagal disimpan. Coba lagi.');
     } finally {
       setLoading(false);
     }

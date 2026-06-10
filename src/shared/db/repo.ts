@@ -380,3 +380,18 @@ export async function deleteReminder(id: string): Promise<void> {
     } catch {}
   });
 }
+
+export async function clearAllData(): Promise<void> {
+  await database.write(async () => {
+    const tables = ['wallets', 'transactions', 'categories', 'budgets', 'reminders', 'settings'];
+    for (const tableName of tables) {
+      try {
+        const col = database.collections.get(tableName);
+        const records = await col.query().fetch();
+        for (const record of records) {
+          await record.destroyPermanently();
+        }
+      } catch {}
+    }
+  });
+}

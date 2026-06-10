@@ -29,3 +29,4 @@ Lihat `progress.md` untuk status terkini.
 ## Keputusan Teknis Kritis
 - [WatermelonDB decorator config](watermelondb-decorators.md) — tsconfig.json wajib punya experimentalDecorators + emitDecoratorMetadata + exclude old-code
 - [AppColors type pattern](appcolors-type.md) — gunakan `type AppColors = typeof AppColorsLight` + cast `as AppColors`; jangan pakai AppColorsType union langsung
+- [Babel & Metro WatermelonDB fixes](issues.md) — babel.config.js butuh `['@babel/plugin-transform-flow-strip-types', { allowDeclareFields: true }]`; metro.config.js butuh shim `better-sqlite3` → `src/mocks/empty-module.js`

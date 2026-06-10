@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ChevronRight,
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '../../src/shared/context/ThemeContext';
 import { useAuth } from '../../src/shared/context/AuthContext';
+import { useAppData } from '../../src/shared/context/AppDataContext';
 import { DynamicIcon } from '../../src/shared/components/DynamicIcon';
 import { AppLabels } from '../../src/shared/config/labels';
 import { BackupService } from '../../src/features/backup/BackupService';
@@ -66,6 +68,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { colors: c, mode: themeMode, setMode: setTheme, isDark } = useTheme();
   const { hasPin } = useAuth();
+  const { clearAll } = useAppData();
 
   const [hideSensitive, setHideSensitive] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -122,9 +125,7 @@ export default function SettingsScreen() {
         {
           text: 'Hapus Semua',
           style: 'destructive',
-          onPress: () => {
-            // TODO: implement clear data
-          },
+          onPress: () => { void clearAll(); },
         },
       ],
     );

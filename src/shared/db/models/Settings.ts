@@ -4,6 +4,6 @@ import { field } from '@nozbe/watermelondb/decorators';
 export class SettingsModel extends Model {
   static table = 'settings';
 
-  @field('key') key!: string;
-  @field('value') value!: string;
+  @field('key') declare key: string;
+  @field('value') declare value: string;
 }

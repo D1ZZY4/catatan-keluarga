@@ -4,12 +4,12 @@ import { field, readonly, date } from '@nozbe/watermelondb/decorators';
 export class BudgetModel extends Model {
   static table = 'budgets';
 
-  @field('category_id') categoryId!: string;
-  @field('amount_enc') amountEnc!: string;
-  @field('currency') currency!: string;
-  @field('period') period!: string;
-  @field('month') month!: number | null;
-  @field('year') year!: number | null;
-  @field('notify_at') notifyAt!: number;
-  @readonly @date('created_at') createdAt!: Date;
+  @field('category_id') declare categoryId: string;
+  @field('amount_enc') declare amountEnc: string;
+  @field('currency') declare currency: string;
+  @field('period') declare period: string;
+  @field('month') declare month: number | null;
+  @field('year') declare year: number | null;
+  @field('notify_at') declare notifyAt: number;
+  @readonly @date('created_at') declare createdAt: Date;
 }
