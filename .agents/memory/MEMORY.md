@@ -2,7 +2,7 @@
 - [exactOptionalPropertyTypes pattern](exact-optional-props.md) — passing `T|undefined` to optional props needs conditional spread
 - [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono)
 - [RN TypeScript fixes](rn-ts-fixes.md) — patterns used to resolve all 136 TS errors in Expo/RN codebase
-- [Progress & milestones](progress.md) — RN codebase: 0 TS errors; M2–M21 largely complete
+- [Progress & milestones](progress.md) — RN codebase: 0 TS errors; M0–M21 selesai; DB blocking fix applied
 - [Architecture decisions](architecture.md) — Context+useReducer, AES-GCM, font stack, exactOptionalPropertyTypes patterns
 - [Build & APK](build-log.md) — APK via EAS Build; see eas.json and EAS-BUILD.md
 - [BottomNav array type](bottomnav-spec.md) — use explicit Array<{center?:boolean}> instead of as const when array has optional prop on some items only
@@ -10,3 +10,4 @@
 - [AppBar prop name](appbar-props.md) — AppBar uses rightAction (not rightElement); ProgressBar now accepts color prop
 - [WatermelonDB model cast](wdb-model-cast.md) — cast via `as unknown as T` when TS rejects direct Model→typed cast due to _RawRecord incompatibility
 - [UI redesign patterns](ui-redesign.md) — old-code design language: grouped tx card containers, NetWorthHero bgCard header, pill BottomNav, WalletCard color accent stripe, BookOpen not in lucide-react-native
+- [WatermelonDB IDB blocking fix](wdb-idb-blocking.md) — extraIncrementalIDBOptions.onVersionChange closes old connection on hot-reload; do NOT use db.close() (method doesn't exist) or browser IDBFactory types (not in RN tsconfig)

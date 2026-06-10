@@ -34,7 +34,7 @@ export default function HapusDataScreen() {
             setLoading(true);
             try {
               await database.write(async () => {
-                const tables = ['transactions', 'wallets', 'categories', 'budgets', 'reminders', 'settings', 'price_cache', 'tags', 'transaction_templates'];
+                const tables = ['transaction_tags', 'transactions', 'wallets', 'categories', 'budgets', 'reminders', 'settings', 'price_cache', 'tags', 'transaction_templates', 'usage_patterns'];
                 for (const table of tables) {
                   const records = await database.get(table).query().fetch();
                   for (const r of records) {

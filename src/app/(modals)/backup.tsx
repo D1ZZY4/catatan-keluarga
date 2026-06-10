@@ -73,7 +73,7 @@ export default function BackupScreen() {
       const Sharing = await import('expo-sharing');
       const filename = `catkeu-backup-${new Date().toISOString().split('T')[0]}.catkeu`;
       const file = new EFile(Paths.document, filename);
-      file.write(json);
+      await file.write(json);
       const canShare = await Sharing.default.isAvailableAsync();
       if (canShare) {
         await Sharing.default.shareAsync(file.uri, {
@@ -97,7 +97,7 @@ export default function BackupScreen() {
       const Sharing = await import('expo-sharing');
       const filename = `catkeu-transaksi-${new Date().toISOString().split('T')[0]}.csv`;
       const file = new EFile(Paths.document, filename);
-      file.write(csv);
+      await file.write(csv);
       const canShare = await Sharing.default.isAvailableAsync();
       if (canShare) {
         await Sharing.default.shareAsync(file.uri, {

@@ -65,10 +65,17 @@ export default function FormTransaksiScreen() {
   }
 
   const filteredCategories = categories.filter(c => {
-    if (isExpenseType(txType)) return c.type === 'expense';
-    return c.type === 'income';
+    if (isExpenseType(txType)) return c.type === 'expense' || c.type === 'both';
+    return c.type === 'income' || c.type === 'both';
   });
 
+  // Auto-select kategori pertama saat type berubah dan kategori sebelumnya tidak valid
+  useEffect(() => {
+    if (categoryId && filteredCategories.some(c => c.id === categoryId)) return;
+    setCategoryId(filteredCategories[0]?.id ?? '');
+  }, [txType, categories]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const txTypeLabel = TYPE_OPTIONS.find(o => o.type === txType)?.label ?? 'Transaksi';
   const isValid = amountNum > 0 && walletId;
 
   const handleSave = async () => {
@@ -120,7 +127,7 @@ export default function FormTransaksiScreen() {
       style={[styles.container, { backgroundColor: colors.bgPage }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <AppBar title="Transaksi Baru" showBack />
+      <AppBar title={txTypeLabel} showBack />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}

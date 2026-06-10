@@ -25,37 +25,37 @@ const modelClasses = [
 
 function createDatabase(): Database {
   if (Platform.OS === 'web') {
-    // Use LokiJS adapter for web
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const LokiJSAdapter = require('@nozbe/watermelondb/adapters/lokijs').default;
     const adapter = new LokiJSAdapter({
       schema: dbSchema,
       useWebWorker: false,
       useIncrementalIndexedDB: true,
       dbName: 'catkeu',
-      onSetUpError: (_error: unknown) => {
-        if (__DEV__) {
-          // DB setup error — check schema version or adapter config
-        }
+      // Saat hot-reload di web, koneksi IDB lama bisa memblokir delete/upgrade.
+      // onVersionChange dipanggil ketika tab/koneksi lain meminta perubahan versi —
+      // menutup koneksi ini agar tidak memblokir proses reset schema.
+      extraIncrementalIDBOptions: {
+        onVersionChange: (db: { close(): void }) => {
+          db.close();
+        },
       },
-    });
-    return new Database({ adapter, modelClasses });
-  } else {
-    // Use SQLite adapter for native
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const SQLiteAdapter = require('@nozbe/watermelondb/adapters/sqlite').default;
-    const adapter = new SQLiteAdapter({
-      schema: dbSchema,
-      dbName: 'catkeu',
-      jsi: true,
       onSetUpError: (_error: unknown) => {
-        if (__DEV__) {
-          // DB setup error — check schema version or adapter config
-        }
+        // silent — DB akan retry otomatis setelah koneksi lama menutup
       },
     });
     return new Database({ adapter, modelClasses });
   }
+
+  const SQLiteAdapter = require('@nozbe/watermelondb/adapters/sqlite').default;
+  const adapter = new SQLiteAdapter({
+    schema: dbSchema,
+    dbName: 'catkeu',
+    jsi: true,
+    onSetUpError: (_error: unknown) => {
+      // silent
+    },
+  });
+  return new Database({ adapter, modelClasses });
 }
 
 export const database = createDatabase();

@@ -122,6 +122,25 @@
 - [x] Cast `(w as {icon?: string}).icon` di form-transaksi.tsx dihapus — WalletModel.icon sudah typed
 - TypeScript: 0 error setelah semua fix ✓
 
+## Audit Sesi Ini (Batch 8 — completeness audit)
+
+- [x] tentang.tsx: "Expo SDK 53" → "Expo SDK 56" (versi salah)
+- [x] hapus-data.tsx: tambah `transaction_tags` + `usage_patterns` ke daftar hapus (2 tabel skema tertinggal, data orphan tersisa setelah reset)
+- [x] issues.md: resolved section diperbaharui
+- TypeScript: 0 error setelah semua fix ✓
+
+## Audit Sesi Ini (Batch 7 — DB blocking fix + form UX)
+
+- [x] KRITIS: `Deleting database failed because it's blocked by another connection` — diperbaiki dengan `extraIncrementalIDBOptions.onVersionChange: (db) => db.close()` di LokiJS adapter; web hot-reload tidak lagi memblokir IDB delete/upgrade
+- [x] form-transaksi.tsx: auto-select kategori pertama saat txType berubah (jika kategori sebelumnya tidak valid untuk type baru) — perbaiki technical debt dari issues.md
+- [x] form-transaksi.tsx: AppBar title dinamis berdasarkan txType ("Pengeluaran", "Pemasukan", dll.) bukan hardcoded "Transaksi Baru"
+- [x] form-transaksi.tsx: filter kategori sekarang juga include type='both' (berlaku untuk income+expense)
+- [x] Memory: wdb-idb-blocking.md dibuat — dokumentasi pola fix, anti-patterns (db.close/window/IDBFactory), dan cara benar (extraIncrementalIDBOptions)
+- KRITIS: `transaksi/[id].tsx` handleDelete — diperbaiki: mengembalikan saldo dompet sebelum hapus transaksi (expense → tambah balik, income → kurang balik, transfer_internal → kurangi saldo toWallet)
+- KRITIS: `backup.tsx` handleExport + handleExportCsv — `file.write()` kini di-await sebelum `shareAsync` (sebelumnya race condition: file bisa kosong saat dibagikan)
+- TypeScript: 0 error setelah semua fix ✓
+- Browser console: bersih, tidak ada blocking error ✓
+
 ## Audit Sesi Ini (Batch 3 — old-code vs RN codebase)
 
 - [x] TxRow di transaksi.tsx → pakai EnrichedTransaction, tampilkan categoryName/note sesuai old-code pola

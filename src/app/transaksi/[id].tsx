@@ -64,7 +64,7 @@ export default function TransactionDetailScreen() {
     if (!tx) return;
     Alert.alert(
       'Hapus Transaksi?',
-      'Tindakan ini tidak dapat dibatalkan.',
+      'Tindakan ini tidak dapat dibatalkan. Saldo dompet akan dikembalikan.',
       [
         { text: 'Batal', style: 'cancel' },
         {
@@ -73,6 +73,27 @@ export default function TransactionDetailScreen() {
           onPress: async () => {
             try {
               await database.write(async () => {
+                // Kembalikan saldo dompet sebelum menghapus transaksi
+                const wallet = await database.get<import('@/shared/db').WalletModel>('wallets').find(tx.walletId).catch(() => null);
+                if (wallet) {
+                  await wallet.update(() => {
+                    // Balik efek transaksi: jika expense → tambah balik; jika income → kurang balik
+                    if (isExpenseType(tx.type)) {
+                      wallet.balance = wallet.balance + tx.amount;
+                    } else if (isIncomeType(tx.type)) {
+                      wallet.balance = wallet.balance - tx.amount;
+                    }
+                  });
+                }
+                // Untuk transfer internal, kurangi saldo dompet tujuan
+                if (tx.type === 'transfer_internal' && tx.toWalletId) {
+                  const toWallet = await database.get<import('@/shared/db').WalletModel>('wallets').find(tx.toWalletId).catch(() => null);
+                  if (toWallet) {
+                    await toWallet.update(() => {
+                      toWallet.balance = toWallet.balance - tx.amount;
+                    });
+                  }
+                }
                 const record = await database.get('transactions').find(tx.id);
                 await (record as { destroyPermanently: () => Promise<void> }).destroyPermanently();
               });

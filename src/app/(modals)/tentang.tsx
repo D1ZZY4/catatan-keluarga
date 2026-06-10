@@ -14,7 +14,7 @@ const FEATURES = [
 ];
 
 const STACK = [
-  'React Native + Expo SDK 53',
+  'React Native + Expo SDK 56',
   'WatermelonDB (IndexedDB / SQLite)',
   'Expo Router 5',
   'Lucide Icons',
