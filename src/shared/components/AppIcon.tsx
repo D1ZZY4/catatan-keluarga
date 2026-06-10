@@ -1,93 +1,77 @@
 /**
- * AppIcon — unified icon wrapper yang menggabungkan 3 library icon.
- * Priority: Lucide React Native → iconsax-react-native → FontAwesome
+ * AppIcon — unified icon wrapper untuk 3 library icon.
  *
  * Format name:
- *   "lucide:Home" → Lucide
- *   "iconsax:Home" → Iconsax
- *   "fa:home" → FontAwesome
- *   "Home" (no prefix) → auto-detect, coba Lucide dulu
+ *   "Home"           → Lucide (auto-detect)
+ *   "lucide:Home"    → Lucide (eksplisit)
+ *   "isax:Wallet"    → iconsax-react-native
+ *   "fa:money-bill"  → FontAwesome Solid
  */
 
 import React from 'react';
 import * as LucideIcons from 'lucide-react-native';
+import * as IsaxIcons from 'iconsax-react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 
-// Register all solid icons
 library.add(fas);
+
+type IsaxVariant = 'Linear' | 'Outline' | 'Broken' | 'Bold' | 'Bulk' | 'TwoTone';
 
 interface AppIconProps {
   name: string;
   size?: number;
   color?: string;
   strokeWidth?: number;
+  isaxVariant?: IsaxVariant;
 }
 
-// Map of common iconsax icon names (simplified set)
-const ICONSAX_AVAILABLE = new Set([
-  'Home', 'Wallet', 'Chart', 'Setting', 'Note', 'Category',
-  'Calendar', 'Notification', 'User', 'Lock', 'Unlock',
-  'ArrowRight', 'ArrowLeft', 'Add', 'Minus', 'Trash',
-  'Edit', 'Eye', 'EyeSlash', 'Send', 'Receive',
-  'Convert', 'Moneys', 'ReceiptItem', 'ShoppingCart',
-  'Bank', 'Card', 'Money', 'Chart2', 'TrendUp', 'TrendDown',
-]);
-
-function parseName(name: string): { lib: 'lucide' | 'iconsax' | 'fa'; iconName: string } {
-  if (name.startsWith('lucide:')) {
-    return { lib: 'lucide', iconName: name.slice(7) };
-  }
-  if (name.startsWith('iconsax:')) {
-    return { lib: 'iconsax', iconName: name.slice(8) };
-  }
-  if (name.startsWith('fa:')) {
-    return { lib: 'fa', iconName: name.slice(3) };
-  }
-  // Auto-detect: check Lucide first
+function parseName(name: string): { lib: 'lucide' | 'isax' | 'fa'; iconName: string } {
+  if (name.startsWith('lucide:')) return { lib: 'lucide', iconName: name.slice(7) };
+  if (name.startsWith('isax:'))   return { lib: 'isax',   iconName: name.slice(5) };
+  if (name.startsWith('fa:'))     return { lib: 'fa',     iconName: name.slice(3) };
   return { lib: 'lucide', iconName: name };
 }
 
-export function AppIcon({ name, size = 20, color = '#000', strokeWidth = 2 }: AppIconProps) {
+export function AppIcon({
+  name,
+  size = 20,
+  color = '#000',
+  strokeWidth = 2,
+  isaxVariant = 'Linear',
+}: AppIconProps) {
   const { lib, iconName } = parseName(name);
 
-  // Try Lucide
-  if (lib === 'lucide' || lib !== 'fa') {
-    // camelCase the name for Lucide lookup
-    const lucideName = iconName.replace(/[-_](\w)/g, (_, c: string) => c.toUpperCase());
-    const lucideKey = lucideName.charAt(0).toUpperCase() + lucideName.slice(1);
-    const LucideIcon = (LucideIcons as Record<string, unknown>)[lucideKey] as
-      | React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
+  if (lib === 'isax') {
+    const IsaxComp = (IsaxIcons as Record<string, unknown>)[iconName] as
+      | React.ComponentType<{ size?: number; color?: string; variant?: IsaxVariant }>
       | undefined;
-
-    if (LucideIcon) {
-      return <LucideIcon size={size} color={color} strokeWidth={strokeWidth} />;
+    if (IsaxComp) {
+      return <IsaxComp size={size} color={color} variant={isaxVariant} />;
     }
+    // fallback ke lucide jika nama isax tidak ditemukan
   }
 
-  // Try FontAwesome
   if (lib === 'fa') {
     try {
-      return <FontAwesomeIcon icon={['fas', iconName as any]} size={size} color={color} />;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return <FontAwesomeIcon icon={['fas', iconName] as any} size={size} color={color} />;
     } catch {
-      // fallback
+      // fallback ke lucide
     }
   }
 
-  // Final fallback: Circle from Lucide
-  return <LucideIcons.Circle size={size} color={color} strokeWidth={strokeWidth} />;
-}
+  // Lucide (default)
+  const lucideKey = iconName.replace(/[-_](\w)/g, (_, c: string) => c.toUpperCase());
+  const lucideNorm = lucideKey.charAt(0).toUpperCase() + lucideKey.slice(1);
+  const LucideIcon = (LucideIcons as Record<string, unknown>)[lucideNorm] as
+    | React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
+    | undefined;
 
-/**
- * Convenience: get all available icon names from Lucide (for icon picker).
- */
-export function getLucideIconNames(): string[] {
-  return Object.keys(LucideIcons).filter(
-    (key) =>
-      key !== 'createLucideIcon' &&
-      key !== 'default' &&
-      !key.endsWith('Icon') &&
-      typeof (LucideIcons as Record<string, unknown>)[key] === 'function',
-  );
+  if (LucideIcon) {
+    return <LucideIcon size={size} color={color} strokeWidth={strokeWidth} />;
+  }
+
+  return <LucideIcons.Circle size={size} color={color} strokeWidth={strokeWidth} />;
 }

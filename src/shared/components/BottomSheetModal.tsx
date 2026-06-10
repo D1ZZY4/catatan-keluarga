@@ -69,10 +69,11 @@ export function BottomSheetModal({
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{ backgroundColor: colors.bgCard, width: 40 }}
       backgroundStyle={{ backgroundColor: colors.bgPage, borderRadius: 28 }}
+      containerStyle={{ zIndex: 9999, elevation: 9999 }}
     >
       <BottomSheetView style={styles.container}>
         {title !== undefined && (
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: colors.bgSurface }]}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
             <TouchableOpacity
               onPress={onClose}
