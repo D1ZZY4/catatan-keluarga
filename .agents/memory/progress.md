@@ -34,8 +34,6 @@ description: Current build status, what is done, what is next for Catat Artha
 - colors.ts typed as `AppColors` interface (avoid literal type errors)
 - tsconfig: `experimentalDecorators: true`, excludes `old-code/`
 - FileSystem API (SDK 54): cast with `unknown` to access `documentDirectory`
-- expo dev server TIDAK bisa jalan di Replit (freeport-async port scan 11000-65535 blocked)
-- Workflow diset ke `bunx tsc --noEmit --watch --pretty` (bukan expo start)
 - PickerBridge pattern: module-level singleton callback untuk picker-to-form communication
 - stats.tsx: menggunakan custom SimplePieChart/SimpleBarChart/SimpleAreaChart (react-native-svg)
 - GuidedHomeTour: `accessibilityViewIsModal` bukan `accessibilityRole="dialog"`
