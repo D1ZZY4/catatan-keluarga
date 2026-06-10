@@ -174,7 +174,7 @@ export default function FormTransaksiScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.chipRow}>
               {wallets.filter(w => !w.isArchived).map(w => {
-                const WIcon = getLucideIcon((w as {icon?: string}).icon ?? '');
+                const WIcon = getLucideIcon(w.icon ?? '');
                 const active = walletId === w.id;
                 return (
                   <Pressable
@@ -204,7 +204,7 @@ export default function FormTransaksiScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.chipRow}>
                 {wallets.filter(w => !w.isArchived && w.id !== walletId).map(w => {
-                  const WIcon = getLucideIcon((w as {icon?: string}).icon ?? '');
+                  const WIcon = getLucideIcon(w.icon ?? '');
                   const active = toWalletId === w.id;
                   return (
                     <Pressable

@@ -25,7 +25,7 @@ const TAB_CONFIG = [
 ] as const;
 
 function CustomTabBar({ state, navigation }: TabBarProps) {
-  const { colors, shadows } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (

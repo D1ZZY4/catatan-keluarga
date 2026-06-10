@@ -101,6 +101,13 @@
 - TypeScript: 0 error setelah semua fix ✓
 - Browser console: bersih, tidak ada shadow* warning ✓
 
+## Audit Sesi Ini (Batch 5 — dead code cleanup)
+
+- [x] StatCharts.tsx dihapus (tidak diimport di mana pun; statistik.tsx pakai inline chart sendiri)
+- [x] Unused `Dimensions` import dihapus dari onboarding/index.tsx
+- [x] Cast `(w as {icon?: string}).icon` di form-transaksi.tsx dihapus — WalletModel.icon sudah typed
+- TypeScript: 0 error setelah semua fix ✓
+
 ## Audit Sesi Ini (Batch 3 — old-code vs RN codebase)
 
 - [x] TxRow di transaksi.tsx → pakai EnrichedTransaction, tampilkan categoryName/note sesuai old-code pola

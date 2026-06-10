@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, Dimensions, TextInput,
+  View, Text, Pressable, StyleSheet, TextInput,
   PanResponder, Animated, ScrollView, Switch, Platform,
 } from 'react-native';
 
@@ -18,8 +18,6 @@ import { ensureSeeded } from '@/shared/utils/seedDatabase';
 import { ConfettiCannon, type ConfettiCannonRef } from '@/shared/components/ConfettiCannon';
 
 const ND = Platform.OS !== 'web';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-void SCREEN_WIDTH;
 
 type AppColors = ReturnType<typeof useTheme>['colors'];
 

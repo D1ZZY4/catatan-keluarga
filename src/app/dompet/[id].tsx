@@ -81,7 +81,7 @@ export default function WalletDetailScreen() {
     try {
       await database.write(async () => {
         const record = await database.get<import('@/shared/db').WalletModel>('wallets').find(wallet.id);
-        await record.update(w => { (w as unknown as { isArchived: boolean }).isArchived = !wallet.isArchived; });
+        await record.update(w => { w.isArchived = !wallet.isArchived; });
       });
       showToast(wallet.isArchived ? 'Arsip dibatalkan' : 'Dompet diarsipkan', 'success');
       void load();

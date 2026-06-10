@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, RefreshControl, Pressable,
+  View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, type DimensionValue,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/shared/hooks/useTheme';
@@ -226,7 +226,7 @@ export default function BerandaScreen() {
                 </View>
               </View>
               <View style={[styles.healthTrack, { backgroundColor: `${colors.bgPage}80` }]}>
-                <View style={[styles.healthFill, { width: `${health.score}%` as any, backgroundColor: heroColor }]} />
+                <View style={[styles.healthFill, { width: `${health.score}%` as DimensionValue, backgroundColor: heroColor }]} />
               </View>
             </View>
             {healthExpanded ? <ChevronUp size={16} color={colors.textMuted} /> : <ChevronDown size={16} color={colors.textMuted} />}
@@ -242,7 +242,7 @@ export default function BerandaScreen() {
                   </View>
                   <View style={[styles.healthTrack, { backgroundColor: `${colors.bgPage}80` }]}>
                     <View style={[styles.healthFill, {
-                      width: `${f.score * 100}%` as any,
+                      width: `${f.score * 100}%` as DimensionValue,
                       backgroundColor: f.score >= 0.7 ? colors.success : f.score >= 0.4 ? colors.warning : colors.danger,
                     }]} />
                   </View>

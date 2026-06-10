@@ -6,7 +6,7 @@ import {
   Laptop, Store, TrendingUp, RotateCcw, Star, CircleDollarSign,
   Coffee, Gamepad2, Dumbbell, Plane, Bus, Bike, Phone, Wifi,
   Music, Camera, Baby, Flower2, Pizza, ShoppingCart, Receipt,
-  Stethoscope, GraduationCap, Trophy, DollarSign, PiggyBank as Pig,
+  Stethoscope, GraduationCap, Trophy, DollarSign,
   ArrowLeftRight, BarChart2, Globe, HelpCircle,
 } from 'lucide-react-native';
 
