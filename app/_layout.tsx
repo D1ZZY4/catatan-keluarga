@@ -19,11 +19,26 @@ import {
   JetBrainsMono_400Regular,
 } from '@expo-google-fonts/jetbrains-mono';
 import { ThemeProvider } from '../src/shared/context/ThemeContext';
-import { AuthProvider } from '../src/shared/context/AuthContext';
+import { AuthProvider, useAuth } from '../src/shared/context/AuthContext';
 import { AppDataProvider } from '../src/shared/context/AppDataContext';
 import { CurrencyProvider } from '../src/shared/context/CurrencyContext';
+import { LockScreen } from '../src/features/auth/LockScreen';
 
 SplashScreen.preventAutoHideAsync();
+
+function AppWithLock() {
+  const { status } = useAuth();
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="(dev)" options={{ headerShown: false }} />
+      </Stack>
+      <LockScreen visible={status === 'locked'} />
+    </>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -51,11 +66,7 @@ export default function RootLayout() {
             <AppDataProvider>
               <CurrencyProvider>
                 <StatusBar style="auto" />
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
-                  <Stack.Screen name="(dev)" options={{ headerShown: false }} />
-                </Stack>
+                <AppWithLock />
               </CurrencyProvider>
             </AppDataProvider>
           </AuthProvider>

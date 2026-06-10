@@ -7,7 +7,9 @@ import { database, getSetting, setSetting } from './database';
 import { WalletModel } from './models/Wallet';
 import { TransactionModel } from './models/Transaction';
 import { CategoryModel } from './models/Category';
-import type { Wallet, Transaction, Category, AppSettings } from '../types';
+import { BudgetModel } from './models/Budget';
+import { ReminderModel } from './models/Reminder';
+import type { Wallet, Transaction, Category, Budget, Reminder, AppSettings } from '../types';
 
 // ---- helpers ----
 
@@ -252,4 +254,129 @@ export async function countTransactionsByWallet(walletId: string): Promise<numbe
   const col = database.collections.get<TransactionModel>('transactions');
   const rows = await col.query().fetch();
   return rows.filter((r) => r.walletId === walletId || r.toWalletId === walletId).length;
+}
+
+// ---- Budgets ----
+
+function budgetFromModel(m: BudgetModel): Budget {
+  return {
+    id: m.id,
+    categoryId: m.categoryId,
+    amount: parseFloat(m.amountEnc) || 0,
+    currency: m.currency,
+    period: m.period as Budget['period'],
+    month: m.month ?? undefined,
+    year: m.year ?? undefined,
+    notifyAt: m.notifyAt,
+    createdAt: m.createdAt.getTime(),
+  };
+}
+
+export async function listBudgets(): Promise<Budget[]> {
+  const col = database.collections.get<BudgetModel>('budgets');
+  const rows = await col.query().fetch();
+  return rows.map(budgetFromModel);
+}
+
+export async function putBudget(budget: Budget): Promise<void> {
+  const col = database.collections.get<BudgetModel>('budgets');
+  await database.write(async () => {
+    try {
+      const existing = await col.find(budget.id);
+      await existing.update((m) => {
+        m.categoryId = budget.categoryId;
+        m.amountEnc = String(budget.amount);
+        m.currency = budget.currency;
+        m.period = budget.period;
+        m.month = budget.month ?? null;
+        m.year = budget.year ?? null;
+        m.notifyAt = budget.notifyAt;
+      });
+    } catch {
+      await col.create((m) => {
+        (m as any)._raw.id = budget.id;
+        m.categoryId = budget.categoryId;
+        m.amountEnc = String(budget.amount);
+        m.currency = budget.currency;
+        m.period = budget.period;
+        m.month = budget.month ?? null;
+        m.year = budget.year ?? null;
+        m.notifyAt = budget.notifyAt;
+      });
+    }
+  });
+}
+
+export async function deleteBudget(id: string): Promise<void> {
+  const col = database.collections.get<BudgetModel>('budgets');
+  await database.write(async () => {
+    try {
+      const record = await col.find(id);
+      await record.destroyPermanently();
+    } catch {}
+  });
+}
+
+// ---- Reminders ----
+
+function reminderFromModel(m: ReminderModel): Reminder {
+  return {
+    id: m.id,
+    name: m.nameEnc,
+    amount: m.amountEnc ? parseFloat(m.amountEnc) : undefined,
+    currency: m.currency,
+    dueDay: m.dueDay,
+    period: m.period as Reminder['period'],
+    category: m.category,
+    notifyDaysBefore: m.notifyDaysBefore,
+    isActive: m.isActive,
+    createdAt: m.createdAt.getTime(),
+  };
+}
+
+export async function listReminders(): Promise<Reminder[]> {
+  const col = database.collections.get<ReminderModel>('reminders');
+  const rows = await col.query().fetch();
+  return rows.map(reminderFromModel).sort((a, b) => a.dueDay - b.dueDay);
+}
+
+export async function putReminder(reminder: Reminder): Promise<void> {
+  const col = database.collections.get<ReminderModel>('reminders');
+  await database.write(async () => {
+    try {
+      const existing = await col.find(reminder.id);
+      await existing.update((m) => {
+        m.nameEnc = reminder.name;
+        m.amountEnc = reminder.amount !== undefined ? String(reminder.amount) : null;
+        m.currency = reminder.currency;
+        m.dueDay = reminder.dueDay;
+        m.period = reminder.period;
+        m.category = reminder.category;
+        m.notifyDaysBefore = reminder.notifyDaysBefore;
+        m.isActive = reminder.isActive;
+      });
+    } catch {
+      await col.create((m) => {
+        (m as any)._raw.id = reminder.id;
+        m.nameEnc = reminder.name;
+        m.amountEnc = reminder.amount !== undefined ? String(reminder.amount) : null;
+        m.currency = reminder.currency;
+        m.dueDay = reminder.dueDay;
+        m.period = reminder.period;
+        m.category = reminder.category;
+        m.notifyDaysBefore = reminder.notifyDaysBefore;
+        m.isActive = reminder.isActive;
+      });
+    }
+  });
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  const col = database.collections.get<ReminderModel>('reminders');
+  await database.write(async () => {
+    try {
+      const record = await col.find(id);
+      await record.destroyPermanently();
+    } catch {}
+  });
 }

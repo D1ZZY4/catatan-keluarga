@@ -11,7 +11,12 @@ import { ChevronRight, Plus, TrendingDown } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTheme } from '../../src/shared/context/ThemeContext';
 import { useAppData, computeWalletBalance } from '../../src/shared/context/AppDataContext';
+import { useAuth } from '../../src/shared/context/AuthContext';
 import { NetWorthHero } from '../../src/features/home/NetWorthHero';
+import { BudgetWidget } from '../../src/features/home/BudgetWidget';
+import { ReminderWidget } from '../../src/features/home/ReminderWidget';
+import { HealthScoreWidget } from '../../src/features/home/HealthScoreWidget';
+import { GuidedHomeTour } from '../../src/features/home/GuidedHomeTour';
 import { WalletCard } from '../../src/shared/components/WalletCard';
 import { TransactionListItem } from '../../src/shared/components/TransactionListItem';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
@@ -23,10 +28,12 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors: c } = useTheme();
   const { wallets, transactions, categories, loading } = useAppData();
+  const { userName } = useAuth();
 
   const [txFormOpen, setTxFormOpen] = useState(false);
   const [txDefaultType, setTxDefaultType] = useState<TransactionType>('expense');
   const [walletFormOpen, setWalletFormOpen] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
 
   const activeWallets = useMemo(() => wallets.filter((w) => !w.isArchived), [wallets]);
 
@@ -70,10 +77,11 @@ export default function HomeScreen() {
       >
         {/* Hero */}
         <NetWorthHero
-          userName="Pengguna"
+          userName={userName ?? 'Pengguna'}
           netWorth={netWorth}
           monthlyIncome={monthlyIncome}
           monthlyExpense={monthlyExpense}
+          onTourPress={() => setTourVisible(true)}
         />
 
         {/* Quick Actions */}
@@ -150,7 +158,7 @@ export default function HomeScreen() {
                   <WalletCard
                     wallet={w}
                     balance={computeWalletBalance(w, transactions)}
-                    onClick={() => router.push('/(tabs)/wallets')}
+                    onClick={() => router.push(`/wallet/${w.id}` as any)}
                   />
                 </View>
               ))}
@@ -163,6 +171,24 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </ScrollView>
           )}
+        </View>
+
+        {/* Health Score */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Kesehatan Keuangan</Text>
+          </View>
+          <HealthScoreWidget />
+        </View>
+
+        {/* Budget widget */}
+        <View style={styles.section}>
+          <BudgetWidget />
+        </View>
+
+        {/* Reminder widget */}
+        <View style={styles.section}>
+          <ReminderWidget />
         </View>
 
         {/* Recent transactions */}
@@ -223,6 +249,10 @@ export default function HomeScreen() {
       <WalletForm
         isOpen={walletFormOpen}
         onClose={() => setWalletFormOpen(false)}
+      />
+      <GuidedHomeTour
+        visible={tourVisible}
+        onClose={() => setTourVisible(false)}
       />
     </>
   );

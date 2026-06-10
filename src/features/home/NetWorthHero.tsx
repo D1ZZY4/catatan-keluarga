@@ -9,6 +9,7 @@ interface NetWorthHeroProps {
   netWorth: number;
   monthlyIncome: number;
   monthlyExpense: number;
+  onTourPress?: () => void;
 }
 
 const MORNING_GREETS = ['Selamat pagi', 'Pagi yang cerah', 'Hai, selamat pagi', 'Semangat pagi'];

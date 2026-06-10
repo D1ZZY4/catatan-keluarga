@@ -1,6 +1,5 @@
 /**
  * AppDataContext — sumber kebenaran tunggal untuk semua data finansial.
- * Migrasi dari old-code/src-backup/app/AppDataContext.tsx
  * Pattern: optimistic updates + WatermelonDB persistence
  */
 
@@ -24,6 +23,12 @@ import {
   listCategories,
   putCategory,
   deleteCategory,
+  listBudgets,
+  putBudget,
+  deleteBudget,
+  listReminders,
+  putReminder,
+  deleteReminder,
 } from '../db/repo';
 import { newId } from '../utils/misc';
 import { INCOME_TYPES, EXPENSE_TYPES } from '../constants/transactionTypes';
@@ -49,6 +54,12 @@ export interface AppDataContextValue extends AppData {
   addCategory: (data: Omit<Category, 'id' | 'createdAt' | 'isDefault'>) => Promise<void>;
   updateCategory: (cat: Category) => Promise<void>;
   removeCategory: (id: string) => Promise<void>;
+  addBudget: (data: Omit<Budget, 'id' | 'createdAt'>) => Promise<void>;
+  updateBudget: (budget: Budget) => Promise<void>;
+  removeBudget: (id: string) => Promise<void>;
+  addReminder: (data: Omit<Reminder, 'id' | 'createdAt'>) => Promise<void>;
+  updateReminder: (reminder: Reminder) => Promise<void>;
+  removeReminder: (id: string) => Promise<void>;
   getWalletBalance: (walletId: string) => number;
   reload: () => Promise<void>;
 }
@@ -137,14 +148,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const load = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', loading: true });
     try {
-      const [wallets, transactions, categories] = await Promise.all([
+      const [wallets, transactions, categories, budgets, reminders] = await Promise.all([
         listWallets(),
         listTransactions(),
         listCategories(),
+        listBudgets(),
+        listReminders(),
       ]);
       dispatch({
         type: 'LOADED',
-        data: { wallets, transactions, categories, budgets: [], reminders: [] },
+        data: { wallets, transactions, categories, budgets, reminders },
       });
     } catch {
       dispatch({ type: 'SET_LOADING', loading: false });
@@ -267,6 +280,72 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // ---- Budgets -------------------------------------------------------------
+
+  const addBudget = useCallback(async (budgetData: Omit<Budget, 'id' | 'createdAt'>) => {
+    const budget: Budget = { ...budgetData, id: newId(), createdAt: Date.now() };
+    const prev = dataRef.current.budgets;
+    dispatch({ type: 'SET_BUDGETS', budgets: [...prev, budget] });
+    try {
+      await putBudget(budget);
+    } catch {
+      dispatch({ type: 'SET_BUDGETS', budgets: prev });
+    }
+  }, []);
+
+  const updateBudget = useCallback(async (budget: Budget) => {
+    const prev = dataRef.current.budgets;
+    dispatch({ type: 'SET_BUDGETS', budgets: prev.map((b) => (b.id === budget.id ? budget : b)) });
+    try {
+      await putBudget(budget);
+    } catch {
+      dispatch({ type: 'SET_BUDGETS', budgets: prev });
+    }
+  }, []);
+
+  const removeBudget = useCallback(async (id: string) => {
+    const prev = dataRef.current.budgets;
+    dispatch({ type: 'SET_BUDGETS', budgets: prev.filter((b) => b.id !== id) });
+    try {
+      await deleteBudget(id);
+    } catch {
+      dispatch({ type: 'SET_BUDGETS', budgets: prev });
+    }
+  }, []);
+
+  // ---- Reminders -----------------------------------------------------------
+
+  const addReminder = useCallback(async (reminderData: Omit<Reminder, 'id' | 'createdAt'>) => {
+    const reminder: Reminder = { ...reminderData, id: newId(), createdAt: Date.now() };
+    const prev = dataRef.current.reminders;
+    dispatch({ type: 'SET_REMINDERS', reminders: [...prev, reminder] });
+    try {
+      await putReminder(reminder);
+    } catch {
+      dispatch({ type: 'SET_REMINDERS', reminders: prev });
+    }
+  }, []);
+
+  const updateReminder = useCallback(async (reminder: Reminder) => {
+    const prev = dataRef.current.reminders;
+    dispatch({ type: 'SET_REMINDERS', reminders: prev.map((r) => (r.id === reminder.id ? reminder : r)) });
+    try {
+      await putReminder(reminder);
+    } catch {
+      dispatch({ type: 'SET_REMINDERS', reminders: prev });
+    }
+  }, []);
+
+  const removeReminder = useCallback(async (id: string) => {
+    const prev = dataRef.current.reminders;
+    dispatch({ type: 'SET_REMINDERS', reminders: prev.filter((r) => r.id !== id) });
+    try {
+      await deleteReminder(id);
+    } catch {
+      dispatch({ type: 'SET_REMINDERS', reminders: prev });
+    }
+  }, []);
+
   // ---- Derived -------------------------------------------------------------
 
   const getWalletBalance = useCallback(
@@ -291,6 +370,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         addCategory,
         updateCategory,
         removeCategory,
+        addBudget,
+        updateBudget,
+        removeBudget,
+        addReminder,
+        updateReminder,
+        removeReminder,
         getWalletBalance,
         reload,
       }}

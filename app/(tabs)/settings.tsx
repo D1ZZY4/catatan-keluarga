@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,7 @@ import { useTheme } from '../../src/shared/context/ThemeContext';
 import { useAuth } from '../../src/shared/context/AuthContext';
 import { DynamicIcon } from '../../src/shared/components/DynamicIcon';
 import { AppLabels } from '../../src/shared/config/labels';
+import { BackupService } from '../../src/features/backup/BackupService';
 import type { ThemeMode } from '../../src/shared/context/ThemeContext';
 
 interface SettingRowProps {
@@ -64,10 +65,31 @@ function SettingRow({ icon, iconBg = '#00000010', label, value, onPress, rightEl
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { colors: c, mode: themeMode, setMode: setTheme, isDark } = useTheme();
-  const { isLockEnabled, setLockEnabled } = useAuth();
+  const { hasPin } = useAuth();
 
   const [hideSensitive, setHideSensitive] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const handleExportBackup = useCallback(async () => {
+    try {
+      await BackupService.exportBackup();
+    } catch {
+      Alert.alert('Gagal', 'Ekspor backup gagal. Coba lagi.');
+    }
+  }, []);
+
+  const handleImportBackup = useCallback(async () => {
+    try {
+      const result = await BackupService.importBackup();
+      if (result.success) {
+        Alert.alert('Berhasil', result.message);
+      } else {
+        Alert.alert('Gagal', result.message);
+      }
+    } catch {
+      Alert.alert('Gagal', 'Import backup gagal. Coba lagi.');
+    }
+  }, []);
 
   const themeModeLabel: Record<string, string> = {
     light: 'Terang',
@@ -122,18 +144,12 @@ export default function SettingsScreen() {
         <SettingRow
           icon={<Lock size={16} color="#fff" />}
           iconBg={c.accentPrimary}
-          label="Kunci Aplikasi"
-          rightElement={
-            <Switch
-              value={isLockEnabled}
-              onValueChange={setLockEnabled}
-              thumbColor={isLockEnabled ? c.accentPrimary : '#ccc'}
-              trackColor={{ false: '#ccc', true: `${c.accentPrimary}60` }}
-            />
-          }
+          label="Kunci Aplikasi (PIN)"
+          value={hasPin ? 'PIN Aktif' : 'Tidak Aktif'}
+          onPress={() => router.push('/pin-setup' as any)}
         />
         <SettingRow
-          icon={isLockEnabled ? <Eye size={16} color="#fff" /> : <EyeOff size={16} color="#fff" />}
+          icon={hideSensitive ? <Eye size={16} color="#fff" /> : <EyeOff size={16} color="#fff" />}
           iconBg="#7b1fa2"
           label="Sembunyikan Saldo"
           rightElement={
@@ -196,14 +212,14 @@ export default function SettingsScreen() {
         <SettingRow
           icon={<Download size={16} color="#fff" />}
           iconBg="#2e7d32"
-          label="Ekspor Data (CSV)"
-          onPress={() => Alert.alert('Segera hadir', 'Fitur ekspor data akan tersedia segera.')}
+          label="Ekspor Backup (.artha)"
+          onPress={handleExportBackup}
         />
         <SettingRow
           icon={<Upload size={16} color="#fff" />}
           iconBg="#1565c0"
-          label="Impor Data"
-          onPress={() => Alert.alert('Segera hadir', 'Fitur impor data akan tersedia segera.')}
+          label="Impor Backup (.artha)"
+          onPress={handleImportBackup}
         />
         <SettingRow
           icon={<Trash2 size={16} color="#fff" />}
