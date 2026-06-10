@@ -1,0 +1,228 @@
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { TrendingDown, TrendingUp, Eye, EyeOff } from 'lucide-react-native';
+import { useTheme } from '../../shared/context/ThemeContext';
+import { formatCurrency } from '../../shared/utils/format';
+
+interface NetWorthHeroProps {
+  userName: string;
+  netWorth: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
+}
+
+const MORNING_GREETS = ['Selamat pagi', 'Pagi yang cerah', 'Hai, selamat pagi', 'Semangat pagi'];
+const AFTERNOON_GREETS = ['Selamat siang', 'Hai, selamat siang', 'Siang yang produktif', 'Halo'];
+const EVENING_GREETS = ['Selamat sore', 'Sore yang menyenangkan', 'Hai, selamat sore', 'Sore hari'];
+const NIGHT_GREETS = ['Selamat malam', 'Malam yang tenang', 'Hai, selamat malam', 'Istirahat yang baik'];
+
+const MORNING_SUBS = [
+  'Yuk mulai hari dengan mencatat keuangan.',
+  'Semoga harimu produktif dan menyenangkan!',
+  'Pagi ini, pantau saldo dompetmu.',
+];
+const AFTERNOON_SUBS = [
+  'Sudah catat pengeluaran pagi ini?',
+  'Jangan lupa catat transaksi siang ini.',
+  'Pantau keuanganmu setiap hari.',
+];
+const EVENING_SUBS = [
+  'Waktunya rekap pengeluaran hari ini.',
+  'Pantau saldo dompetmu sore ini.',
+  'Berapa yang sudah dikeluarkan hari ini?',
+];
+const NIGHT_SUBS = [
+  'Sudah catat semua transaksi hari ini?',
+  'Rekap keuangan harian sebelum istirahat.',
+  'Tutup hari dengan catatan yang lengkap.',
+];
+
+function pickRandom<T>(arr: T[], seed: number): T {
+  return arr[seed % arr.length] as T;
+}
+
+function getSmartGreeting(now: Date): { prefix: string; sub: string } {
+  const hour = now.getHours();
+  const day = now.getDay();
+  const date = now.getDate();
+  const seed = Math.floor(Date.now() / (1000 * 60 * 20));
+
+  const isFirstOfMonth = date === 1;
+  const isLastDays = date >= 25;
+  const isWeekend = day === 0 || day === 6;
+  const isMonday = day === 1;
+
+  let prefixPool: string[];
+  let subPool: string[];
+
+  if (hour >= 4 && hour < 11) {
+    prefixPool = MORNING_GREETS;
+    subPool = MORNING_SUBS;
+  } else if (hour >= 11 && hour < 15) {
+    prefixPool = AFTERNOON_GREETS;
+    subPool = AFTERNOON_SUBS;
+  } else if (hour >= 15 && hour < 19) {
+    prefixPool = EVENING_GREETS;
+    subPool = EVENING_SUBS;
+  } else {
+    prefixPool = NIGHT_GREETS;
+    subPool = NIGHT_SUBS;
+  }
+
+  const prefix = pickRandom(prefixPool, seed);
+  let contextSubs: string[] = [];
+
+  if (isFirstOfMonth) {
+    contextSubs = ['Awal bulan, saatnya atur keuangan dengan bijak.'];
+  } else if (isLastDays) {
+    contextSubs = ['Hampir akhir bulan, pantau sisa anggaranmu.'];
+  } else if (isMonday) {
+    contextSubs = ['Awal pekan yang tepat untuk mencatat keuangan.'];
+  } else if (isWeekend) {
+    contextSubs = ['Hari yang tepat untuk evaluasi keuangan mingguan.'];
+  }
+
+  const combined = [...contextSubs, ...subPool];
+  const sub = pickRandom(combined, seed + date);
+  return { prefix, sub };
+}
+
+export function NetWorthHero({
+  userName,
+  netWorth,
+  monthlyIncome,
+  monthlyExpense,
+}: NetWorthHeroProps) {
+  const { colors } = useTheme();
+  const [visible, setVisible] = useState(true);
+  const now = useMemo(() => new Date(), []);
+  const { prefix, sub } = useMemo(() => getSmartGreeting(now), [now]);
+
+  const c = colors;
+
+  return (
+    <View style={[s.container, { backgroundColor: c.bgCard }]}>
+      {/* Greeting */}
+      <View style={s.greetRow}>
+        <View style={s.greetText}>
+          <Text style={[s.greetPrefix, { color: c.textPrimary }]}>
+            {prefix},{' '}
+            <Text style={{ color: c.accentWarm }}>{userName}</Text>
+          </Text>
+          <Text style={[s.greetSub, { color: c.textMuted }]}>{sub}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => setVisible((v) => !v)}
+          style={[s.toggleBtn, { backgroundColor: `${c.bgSurface}CC` }]}
+          accessibilityLabel={visible ? 'Sembunyikan saldo' : 'Tampilkan saldo'}
+        >
+          {visible
+            ? <EyeOff size={14} color={c.textMuted} />
+            : <Eye size={14} color={c.textMuted} />}
+        </TouchableOpacity>
+      </View>
+
+      {/* Net worth */}
+      <Text style={[s.netWorthLabel, { color: c.textMuted }]}>SALDO BERSIH</Text>
+      <Text style={[s.netWorth, { color: c.textPrimary }]}>
+        {visible ? formatCurrency(netWorth, 'IDR') : 'Rp ••••••'}
+      </Text>
+
+      {/* Monthly stats */}
+      <View style={s.statsRow}>
+        <View style={[s.statCard, { backgroundColor: `${c.bgSurface}99`, borderColor: '#2e7d3220' }]}>
+          <View style={s.statHeader}>
+            <TrendingUp size={11} color="#2e7d32" />
+            <Text style={[s.statLabel, { color: c.textMuted }]}>MASUK</Text>
+          </View>
+          <Text style={[s.statAmount, { color: '#2e7d32' }]}>
+            {visible ? formatCurrency(monthlyIncome, 'IDR') : '••••'}
+          </Text>
+        </View>
+        <View style={[s.statCard, { backgroundColor: `${c.bgSurface}99`, borderColor: '#c6282820' }]}>
+          <View style={s.statHeader}>
+            <TrendingDown size={11} color="#c62828" />
+            <Text style={[s.statLabel, { color: c.textMuted }]}>KELUAR</Text>
+          </View>
+          <Text style={[s.statAmount, { color: '#c62828' }]}>
+            {visible ? formatCurrency(monthlyExpense, 'IDR') : '••••'}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  container: {
+    padding: 20,
+    paddingBottom: 24,
+  },
+  greetRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  greetText: { flex: 1, paddingRight: 12 },
+  greetPrefix: {
+    fontSize: 15,
+    fontFamily: 'DM-Sans-Bold',
+    lineHeight: 22,
+  },
+  greetSub: {
+    fontSize: 11,
+    fontFamily: 'DM-Sans',
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  toggleBtn: {
+    flexShrink: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  netWorthLabel: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans-SemiBold',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  netWorth: {
+    fontSize: 40,
+    fontFamily: 'Instrument-Serif',
+    letterSpacing: -1.5,
+    lineHeight: 48,
+    marginBottom: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 9,
+    fontFamily: 'DM-Sans-SemiBold',
+    letterSpacing: 0.8,
+  },
+  statAmount: {
+    fontSize: 14,
+    fontFamily: 'JetBrains-Mono',
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
+  },
+});
