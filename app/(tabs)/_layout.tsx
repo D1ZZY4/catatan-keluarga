@@ -49,7 +49,7 @@ export default function TabLayout() {
           right: 24,
           height: 64,
           borderRadius: 28,
-          backgroundColor: `${colors.bgCard}DD`,
+          backgroundColor: colors.bgCard,
           borderTopWidth: 0,
           elevation: 0,
           shadowColor: '#000',

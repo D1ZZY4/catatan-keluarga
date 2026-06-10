@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ChevronRight,
   Shield,
-  Palette,
+  ShieldCheck,
   Bell,
   Download,
   Upload,
@@ -23,50 +23,96 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Palette,
+  Heart,
 } from 'lucide-react-native';
 import { useTheme } from '../../src/shared/context/ThemeContext';
 import { useAuth } from '../../src/shared/context/AuthContext';
 import { useAppData } from '../../src/shared/context/AppDataContext';
-import { DynamicIcon } from '../../src/shared/components/DynamicIcon';
 import { AppLabels } from '../../src/shared/config/labels';
 import { BackupService } from '../../src/features/backup/BackupService';
 import type { ThemeMode } from '../../src/shared/context/ThemeContext';
 
 interface SettingRowProps {
   icon: React.ReactNode;
-  iconBg?: string;
+  iconBg: string;
   label: string;
+  description?: string;
   value?: string;
   onPress?: () => void;
   rightElement?: React.ReactNode;
   danger?: boolean;
+  isLast?: boolean;
 }
 
-function SettingRow({ icon, iconBg = '#00000010', label, value, onPress, rightElement, danger }: SettingRowProps) {
+function SettingRow({
+  icon,
+  iconBg,
+  label,
+  description,
+  value,
+  onPress,
+  rightElement,
+  danger,
+  isLast,
+}: SettingRowProps) {
   const { colors: c } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[s.row, { borderBottomColor: c.bgPage }]}
+      style={[
+        s.row,
+        !isLast && { borderBottomWidth: 1, borderBottomColor: c.bgPage },
+      ]}
       disabled={!onPress && !rightElement}
-      activeOpacity={onPress ? 0.6 : 1}
+      activeOpacity={onPress ? 0.55 : 1}
     >
       <View style={[s.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
-      <Text style={[s.rowLabel, danger ? { color: '#c62828' } : { color: c.textPrimary }]}>
-        {label}
-      </Text>
+      <View style={s.rowContent}>
+        <Text
+          style={[s.rowLabel, danger ? { color: c.danger } : { color: c.textPrimary }]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        {description !== undefined && (
+          <Text style={[s.rowDesc, { color: c.textMuted }]} numberOfLines={1}>
+            {description}
+          </Text>
+        )}
+      </View>
       <View style={s.rowRight}>
-        {value && <Text style={[s.rowValue, { color: c.textMuted }]}>{value}</Text>}
+        {value !== undefined && (
+          <Text style={[s.rowValue, { color: c.textMuted }]}>{value}</Text>
+        )}
         {rightElement}
-        {onPress && !rightElement && <ChevronRight size={16} color={c.textMuted} />}
+        {onPress !== undefined && rightElement === undefined && (
+          <ChevronRight size={15} color={c.textMuted} />
+        )}
       </View>
     </TouchableOpacity>
   );
 }
 
+function SectionCard({ children }: { children: React.ReactNode }) {
+  const { colors: c } = useTheme();
+  return (
+    <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      {children}
+    </View>
+  );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  const { colors: c } = useTheme();
+  return (
+    <Text style={[s.sectionTitle, { color: c.textMuted }]}>{title}</Text>
+  );
+}
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const { colors: c, mode: themeMode, setMode: setTheme, isDark } = useTheme();
+  const { colors: c, mode: themeMode, setMode: setTheme } = useTheme();
   const { hasPin } = useAuth();
   const { clearAll } = useAppData();
 
@@ -139,120 +185,138 @@ export default function SettingsScreen() {
     >
       <Text style={[s.pageTitle, { color: c.textPrimary }]}>Pengaturan</Text>
 
-      {/* Security */}
-      <Text style={[s.sectionTitle, { color: c.textMuted }]}>KEAMANAN</Text>
-      <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      {/* Keamanan */}
+      <SectionHeader title="KEAMANAN" />
+      <SectionCard>
         <SettingRow
-          icon={<Lock size={16} color="#fff" />}
-          iconBg={c.accentPrimary}
+          icon={<Lock size={18} color="#fff" />}
+          iconBg="#1565c0"
           label="Kunci Aplikasi (PIN)"
+          description={hasPin ? 'Ketuk untuk mengubah kode PIN' : 'Buat PIN untuk lindungi data'}
           value={hasPin ? 'PIN Aktif' : 'Tidak Aktif'}
           onPress={() => router.push('/pin-setup' as any)}
         />
         <SettingRow
-          icon={hideSensitive ? <Eye size={16} color="#fff" /> : <EyeOff size={16} color="#fff" />}
+          icon={hideSensitive ? <EyeOff size={18} color="#fff" /> : <Eye size={18} color="#fff" />}
           iconBg="#7b1fa2"
           label="Sembunyikan Saldo"
+          description="Sembunyikan nominal di beranda"
           rightElement={
             <Switch
               value={hideSensitive}
               onValueChange={setHideSensitive}
-              thumbColor={hideSensitive ? '#7b1fa2' : '#ccc'}
-              trackColor={{ false: '#ccc', true: '#7b1fa260' }}
+              thumbColor={hideSensitive ? '#fff' : '#fff'}
+              trackColor={{ false: '#ccc', true: '#7b1fa2' }}
             />
           }
         />
         <SettingRow
-          icon={<Shield size={16} color="#fff" />}
+          icon={hasPin ? <ShieldCheck size={18} color="#fff" /> : <Shield size={18} color="#fff" />}
           iconBg="#2e7d32"
           label="Enkripsi AES-256-GCM"
+          description="Data terenkripsi di penyimpanan lokal"
           value="Aktif"
+          isLast
         />
-      </View>
+      </SectionCard>
 
       {/* Tampilan */}
-      <Text style={[s.sectionTitle, { color: c.textMuted }]}>TAMPILAN</Text>
-      <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      <SectionHeader title="TAMPILAN" />
+      <SectionCard>
         <SettingRow
-          icon={<Palette size={16} color="#fff" />}
+          icon={<Palette size={18} color="#fff" />}
           iconBg="#e65100"
           label="Tema"
+          description="Terang, gelap, atau ikuti sistem"
           value={themeModeLabel[themeMode] ?? 'Otomatis'}
           onPress={handleThemeChange}
         />
         <SettingRow
-          icon={<Globe size={16} color="#fff" />}
+          icon={<Globe size={18} color="#fff" />}
           iconBg="#1565c0"
           label="Mata Uang Utama"
+          description="Mata uang default untuk dompet baru"
           value="IDR (Rupiah)"
-          onPress={() => Alert.alert('Segera hadir', 'Pengaturan mata uang akan tersedia di versi berikutnya.')}
+          onPress={() =>
+            Alert.alert('Segera hadir', 'Pengaturan mata uang akan tersedia di versi berikutnya.')
+          }
+          isLast
         />
-      </View>
+      </SectionCard>
 
       {/* Notifikasi */}
-      <Text style={[s.sectionTitle, { color: c.textMuted }]}>NOTIFIKASI</Text>
-      <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      <SectionHeader title="NOTIFIKASI" />
+      <SectionCard>
         <SettingRow
-          icon={<Bell size={16} color="#fff" />}
+          icon={<Bell size={18} color="#fff" />}
           iconBg="#e65100"
           label="Notifikasi Pengingat"
+          description={notificationsEnabled ? 'Aktif. Anda akan mendapat pengingat tagihan.' : 'Nonaktif. Ketuk untuk mengaktifkan.'}
           rightElement={
             <Switch
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
-              thumbColor={notificationsEnabled ? '#e65100' : '#ccc'}
-              trackColor={{ false: '#ccc', true: '#e6510060' }}
+              thumbColor="#fff"
+              trackColor={{ false: '#ccc', true: '#e65100' }}
             />
           }
+          isLast
         />
-      </View>
+      </SectionCard>
 
-      {/* Data */}
-      <Text style={[s.sectionTitle, { color: c.textMuted }]}>DATA & BACKUP</Text>
-      <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      {/* Data & Backup */}
+      <SectionHeader title="DATA & BACKUP" />
+      <SectionCard>
         <SettingRow
-          icon={<Download size={16} color="#fff" />}
+          icon={<Download size={18} color="#fff" />}
           iconBg="#2e7d32"
           label="Ekspor Backup (.artha)"
+          description="Simpan semua data ke file"
           onPress={handleExportBackup}
         />
         <SettingRow
-          icon={<Upload size={16} color="#fff" />}
+          icon={<Upload size={18} color="#fff" />}
           iconBg="#1565c0"
           label="Impor Backup (.artha)"
+          description="Pulihkan data dari file backup"
           onPress={handleImportBackup}
         />
         <SettingRow
-          icon={<Trash2 size={16} color="#fff" />}
+          icon={<Trash2 size={18} color="#fff" />}
           iconBg="#c62828"
           label="Hapus Semua Data"
+          description="Menghapus seluruh data secara permanen"
           onPress={handleClearData}
           danger
+          isLast
         />
-      </View>
+      </SectionCard>
 
-      {/* About */}
-      <Text style={[s.sectionTitle, { color: c.textMuted }]}>TENTANG</Text>
-      <View style={[s.card, { backgroundColor: c.bgCard }]}>
+      {/* Tentang */}
+      <SectionHeader title="TENTANG" />
+      <SectionCard>
         <SettingRow
-          icon={<Info size={16} color="#fff" />}
-          iconBg="#607d8b"
+          icon={<Info size={18} color="#fff" />}
+          iconBg="#546e7a"
           label="Versi Aplikasi"
+          description="Catat Artha"
           value="1.0.0"
         />
         <SettingRow
-          icon={<DynamicIcon name="Shield" size={16} color="#fff" />}
-          iconBg="#607d8b"
+          icon={<Shield size={18} color="#fff" />}
+          iconBg="#546e7a"
           label="Developer"
+          description="Pembuat aplikasi"
           value="Aby Abdillah"
         />
         <SettingRow
-          icon={<DynamicIcon name="Heart" size={16} color="#fff" />}
+          icon={<Heart size={18} color="#fff" />}
           iconBg="#e91e63"
-          label="Data tersimpan di perangkat Anda"
-          value="100% Offline"
+          label="100% Offline"
+          description="Data tersimpan sepenuhnya di perangkat Anda"
+          isLast
         />
-      </View>
+      </SectionCard>
     </ScrollView>
   );
 }
@@ -264,27 +328,57 @@ const s = StyleSheet.create({
     fontFamily: 'Instrument-Serif',
     letterSpacing: -0.5,
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 11,
     fontFamily: 'DM-Sans-SemiBold',
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
     paddingHorizontal: 20,
     marginBottom: 8,
     marginTop: 20,
   },
-  card: { marginHorizontal: 16, borderRadius: 20, overflow: 'hidden' },
+  card: {
+    marginHorizontal: 16,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     gap: 12,
-    borderBottomWidth: 1,
   },
-  rowIcon: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { flex: 1, fontSize: 14, fontFamily: 'DM-Sans-Medium' },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rowValue: { fontSize: 13, fontFamily: 'DM-Sans' },
+  rowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  rowContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  rowLabel: {
+    fontSize: 14,
+    fontFamily: 'DM-Sans-Medium',
+  },
+  rowDesc: {
+    fontSize: 12,
+    fontFamily: 'DM-Sans',
+    marginTop: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexShrink: 0,
+  },
+  rowValue: {
+    fontSize: 13,
+    fontFamily: 'DM-Sans',
+  },
 });
