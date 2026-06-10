@@ -32,7 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     versionCode: 1,
   } as ExpoConfig['android'] & { minSdkVersion: number; targetSdkVersion: number },
   plugins: [
-    'expo-router',
+    ['expo-router', { root: 'src/app' }],
     'expo-font',
     'expo-local-authentication',
     'expo-notifications',

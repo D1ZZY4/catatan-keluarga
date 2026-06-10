@@ -42,6 +42,19 @@ description: Key architecture decisions for Catat Artha React Native app
 - Expo SDK: 54 (LOCKED — jangan upgrade)
 
 ## Replit Dev Workflow
-- Expo dev server TIDAK bisa jalan di Replit (freeport-async port scan 11000-65535 semuanya blocked)
-- Workflow: `bunx tsc --noEmit --watch` untuk TypeScript watch
-- Build APK: `bunx eas build --platform android --profile preview` (dijalankan dari terminal, bukan workflow)
+- Workflow: `EXPO_NO_TYPESCRIPT_SETUP=1 bunx expo start --port 8081` (console output mode)
+- Metro Bundler berhasil jalan dan menampilkan QR code di console
+- Untuk test: scan QR code dengan Expo Go di Android (native dev build)
+- Web preview TIDAK bekerja — app menggunakan banyak native-only packages (WatermelonDB, MMKV, biometrics)
+- Build APK: `bunx eas build --platform android --profile preview`
+
+## File Structure
+- Routes: `src/app/` (expo-router config: `root: 'src/app'`)
+- Shared: `src/shared/` (components, theme, types, hooks, crypto, etc.)
+- Features: `src/features/` (prices, etc.)
+- Path alias: `@/*` → `./src/*` in tsconfig.json
+
+## tsconfig.json Rules
+- DO NOT use `extends: "expo/tsconfig.base"` — expo SDK 54 base uses `module: "preserve"` which TS 5.3.3 doesn't support
+- Use `EXPO_NO_TYPESCRIPT_SETUP=1` env var in workflow to prevent expo from re-adding the extends
+- Standalone tsconfig with all settings explicit is the correct approach
