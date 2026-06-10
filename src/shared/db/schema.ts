@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const dbSchema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     tableSchema({
       name: 'wallets',
@@ -117,6 +117,17 @@ export const dbSchema = appSchema({
       columns: [
         { name: 'key', type: 'string' },
         { name: 'value', type: 'string' },
+      ],
+    }),
+    tableSchema({
+      name: 'recurring_transactions',
+      columns: [
+        { name: 'type', type: 'string' },
+        { name: 'template_data', type: 'string' },
+        { name: 'frequency', type: 'string' },
+        { name: 'next_due_date', type: 'number', isIndexed: true },
+        { name: 'is_active', type: 'boolean' },
+        { name: 'created_at', type: 'number' },
       ],
     }),
   ],

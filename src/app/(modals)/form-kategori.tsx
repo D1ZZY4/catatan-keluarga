@@ -64,11 +64,11 @@ export default function FormKategoriScreen() {
       await database.write(async () => {
         if (isEdit && params.id) {
           const record = await database.get<import('@/shared/db').CategoryModel>('categories').find(params.id);
-          await record.update(() => {
-            record.name = name.trim();
-            record.icon = icon;
-            record.color = color;
-            record.type = type;
+          await record.update((r: import('@/shared/db').CategoryModel) => {
+            r.name = name.trim();
+            r.icon = icon;
+            r.color = color;
+            r.type = type;
           });
         } else {
           await database.get<import('@/shared/db').CategoryModel>('categories').create((record) => {

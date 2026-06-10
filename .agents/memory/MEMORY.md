@@ -2,7 +2,7 @@
 - [exactOptionalPropertyTypes pattern](exact-optional-props.md) — passing `T|undefined` to optional props needs conditional spread
 - [Font stack](font-stack.md) — DM Sans (body/sans), Instrument Serif (display), JetBrains Mono (mono)
 - [RN TypeScript fixes](rn-ts-fixes.md) — patterns used to resolve all 136 TS errors in Expo/RN codebase
-- [Progress & milestones](progress.md) — RN codebase: 0 TS errors; M0–M21 selesai; DB blocking fix applied
+- [Progress & milestones](progress.md) — RN codebase: 0 TS errors; M0–M21 selesai; Batch 9: recurring_transactions (schema v3, model, screens, hook)
 - [Architecture decisions](architecture.md) — Context+useReducer, AES-GCM, font stack, exactOptionalPropertyTypes patterns
 - [Build & APK](build-log.md) — APK via EAS Build; see eas.json and EAS-BUILD.md
 - [BottomNav array type](bottomnav-spec.md) — use explicit Array<{center?:boolean}> instead of as const when array has optional prop on some items only

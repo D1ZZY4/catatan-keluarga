@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
 import {
   User, Shield, Palette, Bell, Database, Trash2,
   ChevronRight, PiggyBank, CalendarClock, FileText,
-  ReceiptText, Layers, Tag, TrendingUp, Info,
+  ReceiptText, Layers, Tag, TrendingUp, Info, RefreshCw,
 } from 'lucide-react-native';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useRouter } from 'expo-router';
@@ -128,6 +128,13 @@ export default function PengaturanScreen() {
           label="Kategori"
           description="Kelola kategori transaksi"
           onPress={() => router.push('/(modals)/kategori')}
+        />
+        <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
+        <SettingRow
+          icon={<RefreshCw size={18} color={colors.accentPrimary} />}
+          label="Transaksi Berulang"
+          description="Jadwal transaksi otomatis"
+          onPress={() => router.push('/(modals)/berulang')}
         />
         <View style={[styles.divider, { backgroundColor: colors.bgPage }]} />
         <SettingRow

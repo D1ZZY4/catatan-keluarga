@@ -10,6 +10,9 @@ import { SettingModel } from './models/SettingModel';
 import { PriceCacheModel } from './models/PriceCacheModel';
 import { TagModel } from './models/TagModel';
 import { TransactionTemplateModel } from './models/TransactionTemplateModel';
+import { RecurringTransactionModel } from './models/RecurringTransactionModel';
+import { TransactionTagModel } from './models/TransactionTagModel';
+import { UsagePatternModel } from './models/UsagePatternModel';
 
 const modelClasses = [
   WalletModel,
@@ -21,6 +24,9 @@ const modelClasses = [
   PriceCacheModel,
   TagModel,
   TransactionTemplateModel,
+  RecurringTransactionModel,
+  TransactionTagModel,
+  UsagePatternModel,
 ];
 
 function createDatabase(): Database {
@@ -31,16 +37,13 @@ function createDatabase(): Database {
       useWebWorker: false,
       useIncrementalIndexedDB: true,
       dbName: 'catkeu',
-      // Saat hot-reload di web, koneksi IDB lama bisa memblokir delete/upgrade.
-      // onVersionChange dipanggil ketika tab/koneksi lain meminta perubahan versi —
-      // menutup koneksi ini agar tidak memblokir proses reset schema.
       extraIncrementalIDBOptions: {
         onVersionChange: (db: { close(): void }) => {
           db.close();
         },
       },
       onSetUpError: (_error: unknown) => {
-        // silent — DB akan retry otomatis setelah koneksi lama menutup
+        // silent
       },
     });
     return new Database({ adapter, modelClasses });
@@ -69,3 +72,6 @@ export { SettingModel } from './models/SettingModel';
 export { PriceCacheModel } from './models/PriceCacheModel';
 export { TagModel } from './models/TagModel';
 export { TransactionTemplateModel } from './models/TransactionTemplateModel';
+export { RecurringTransactionModel } from './models/RecurringTransactionModel';
+export { TransactionTagModel } from './models/TransactionTagModel';
+export { UsagePatternModel } from './models/UsagePatternModel';

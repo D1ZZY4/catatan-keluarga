@@ -14,10 +14,12 @@ import { useReminders } from '@/features/reminders/useReminders';
 import { ProgressBar } from '@/shared/components/ProgressBar';
 import { formatCurrency } from '@/shared/utils/formatters';
 import { SecureStorage } from '@/shared/utils/secureStorage';
+import { getTypeOption } from '@/shared/constants/transactionTypes';
+import { useRecurringList } from '@/features/recurring/useRecurringList';
 import {
   TrendingUp, TrendingDown, Plus, ScanLine, ArrowLeftRight,
   Activity, ChevronDown, ChevronUp, Wallet, ChevronRight, ArrowUpDown,
-  Bell, Layers, Eye, EyeOff,
+  Bell, Layers, Eye, EyeOff, Repeat2,
 } from 'lucide-react-native';
 
 const TOUR_STEPS: TourStep[] = [
@@ -83,8 +85,14 @@ export default function BerandaScreen() {
   const { wallets, totalBalance, monthIncome, monthExpense, recentTransactions, loading, reload } = useHomeData();
   const { budgets } = useBudgets();
   const { reminders } = useReminders();
+  const { items: allRecurring } = useRecurringList();
   const [refreshing, setRefreshing] = useState(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
+
+  const upcomingRecurring = useMemo(() => {
+    const in7days = Date.now() + 7 * 86400000;
+    return allRecurring.filter(r => r.isActive && r.nextDueDate <= in7days).slice(0, 5);
+  }, [allRecurring]);
   const [healthExpanded, setHealthExpanded] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
@@ -395,6 +403,52 @@ export default function BerandaScreen() {
                   );
                 })}
               </ScrollView>
+            </View>
+          )}
+
+          {/* ── Upcoming Recurring ── */}
+          {upcomingRecurring.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <Repeat2 size={14} color={colors.accentPrimary} />
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary, fontFamily: 'DMSans-SemiBold' }]}>Jadwal 7 Hari Ke Depan</Text>
+                </View>
+                <Pressable onPress={() => router.push('/(modals)/berulang')} style={styles.seeAllRow}>
+                  <Text style={[styles.seeAll, { color: colors.textMuted, fontFamily: 'DMSans-Medium' }]}>Kelola</Text>
+                  <ChevronRight size={13} color={colors.textMuted} />
+                </Pressable>
+              </View>
+              <View style={[styles.txContainer, { backgroundColor: colors.bgCard }, shadows.sm]}>
+                {upcomingRecurring.map((r, idx) => {
+                  const typeOpt = getTypeOption(r.type);
+                  const isIncome = ['income', 'debt_received', 'invest_sell'].includes(r.type);
+                  const amtColor = isIncome ? colors.success : colors.danger;
+                  const amtPrefix = isIncome ? '+' : '-';
+                  const daysLeft = Math.ceil((r.nextDueDate - Date.now()) / 86400000);
+                  return (
+                    <View key={r.id} style={[
+                      styles.txItem,
+                      idx < upcomingRecurring.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.bgPage },
+                    ]}>
+                      <View style={[styles.txIcon, { backgroundColor: `${amtColor}18` }]}>
+                        <Repeat2 size={14} color={amtColor} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.txName, { color: colors.textPrimary, fontFamily: 'DMSans-Medium' }]} numberOfLines={1}>
+                          {typeOpt?.label ?? r.type}{r.note ? ` · ${r.note}` : ''}
+                        </Text>
+                        <Text style={[styles.txNote, { color: colors.textMuted, fontFamily: 'DMSans-Regular' }]}>
+                          {daysLeft === 0 ? 'Hari ini' : daysLeft === 1 ? 'Besok' : `${daysLeft} hari lagi`}
+                        </Text>
+                      </View>
+                      <Text style={[styles.txAmt, { color: amtColor, fontFamily: 'JetBrainsMono-Regular' }]}>
+                        {amtPrefix}{formatCurrency(r.amount, r.currency)}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           )}
 

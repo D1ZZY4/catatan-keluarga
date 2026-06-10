@@ -40,6 +40,8 @@ const SCREENS: Array<{ label: string; route: string }> = [
   { label: 'Tampilan', route: '/(modals)/tampilan' },
   { label: 'Templates', route: '/(modals)/templates' },
   { label: 'Tentang', route: '/(modals)/tentang' },
+  { label: 'Transaksi Berulang', route: '/(modals)/berulang' },
+  { label: 'Form Berulang', route: '/(modals)/form-berulang' },
 ];
 
 export default function UICheckScreen() {

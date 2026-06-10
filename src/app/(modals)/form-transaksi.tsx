@@ -99,15 +99,17 @@ export default function FormTransaksiScreen() {
         });
 
         const walletRecord = await database.get('wallets').find(walletId) as import('@/shared/db').WalletModel;
-        await walletRecord.update(() => {
-          const isDeduction = isExpenseType(txType);
-          walletRecord.balance = isDeduction ? walletRecord.balance - amountNum : walletRecord.balance + amountNum;
+        const isDeduction = isExpenseType(txType);
+        const newBal = isDeduction ? walletRecord.balance - amountNum : walletRecord.balance + amountNum;
+        await walletRecord.update((w: import('@/shared/db').WalletModel) => {
+          w.balance = newBal;
         });
 
         if (txType === 'transfer_internal' && toWalletId) {
           const toWalletRecord = await database.get('wallets').find(toWalletId) as import('@/shared/db').WalletModel;
-          await toWalletRecord.update(() => {
-            toWalletRecord.balance = toWalletRecord.balance + amountNum;
+          const toNewBal = toWalletRecord.balance + amountNum;
+          await toWalletRecord.update((w: import('@/shared/db').WalletModel) => {
+            w.balance = toNewBal;
           });
         }
       });

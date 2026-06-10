@@ -69,9 +69,9 @@ async function saveToCache(key: string, value: string, existingId?: string) {
   await database.write(async () => {
     if (existingId) {
       const record = await database.get<import('@/shared/db').PriceCacheModel>('price_cache').find(existingId);
-      await record.update(() => {
-        record.value = value;
-        record.fetchedAt = Date.now();
+      await record.update((r: import('@/shared/db').PriceCacheModel) => {
+        r.value = value;
+        r.fetchedAt = Date.now();
       });
     } else {
       await database.get<import('@/shared/db').PriceCacheModel>('price_cache').create((r) => {

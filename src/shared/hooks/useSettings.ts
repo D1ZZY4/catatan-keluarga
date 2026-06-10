@@ -41,7 +41,7 @@ export function useSettings() {
         const existing = await database.get<SettingModel>('settings').query().fetch();
         const found = existing.find(r => r.key === key);
         if (found) {
-          await found.update(() => { found.value = value; });
+          await found.update((r: SettingModel) => { r.value = value; });
         } else {
           await database.get<SettingModel>('settings').create((record) => {
             record.key = key;

@@ -13,26 +13,23 @@ import { formatDate } from '@/shared/utils/formatters';
 
 type RawModelRecord = Record<string, unknown>;
 
+const ALL_TABLES = [
+  'wallets', 'transactions', 'categories', 'budgets', 'reminders',
+  'settings', 'price_cache', 'tags', 'transaction_tags',
+  'transaction_templates', 'usage_patterns', 'recurring_transactions',
+] as const;
+
+type TableName = typeof ALL_TABLES[number];
+
 async function buildBackupJson(): Promise<string> {
-  const [wallets, transactions, categories, budgets, reminders, settings] = await Promise.all([
-    database.get<WalletModel>('wallets').query().fetch(),
-    database.get<TransactionModel>('transactions').query().fetch(),
-    database.get<CategoryModel>('categories').query().fetch(),
-    database.get('budgets').query().fetch(),
-    database.get('reminders').query().fetch(),
-    database.get('settings').query().fetch(),
-  ]);
   const toRaw = (m: { _raw: RawModelRecord }) => m._raw;
-  const backup = {
-    version: '1.0.0',
-    createdAt: Date.now(),
-    wallets: (wallets as Array<{ _raw: RawModelRecord }>).map(toRaw),
-    transactions: (transactions as Array<{ _raw: RawModelRecord }>).map(toRaw),
-    categories: (categories as Array<{ _raw: RawModelRecord }>).map(toRaw),
-    budgets: (budgets as Array<{ _raw: RawModelRecord }>).map(toRaw),
-    reminders: (reminders as Array<{ _raw: RawModelRecord }>).map(toRaw),
-    settings: (settings as Array<{ _raw: RawModelRecord }>).map(toRaw),
-  };
+  const results = await Promise.all(
+    ALL_TABLES.map(t => database.get(t).query().fetch())
+  );
+  const tableData = Object.fromEntries(
+    ALL_TABLES.map((t, i) => [t, (results[i] as Array<{ _raw: RawModelRecord }>).map(toRaw)])
+  );
+  const backup = { version: '2.0.0', createdAt: Date.now(), ...tableData };
   return JSON.stringify(backup, null, 2);
 }
 
@@ -130,15 +127,7 @@ export default function BackupScreen() {
       const text = await new EFile(uri).text();
 
       type RawRecord = Record<string, unknown> & { id: string };
-      type BackupFile = {
-        version?: string;
-        wallets?: RawRecord[];
-        transactions?: RawRecord[];
-        categories?: RawRecord[];
-        budgets?: RawRecord[];
-        reminders?: RawRecord[];
-        settings?: RawRecord[];
-      };
+      type BackupFile = { version?: string; wallets?: RawRecord[] } & Partial<Record<TableName, RawRecord[]>>;
 
       const data = JSON.parse(text) as BackupFile;
       if (!data.version || !data.wallets) {
@@ -146,14 +135,10 @@ export default function BackupScreen() {
         return;
       }
 
-      const tables: Array<{ name: string; rows: RawRecord[] }> = [
-        { name: 'wallets', rows: data.wallets ?? [] },
-        { name: 'transactions', rows: data.transactions ?? [] },
-        { name: 'categories', rows: data.categories ?? [] },
-        { name: 'budgets', rows: data.budgets ?? [] },
-        { name: 'reminders', rows: data.reminders ?? [] },
-        { name: 'settings', rows: data.settings ?? [] },
-      ];
+      const tables: Array<{ name: TableName; rows: RawRecord[] }> = ALL_TABLES.map(t => ({
+        name: t,
+        rows: (data[t] ?? []) as RawRecord[],
+      }));
 
       await database.write(async () => {
         for (const table of tables) {

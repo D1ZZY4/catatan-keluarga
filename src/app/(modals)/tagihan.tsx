@@ -25,7 +25,7 @@ export default function TagihanScreen() {
     try {
       await database.write(async () => {
         const r = await database.get<import('@/shared/db').ReminderModel>('reminders').find(id);
-        await r.update(() => { r.isActive = !isActive; });
+        await r.update((rec: import('@/shared/db').ReminderModel) => { rec.isActive = !isActive; });
       });
       void reload();
     } catch {

@@ -77,12 +77,12 @@ export default function FormDompetScreen() {
       await database.write(async () => {
         if (isEdit && params.id) {
           const record = await database.get<import('@/shared/db').WalletModel>('wallets').find(params.id);
-          await record.update(() => {
-            record.name = name.trim();
-            record.icon = icon;
-            record.color = color;
-            record.currency = currency;
-            record.type = type;
+          await record.update((r: import('@/shared/db').WalletModel) => {
+            r.name = name.trim();
+            r.icon = icon;
+            r.color = color;
+            r.currency = currency;
+            r.type = type;
           });
         } else {
           await database.get<import('@/shared/db').WalletModel>('wallets').create((record) => {

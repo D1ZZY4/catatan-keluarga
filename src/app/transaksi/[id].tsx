@@ -76,21 +76,22 @@ export default function TransactionDetailScreen() {
                 // Kembalikan saldo dompet sebelum menghapus transaksi
                 const wallet = await database.get<import('@/shared/db').WalletModel>('wallets').find(tx.walletId).catch(() => null);
                 if (wallet) {
-                  await wallet.update(() => {
-                    // Balik efek transaksi: jika expense → tambah balik; jika income → kurang balik
-                    if (isExpenseType(tx.type)) {
-                      wallet.balance = wallet.balance + tx.amount;
-                    } else if (isIncomeType(tx.type)) {
-                      wallet.balance = wallet.balance - tx.amount;
-                    }
+                  const reversedBal = isExpenseType(tx.type)
+                    ? wallet.balance + tx.amount
+                    : isIncomeType(tx.type)
+                      ? wallet.balance - tx.amount
+                      : wallet.balance;
+                  await wallet.update((w: import('@/shared/db').WalletModel) => {
+                    w.balance = reversedBal;
                   });
                 }
                 // Untuk transfer internal, kurangi saldo dompet tujuan
                 if (tx.type === 'transfer_internal' && tx.toWalletId) {
                   const toWallet = await database.get<import('@/shared/db').WalletModel>('wallets').find(tx.toWalletId).catch(() => null);
                   if (toWallet) {
-                    await toWallet.update(() => {
-                      toWallet.balance = toWallet.balance - tx.amount;
+                    const toReversedBal = toWallet.balance - tx.amount;
+                    await toWallet.update((w: import('@/shared/db').WalletModel) => {
+                      w.balance = toReversedBal;
                     });
                   }
                 }
