@@ -189,7 +189,6 @@ export default function WalletDetailScreen() {
       <TransactionForm
         isOpen={txFormOpen}
         onClose={() => setTxFormOpen(false)}
-        prefill={{ date: Date.now() }}
       />
       <WalletForm
         isOpen={editOpen}

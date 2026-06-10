@@ -4,10 +4,19 @@
  *
  * Threat model: melindungi data di SQLite dari akses kasual ke device.
  * Kunci TIDAK PERNAH masuk ke AsyncStorage — hanya SecureStore.
+ *
+ * Platform guard: pada web, fallback ke sessionStorage (hanya untuk dev preview).
  */
 
-import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import * as Crypto from 'expo-crypto';
+
+// Dynamic import untuk SecureStore — hanya pada native
+import type * as SecureStoreType from 'expo-secure-store';
+let SecureStore: typeof SecureStoreType | null = null;
+if (Platform.OS !== 'web') {
+  SecureStore = require('expo-secure-store') as typeof SecureStoreType;
+}
 
 const SECURE_KEY = 'catat_artha_enc_key';
 const SECURE_SALT = 'catat_artha_salt';
@@ -17,6 +26,44 @@ const PBKDF2_ITERATIONS = 100_000;
 
 // In-memory key cache — dikosongkan saat lock
 let _cryptoKey: CryptoKey | null = null;
+
+// --- Web fallback storage (sessionStorage — TIDAK AMAN, hanya untuk dev preview) ---
+const webStore: Record<string, string> = {};
+
+async function secureGetItem(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return webStore[key] ?? null;
+    }
+  }
+  return SecureStore!.getItemAsync(key);
+}
+
+async function secureSetItem(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      webStore[key] = value;
+    }
+    return;
+  }
+  await SecureStore!.setItemAsync(key, value);
+}
+
+async function secureDeleteItem(key: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      delete webStore[key];
+    }
+    return;
+  }
+  await SecureStore!.deleteItemAsync(key);
+}
 
 function base64ToBuffer(b64: string): Uint8Array {
   const s = atob(b64);
@@ -34,7 +81,6 @@ function bufferToBase64(buf: Uint8Array | ArrayBuffer): string {
 
 function randomBytes(length: number): Uint8Array {
   const bytes = new Uint8Array(length);
-  // expo-crypto provides getRandomValues
   Crypto.getRandomValues(bytes);
   return bytes;
 }
@@ -67,8 +113,7 @@ async function deriveKeyFromPinString(
 }
 
 async function deriveDeviceKey(): Promise<CryptoKey> {
-  // Fallback deterministic key ketika tidak ada PIN
-  const stored = await SecureStore.getItemAsync(SECURE_KEY);
+  const stored = await secureGetItem(SECURE_KEY);
   if (stored) {
     const raw = base64ToBuffer(stored);
     return crypto.subtle.importKey(
@@ -79,9 +124,8 @@ async function deriveDeviceKey(): Promise<CryptoKey> {
       ['encrypt', 'decrypt'],
     );
   }
-  // Generate random device key
   const raw = randomBytes(32);
-  await SecureStore.setItemAsync(SECURE_KEY, bufferToBase64(raw));
+  await secureSetItem(SECURE_KEY, bufferToBase64(raw));
   return crypto.subtle.importKey(
     'raw',
     raw as unknown as BufferSource,
@@ -92,16 +136,14 @@ async function deriveDeviceKey(): Promise<CryptoKey> {
 }
 
 export const e2e = {
-  /** Unlock dengan PIN — derive key dari PIN + stored salt */
   async unlockWithPin(pin: string): Promise<boolean> {
     try {
-      const saltB64 = await SecureStore.getItemAsync(SECURE_SALT);
+      const saltB64 = await secureGetItem(SECURE_SALT);
       if (!saltB64) return false;
 
-      const pinHashStored = await SecureStore.getItemAsync(SECURE_PIN_HASH);
+      const pinHashStored = await secureGetItem(SECURE_PIN_HASH);
       if (!pinHashStored) return false;
 
-      // Verify PIN
       const key = await deriveKeyFromPinString(pin, saltB64);
       const enc = new TextEncoder();
       const saltBytes = base64ToBuffer(saltB64);
@@ -121,11 +163,10 @@ export const e2e = {
     }
   },
 
-  /** Setup PIN pertama kali — generate salt, hash PIN, derive key */
   async setupPin(pin: string): Promise<void> {
     const salt = randomBytes(16);
     const saltB64 = bufferToBase64(salt);
-    await SecureStore.setItemAsync(SECURE_SALT, saltB64);
+    await secureSetItem(SECURE_SALT, saltB64);
 
     const enc = new TextEncoder();
     const pinBytes = enc.encode(pin);
@@ -134,33 +175,28 @@ export const e2e = {
     buf.set(pinBytes, salt.length);
     const digest = await crypto.subtle.digest('SHA-256', buf);
     const pinHash = bufferToBase64(new Uint8Array(digest));
-    await SecureStore.setItemAsync(SECURE_PIN_HASH, pinHash);
+    await secureSetItem(SECURE_PIN_HASH, pinHash);
 
     _cryptoKey = await deriveKeyFromPinString(pin, saltB64);
   },
 
-  /** Unlock tanpa PIN — gunakan device key */
   async unlockWithoutPin(): Promise<void> {
     _cryptoKey = await deriveDeviceKey();
   },
 
-  /** Apakah sudah ada PIN yang di-setup? */
   async hasPin(): Promise<boolean> {
-    const h = await SecureStore.getItemAsync(SECURE_PIN_HASH);
+    const h = await secureGetItem(SECURE_PIN_HASH);
     return h !== null;
   },
 
-  /** Lock — hapus key dari memori */
   lock(): void {
     _cryptoKey = null;
   },
 
-  /** Apakah saat ini sudah unlock? */
   isUnlocked(): boolean {
     return _cryptoKey !== null;
   },
 
-  /** Encrypt string/JSON value → base64 ciphertext dengan IV embedded */
   async encrypt(value: unknown): Promise<string> {
     if (!_cryptoKey) throw new Error('E2E not unlocked');
     const iv = randomBytes(IV_BYTES);
@@ -171,11 +207,9 @@ export const e2e = {
       _cryptoKey,
       plaintext as unknown as BufferSource,
     );
-    // Format: base64(iv) + ':' + base64(ciphertext)
     return `${bufferToBase64(iv)}:${bufferToBase64(new Uint8Array(cipher))}`;
   },
 
-  /** Decrypt base64 ciphertext → original value */
   async decrypt<T>(cipherB64: string): Promise<T> {
     if (!_cryptoKey) throw new Error('E2E not unlocked');
     const [ivB64, cipherPartB64] = cipherB64.split(':');
@@ -191,7 +225,6 @@ export const e2e = {
     return JSON.parse(dec.decode(plain)) as T;
   },
 
-  /** Decrypt atau return fallback (untuk field opsional) */
   async decryptOr<T>(cipherB64: string | null | undefined, fallback: T): Promise<T> {
     if (!cipherB64) return fallback;
     try {
@@ -201,11 +234,10 @@ export const e2e = {
     }
   },
 
-  /** Delete semua data enkripsi (untuk reset app) */
   async deleteAll(): Promise<void> {
-    await SecureStore.deleteItemAsync(SECURE_KEY);
-    await SecureStore.deleteItemAsync(SECURE_SALT);
-    await SecureStore.deleteItemAsync(SECURE_PIN_HASH);
+    await secureDeleteItem(SECURE_KEY);
+    await secureDeleteItem(SECURE_SALT);
+    await secureDeleteItem(SECURE_PIN_HASH);
     _cryptoKey = null;
   },
 };

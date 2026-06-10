@@ -73,7 +73,7 @@ export function TransactionForm({
   const [tagInput, setTagInput] = useState('');
   const [categoryManuallySelected, setCategoryManuallySelected] = useState(false);
 
-  const activeWallets = wallets.filter((w) => !w.isArchived);
+  const activeWallets = useMemo(() => wallets.filter((w) => !w.isArchived), [wallets]);
 
   const buildInitialForm = useCallback((): FormState => ({
     type: editTransaction?.type ?? defaultType,

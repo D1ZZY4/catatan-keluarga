@@ -1,3 +1,4 @@
+import '../src/polyfills';
 import '../src/global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
@@ -33,7 +34,8 @@ function AppWithLock() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="(dev)" options={{ headerShown: false }} />
+        <Stack.Screen name="pin-setup" options={{ headerShown: false }} />
+        <Stack.Screen name="wallet/[id]" options={{ headerShown: false }} />
       </Stack>
       <LockScreen visible={status === 'locked'} />
     </>
