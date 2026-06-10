@@ -1,126 +1,99 @@
-/**
- * ReminderWidget — widget pengingat tagihan di home screen.
- * Menampilkan tagihan yang akan jatuh tempo bulan ini.
- */
-
-import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import { Bell, Plus } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Bell } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useTheme } from '../../shared/context/ThemeContext';
 import { useAppData } from '../../shared/context/AppDataContext';
-import { ReminderSheet } from '../reminders/ReminderSheet';
 import { formatCurrency } from '../../shared/utils/format';
-import type { Reminder } from '../../shared/types';
 
 export function ReminderWidget() {
   const { colors: c } = useTheme();
   const { reminders } = useAppData();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editReminder, setEditReminder] = useState<Reminder | undefined>();
 
-  const now = new Date();
-  const today = now.getDate();
+  const today = new Date();
 
-  const upcomingReminders = useMemo(() => {
+  const upcoming = useMemo(() => {
     return reminders
       .filter((r) => r.isActive)
       .map((r) => {
-        const daysUntil = r.dueDay >= today ? r.dueDay - today : 30 - today + r.dueDay;
-        return { reminder: r, daysUntil };
+        let dueDate: Date;
+        if (r.period === 'bulanan') {
+          dueDate = new Date(today.getFullYear(), today.getMonth(), r.dueDay);
+          if (dueDate.getTime() < Date.now()) {
+            dueDate = new Date(today.getFullYear(), today.getMonth() + 1, r.dueDay);
+          }
+        } else {
+          const diff = (r.dueDay - today.getDay() + 7) % 7;
+          dueDate = new Date(today);
+          dueDate.setDate(today.getDate() + diff);
+        }
+        const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / 86400000);
+        return { reminder: r, dueDate, daysLeft };
       })
-      .sort((a, b) => a.daysUntil - b.daysUntil)
-      .slice(0, 4);
-  }, [reminders, today]);
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, 3);
+  }, [reminders]);
 
-  const openAdd = () => {
-    setEditReminder(undefined);
-    setSheetOpen(true);
-  };
-
-  const openEdit = (r: Reminder) => {
-    setEditReminder(r);
-    setSheetOpen(true);
-  };
+  if (upcoming.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: c.textPrimary }]}>Tagihan Mendatang</Text>
-        <TouchableOpacity onPress={openAdd} style={[styles.addBtn, { backgroundColor: c.accentPrimary + '20' }]}>
-          <Plus size={14} color={c.accentPrimary} />
-          <Text style={[styles.addBtnText, { color: c.accentPrimary }]}>Tambah</Text>
+    <View style={s.section}>
+      <View style={s.header}>
+        <View style={s.titleRow}>
+          <Bell size={14} color="#e65100" />
+          <Text style={[s.title, { color: c.textPrimary }]}>Pengingat Tagihan</Text>
+        </View>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/settings' as any)}>
+          <Text style={[s.linkText, { color: c.textMuted }]}>Lihat semua</Text>
         </TouchableOpacity>
       </View>
 
-      {upcomingReminders.length === 0 ? (
-        <TouchableOpacity
-          onPress={openAdd}
-          style={[styles.emptyCard, { backgroundColor: c.bgCard, borderColor: c.bgCard }]}
-        >
-          <Bell size={18} color={c.textMuted} />
-          <Text style={[styles.emptyText, { color: c.textMuted }]}>
-            Belum ada tagihan terjadwal
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={[styles.card, { backgroundColor: c.bgCard }]}>
-          {upcomingReminders.map(({ reminder, daysUntil }, i) => (
-            <TouchableOpacity
-              key={reminder.id}
-              onPress={() => openEdit(reminder)}
-              style={[
-                styles.reminderRow,
-                i < upcomingReminders.length - 1 && { borderBottomColor: c.bgPage, borderBottomWidth: 1 },
-              ]}
-            >
-              <View
-                style={[
-                  styles.daysBox,
-                  {
-                    backgroundColor:
-                      daysUntil <= 3 ? '#c628280F' : daysUntil <= 7 ? '#e651000F' : c.bgPage,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.daysNum,
-                    { color: daysUntil <= 3 ? '#c62828' : daysUntil <= 7 ? '#e65100' : c.accentPrimary },
-                  ]}
-                >
-                  {daysUntil}
-                </Text>
-                <Text style={[styles.daysLabel, { color: c.textMuted }]}>hari</Text>
-              </View>
-              <View style={styles.reminderInfo}>
-                <Text style={[styles.reminderName, { color: c.textPrimary }]}>{reminder.name}</Text>
-                <Text style={[styles.reminderSub, { color: c.textMuted }]}>
-                  {reminder.category} • Tgl {reminder.dueDay}
-                  {reminder.amount !== undefined && ` • ${formatCurrency(reminder.amount, reminder.currency)}`}
-                </Text>
-              </View>
-              {daysUntil <= 3 && (
-                <View style={[styles.urgentBadge, { backgroundColor: '#c6282820' }]}>
-                  <Text style={{ fontSize: 10, color: '#c62828', fontFamily: 'DM-Sans-SemiBold' }}>Segera!</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.scrollContent}
+      >
+        {upcoming.map(({ reminder, daysLeft }) => {
+          const isUrgent = daysLeft <= 3;
+          const cardBg = isUrgent ? 'rgba(230,81,0,0.08)' : c.bgCard;
+          const borderColor = isUrgent ? 'rgba(230,81,0,0.28)' : 'transparent';
+          const badgeBg = isUrgent ? 'rgba(230,81,0,0.18)' : c.bgSurface;
+          const badgeColor = isUrgent ? '#e65100' : c.textMuted;
 
-      <ReminderSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} editReminder={editReminder} />
+          return (
+            <View
+              key={reminder.id}
+              style={[s.card, { backgroundColor: cardBg, borderColor, borderWidth: 1 }]}
+            >
+              <View style={[s.badge, { backgroundColor: badgeBg }]}>
+                <Text style={[s.badgeText, { color: badgeColor }]}>
+                  {daysLeft === 0
+                    ? 'Hari ini!'
+                    : daysLeft === 1
+                    ? 'Besok'
+                    : `${daysLeft} hari lagi`}
+                </Text>
+              </View>
+
+              <Text style={[s.reminderName, { color: c.textPrimary }]} numberOfLines={1}>
+                {reminder.name}
+              </Text>
+
+              {reminder.amount !== undefined && (
+                <Text style={[s.reminderAmount, { color: c.textPrimary }]}>
+                  {formatCurrency(reminder.amount, reminder.currency)}
+                </Text>
+              )}
+            </View>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {},
+const s = StyleSheet.create({
+  section: {},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -128,34 +101,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
-  title: { fontSize: 14, fontFamily: 'DM-Sans-SemiBold' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  addBtnText: { fontSize: 12, fontFamily: 'DM-Sans-SemiBold' },
-  emptyCard: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    padding: 16,
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
+    gap: 6,
   },
-  emptyText: { fontSize: 13, fontFamily: 'DM-Sans' },
-  card: { marginHorizontal: 16, borderRadius: 16, overflow: 'hidden' },
-  reminderRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
-  daysBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  title: { fontSize: 14, fontFamily: 'DM-Sans-SemiBold' },
+  linkText: { fontSize: 12, fontFamily: 'DM-Sans-Medium' },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 12,
   },
-  daysNum: { fontSize: 16, fontFamily: 'DM-Sans-Bold', lineHeight: 18 },
-  daysLabel: { fontSize: 9, fontFamily: 'DM-Sans', letterSpacing: 0.3 },
-  reminderInfo: { flex: 1 },
-  reminderName: { fontSize: 13, fontFamily: 'DM-Sans-Medium', marginBottom: 2 },
-  reminderSub: { fontSize: 11, fontFamily: 'DM-Sans' },
-  urgentBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20 },
+  card: {
+    width: 160,
+    borderRadius: 20,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 8,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans-SemiBold',
+  },
+  reminderName: {
+    fontSize: 12,
+    fontFamily: 'DM-Sans-SemiBold',
+  },
+  reminderAmount: {
+    fontSize: 14,
+    fontFamily: 'Instrument-Serif',
+    letterSpacing: -0.5,
+  },
 });

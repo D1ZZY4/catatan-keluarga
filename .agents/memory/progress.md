@@ -1,11 +1,9 @@
 # progress.md — Status Pekerjaan Catat Artha
 
 ## Status Terkini
-- **Infinite loop TERATASI** — `activeWallets` di TransactionForm.tsx kini wrapped `useMemo`
-- **prefill={{ date: Date.now() }} DIHAPUS** dari `app/wallet/[id].tsx` (objek baru tiap render)
 - TypeScript: 0 errors
 - Metro Bundler: RUNNING
-- Browser console: hanya warnings minor dari third-party libs (shadow*, pointerEvents, element.ref)
+- Browser console: hanya warnings web-only minor (shadow*, pointerEvents, useNativeDriver, element.ref — tidak mempengaruhi Android APK)
 - Blocker: tidak ada
 
 ---
@@ -42,10 +40,20 @@
 - Fix: hapus `prefill={{ date: Date.now() }}` dari wallet/[id].tsx (objek baru tiap render)
 - Browser console bersih dari "Maximum update depth exceeded"
 
+### 2026-06-10 — Sesi Kelima: Full UI Fix vs old-code Audit
+**Checkpoint selesai:**
+1. **FAB redesign** — MoreVertical icon (bukan Plus), speed dial buka ke atas, stagger 60ms, backdrop semi-transparent, posisi `bottom: 92, right: 20`
+2. **QuickActions** — 4-column grid layout dengan icon+label vertikal (bukan horizontal ScrollView)
+3. **BudgetWidget** — horizontal scroll cards dengan ProgressBar (matching old-code BudgetRow)
+4. **ReminderWidget** — horizontal scroll cards dengan days-remaining badge (matching old-code RemindersRow)
+5. **BottomNav** — dot indicator kecil di bawah icon aktif (matching old-code BottomNav)
+6. **NetWorthHero** — toggle button pakai teks "Sembunyikan"/"Tampilkan" (bukan Eye/EyeOff icons)
+7. TypeScript: 0 errors setelah semua fix
+
 ---
 
 ## Halaman yang Sudah Selesai
-- [x] **Beranda** — NetWorthHero + QuickActions + WalletCards + HealthScore + BudgetWidget + ReminderWidget + Recent Transactions
+- [x] **Beranda** — NetWorthHero + QuickActions (4-col grid) + WalletCards + HealthScore + BudgetWidget (h-scroll) + ReminderWidget (h-scroll) + Recent Transactions + FAB speed dial
 - [x] **Transaksi** — SectionList grouped, filter periode+jenis, search, batch delete, batch move category
 - [x] **Statistik** — Overview (bar chart Victory), Category (pie chart), Hutang & Piutang
 - [x] **Dompet** — list aktif+arsip, add/edit/archive/duplicate/delete, WalletDetail
@@ -55,3 +63,4 @@
 - [ ] GuidedHomeTour flow (komponen ada, belum diverifikasi)
 - [ ] CalculatorSheet (komponen ada di src/features/calculator/)
 - [ ] Onboarding flow (halaman ada di app/onboarding.tsx)
+- [ ] WalletCard sparkline (7-hari Victory Native chart)

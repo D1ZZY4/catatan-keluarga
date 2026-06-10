@@ -1,8 +1,38 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, TrendingUp, BarChart2, Wallet, Settings } from 'lucide-react-native';
 import { AppLabels } from '../../src/shared/config/labels';
 import { useTheme } from '../../src/shared/context/ThemeContext';
+
+function TabIcon({
+  Icon,
+  color,
+  focused,
+  size = 22,
+  accentColor,
+}: {
+  Icon: React.ElementType;
+  color: string;
+  focused: boolean;
+  size?: number;
+  accentColor: string;
+}) {
+  return (
+    <View style={{ alignItems: 'center', gap: 3 }}>
+      <Icon size={size} color={color} strokeWidth={focused ? 2.5 : 1.75} />
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: focused ? accentColor : 'transparent',
+        }}
+      />
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -33,7 +63,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarShowLabel: false,
         tabBarItemStyle: {
-          paddingVertical: 8,
+          paddingVertical: 4,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
       }}
     >
@@ -42,11 +74,7 @@ export default function TabLayout() {
         options={{
           title: AppLabels.tabs.home,
           tabBarIcon: ({ color, focused }) => (
-            <Home
-              size={22}
-              color={color}
-              strokeWidth={focused ? 2.5 : 1.75}
-            />
+            <TabIcon Icon={Home} color={color} focused={focused} accentColor={colors.accentPrimary} />
           ),
         }}
       />
@@ -55,11 +83,7 @@ export default function TabLayout() {
         options={{
           title: AppLabels.tabs.transaction,
           tabBarIcon: ({ color, focused }) => (
-            <TrendingUp
-              size={22}
-              color={color}
-              strokeWidth={focused ? 2.5 : 1.75}
-            />
+            <TabIcon Icon={TrendingUp} color={color} focused={focused} accentColor={colors.accentPrimary} />
           ),
         }}
       />
@@ -68,11 +92,7 @@ export default function TabLayout() {
         options={{
           title: AppLabels.tabs.stats,
           tabBarIcon: ({ color, focused }) => (
-            <BarChart2
-              size={28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 1.75}
-            />
+            <TabIcon Icon={BarChart2} color={color} focused={focused} size={28} accentColor={colors.accentPrimary} />
           ),
         }}
       />
@@ -81,11 +101,7 @@ export default function TabLayout() {
         options={{
           title: AppLabels.tabs.wallet,
           tabBarIcon: ({ color, focused }) => (
-            <Wallet
-              size={22}
-              color={color}
-              strokeWidth={focused ? 2.5 : 1.75}
-            />
+            <TabIcon Icon={Wallet} color={color} focused={focused} accentColor={colors.accentPrimary} />
           ),
         }}
       />
@@ -94,11 +110,7 @@ export default function TabLayout() {
         options={{
           title: AppLabels.tabs.settings,
           tabBarIcon: ({ color, focused }) => (
-            <Settings
-              size={22}
-              color={color}
-              strokeWidth={focused ? 2.5 : 1.75}
-            />
+            <TabIcon Icon={Settings} color={color} focused={focused} accentColor={colors.accentPrimary} />
           ),
         }}
       />

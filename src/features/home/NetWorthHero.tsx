@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { TrendingDown, TrendingUp, Eye, EyeOff } from 'lucide-react-native';
+import { TrendingDown, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '../../shared/context/ThemeContext';
 import { formatCurrency } from '../../shared/utils/format';
 
@@ -21,28 +21,36 @@ const MORNING_SUBS = [
   'Yuk mulai hari dengan mencatat keuangan.',
   'Semoga harimu produktif dan menyenangkan!',
   'Pagi ini, pantau saldo dompetmu.',
+  'Hari baru, semangat baru!',
+  'Catat setiap rupiah, raih tujuan finansialmu.',
 ];
 const AFTERNOON_SUBS = [
   'Sudah catat pengeluaran pagi ini?',
   'Jangan lupa catat transaksi siang ini.',
   'Pantau keuanganmu setiap hari.',
+  'Satu catatan kecil, manfaat besar.',
+  'Cek saldo sebelum belanja.',
 ];
 const EVENING_SUBS = [
   'Waktunya rekap pengeluaran hari ini.',
+  'Cek anggaran sebelum belanja sore.',
   'Pantau saldo dompetmu sore ini.',
   'Berapa yang sudah dikeluarkan hari ini?',
+  'Sebentar lagi malam, rekap harimu.',
 ];
 const NIGHT_SUBS = [
   'Sudah catat semua transaksi hari ini?',
   'Rekap keuangan harian sebelum istirahat.',
+  'Pastikan semua pengeluaran sudah tercatat.',
   'Tutup hari dengan catatan yang lengkap.',
+  'Istirahat tenang setelah keuangan tercatat.',
 ];
 
 function pickRandom<T>(arr: T[], seed: number): T {
   return arr[seed % arr.length] as T;
 }
 
-function getSmartGreeting(now: Date): { prefix: string; sub: string } {
+function getSmartGreeting(userName: string, now: Date): { prefix: string; sub: string } {
   const hour = now.getHours();
   const day = now.getDay();
   const date = now.getDate();
@@ -74,13 +82,13 @@ function getSmartGreeting(now: Date): { prefix: string; sub: string } {
   let contextSubs: string[] = [];
 
   if (isFirstOfMonth) {
-    contextSubs = ['Awal bulan, saatnya atur keuangan dengan bijak.'];
+    contextSubs = ['Selamat datang di bulan baru! Waktunya merencanakan anggaran.', 'Awal bulan, saatnya atur keuangan dengan bijak.'];
   } else if (isLastDays) {
-    contextSubs = ['Hampir akhir bulan, pantau sisa anggaranmu.'];
+    contextSubs = ['Hampir akhir bulan, pantau sisa anggaranmu.', 'Beberapa hari lagi akhir bulan, cek pengeluaranmu.'];
   } else if (isMonday) {
-    contextSubs = ['Awal pekan yang tepat untuk mencatat keuangan.'];
+    contextSubs = ['Semangat memulai pekan baru!', 'Awal pekan yang tepat untuk mencatat keuangan.'];
   } else if (isWeekend) {
-    contextSubs = ['Hari yang tepat untuk evaluasi keuangan mingguan.'];
+    contextSubs = ['Selamat menikmati akhir pekan!', 'Hari yang tepat untuk evaluasi keuangan mingguan.'];
   }
 
   const combined = [...contextSubs, ...subPool];
@@ -97,7 +105,7 @@ export function NetWorthHero({
   const { colors } = useTheme();
   const [visible, setVisible] = useState(true);
   const now = useMemo(() => new Date(), []);
-  const { prefix, sub } = useMemo(() => getSmartGreeting(now), [now]);
+  const { prefix, sub } = useMemo(() => getSmartGreeting(userName, now), [userName, now]);
 
   const c = colors;
 
@@ -114,12 +122,12 @@ export function NetWorthHero({
         </View>
         <TouchableOpacity
           onPress={() => setVisible((v) => !v)}
-          style={[s.toggleBtn, { backgroundColor: `${c.bgSurface}CC` }]}
+          style={[s.toggleBtn, { backgroundColor: `${c.bgSurface}B0` }]}
           accessibilityLabel={visible ? 'Sembunyikan saldo' : 'Tampilkan saldo'}
         >
-          {visible
-            ? <EyeOff size={14} color={c.textMuted} />
-            : <Eye size={14} color={c.textMuted} />}
+          <Text style={[s.toggleText, { color: c.textMuted }]}>
+            {visible ? 'Sembunyikan' : 'Tampilkan'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -182,9 +190,12 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+  },
+  toggleText: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans-SemiBold',
   },
   netWorthLabel: {
     fontSize: 10,

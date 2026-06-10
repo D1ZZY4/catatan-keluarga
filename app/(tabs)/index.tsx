@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, Plus, TrendingDown } from 'lucide-react-native';
+import { ChevronRight, Plus, TrendingDown, Wallet } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTheme } from '../../src/shared/context/ThemeContext';
 import { useAppData, computeWalletBalance } from '../../src/shared/context/AppDataContext';
 import { useAuth } from '../../src/shared/context/AuthContext';
 import { NetWorthHero } from '../../src/features/home/NetWorthHero';
+import { QuickActions } from '../../src/features/home/QuickActions';
 import { BudgetWidget } from '../../src/features/home/BudgetWidget';
 import { ReminderWidget } from '../../src/features/home/ReminderWidget';
 import { HealthScoreWidget } from '../../src/features/home/HealthScoreWidget';
@@ -21,8 +22,10 @@ import { WalletCard } from '../../src/shared/components/WalletCard';
 import { TransactionListItem } from '../../src/shared/components/TransactionListItem';
 import { TransactionForm } from '../../src/features/transactions/TransactionForm';
 import { WalletForm } from '../../src/features/wallets/WalletForm';
+import { FAB } from '../../src/shared/components/FAB';
 import { AppLabels } from '../../src/shared/config/labels';
 import type { TransactionType } from '../../src/shared/types';
+import type { FABAction } from '../../src/shared/components/FAB';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -68,10 +71,15 @@ export default function HomeScreen() {
     setTxFormOpen(true);
   };
 
+  const handleFABAction = (action: FABAction) => {
+    if (action === 'scan') return;
+    openTxForm(action as TransactionType);
+  };
+
   return (
-    <>
+    <View style={[styles.root, { backgroundColor: c.bgPage }]}>
       <ScrollView
-        style={[styles.container, { backgroundColor: c.bgPage }]}
+        style={styles.scroll}
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
@@ -84,41 +92,26 @@ export default function HomeScreen() {
           onTourPress={() => setTourVisible(true)}
         />
 
-        {/* Quick Actions */}
+        {/* Quick Actions — 4-column grid matching old-code */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Aksi Cepat</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
-          >
-            {[
-              { label: 'Pengeluaran', type: 'expense', color: '#c62828' },
-              { label: 'Pemasukan', type: 'income', color: '#2e7d32' },
-              { label: 'Transfer', type: 'transfer_internal', color: '#1565c0' },
-              { label: 'Hutang', type: 'debt_received', color: '#e65100' },
-              { label: 'Piutang', type: 'debt_given', color: '#7b1fa2' },
-            ].map((qa) => (
-              <TouchableOpacity
-                key={qa.type}
-                onPress={() => openTxForm(qa.type as TransactionType)}
-                style={[styles.qaBtn, { backgroundColor: `${qa.color}15`, borderColor: `${qa.color}25` }]}
-              >
-                <View style={[styles.qaIcon, { backgroundColor: `${qa.color}20` }]}>
-                  <Plus size={16} color={qa.color} strokeWidth={2.5} />
-                </View>
-                <Text style={[styles.qaLabel, { color: qa.color }]}>{qa.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <QuickActions onAction={openTxForm} />
         </View>
 
-        {/* Wallets */}
+        {/* Health Score */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Dompet Saya</Text>
+            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Kesehatan Keuangan</Text>
+          </View>
+          <HealthScoreWidget />
+        </View>
+
+        {/* Wallets horizontal scroll */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.titleRow}>
+              <Wallet size={14} color={c.textMuted} />
+              <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Dompet Saya</Text>
+            </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/wallets')}
               style={styles.seeAll}
@@ -173,20 +166,12 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Health Score */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Kesehatan Keuangan</Text>
-          </View>
-          <HealthScoreWidget />
-        </View>
-
-        {/* Budget widget */}
+        {/* Budget horizontal cards */}
         <View style={styles.section}>
           <BudgetWidget />
         </View>
 
-        {/* Reminder widget */}
+        {/* Reminders horizontal cards */}
         <View style={styles.section}>
           <ReminderWidget />
         </View>
@@ -241,6 +226,9 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
+      {/* FAB speed dial — positioned above tab bar */}
+      <FAB onAction={handleFABAction} />
+
       <TransactionForm
         isOpen={txFormOpen}
         onClose={() => setTxFormOpen(false)}
@@ -254,12 +242,13 @@ export default function HomeScreen() {
         visible={tourVisible}
         onClose={() => setTourVisible(false)}
       />
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  root: { flex: 1 },
+  scroll: { flex: 1 },
   section: { marginTop: 20 },
   sectionHeader: {
     flexDirection: 'row',
@@ -268,6 +257,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 12,
   },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   sectionTitle: { fontSize: 14, fontFamily: 'DM-Sans-SemiBold' },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   seeAllText: { fontSize: 12, fontFamily: 'DM-Sans-Medium' },
@@ -278,7 +268,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 16,
     borderWidth: 2,
@@ -299,15 +288,4 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   addWalletText: { fontSize: 10, fontFamily: 'DM-Sans-SemiBold' },
-  qaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  qaIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  qaLabel: { fontSize: 13, fontFamily: 'DM-Sans-Medium' },
 });

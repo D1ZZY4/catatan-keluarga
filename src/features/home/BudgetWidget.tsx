@@ -1,29 +1,16 @@
-/**
- * BudgetWidget — widget ringkasan anggaran di home screen.
- * Menampilkan progress bar per kategori dan total % pemakaian.
- */
-
-import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import { Plus } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Layers, Plus } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useTheme } from '../../shared/context/ThemeContext';
 import { useAppData } from '../../shared/context/AppDataContext';
 import { DynamicIcon } from '../../shared/components/DynamicIcon';
-import { BudgetSheet } from '../budgets/BudgetSheet';
 import { formatCurrency } from '../../shared/utils/format';
 import { EXPENSE_TYPES } from '../../shared/constants/transactionTypes';
-import type { Budget } from '../../shared/types';
 
 export function BudgetWidget() {
   const { colors: c } = useTheme();
   const { budgets, transactions, categories } = useAppData();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editBudget, setEditBudget] = useState<Budget | undefined>();
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
@@ -39,95 +26,110 @@ export function BudgetWidget() {
         )
         .reduce((s, tx) => s + tx.amount, 0);
 
-      const pct = b.amount > 0 ? Math.min(100, Math.round((spent / b.amount) * 100)) : 0;
+      const pct = b.amount > 0 ? spent / b.amount : 0;
       const category = categories.find((cat) => cat.id === b.categoryId);
-
       return { budget: b, spent, pct, category };
     });
   }, [budgets, transactions, categories, startOfMonth]);
 
-  const openAdd = () => {
-    setEditBudget(undefined);
-    setSheetOpen(true);
-  };
-
-  const openEdit = (b: Budget) => {
-    setEditBudget(b);
-    setSheetOpen(true);
-  };
+  if (budgetProgress.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: c.textPrimary }]}>Anggaran Bulan Ini</Text>
-        <TouchableOpacity onPress={openAdd} style={[styles.addBtn, { backgroundColor: c.accentPrimary + '20' }]}>
-          <Plus size={14} color={c.accentPrimary} />
-          <Text style={[styles.addBtnText, { color: c.accentPrimary }]}>Tambah</Text>
+    <View style={s.section}>
+      <View style={s.header}>
+        <View style={s.titleRow}>
+          <Layers size={14} color={c.textMuted} />
+          <Text style={[s.title, { color: c.textPrimary }]}>Anggaran Bulan Ini</Text>
+        </View>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/settings' as any)}>
+          <Text style={[s.linkText, { color: c.textMuted }]}>Kelola</Text>
         </TouchableOpacity>
       </View>
 
-      {budgetProgress.length === 0 ? (
-        <TouchableOpacity
-          onPress={openAdd}
-          style={[styles.emptyCard, { backgroundColor: c.bgCard, borderColor: c.bgCard }]}
-        >
-          <Text style={[styles.emptyText, { color: c.textMuted }]}>
-            Belum ada anggaran. Tap untuk menambahkan.
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={[styles.card, { backgroundColor: c.bgCard }]}>
-          {budgetProgress.map(({ budget, spent, pct, category }, i) => (
-            <TouchableOpacity
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.scrollContent}
+      >
+        {budgetProgress.map(({ budget, spent, pct, category }) => {
+          const isOver = pct >= 1;
+          const isNear = pct > 0.8;
+          const barColor = isOver ? '#c62828' : isNear ? '#e65100' : (category?.color ?? c.accentPrimary);
+          const cardBg = isOver ? 'rgba(198,40,40,0.06)' : isNear ? 'rgba(230,81,0,0.06)' : c.bgCard;
+          const borderColor = isOver ? 'rgba(198,40,40,0.25)' : isNear ? 'rgba(230,81,0,0.25)' : 'transparent';
+
+          return (
+            <View
               key={budget.id}
-              onPress={() => openEdit(budget)}
               style={[
-                styles.budgetRow,
-                i < budgetProgress.length - 1 && { borderBottomColor: c.bgPage, borderBottomWidth: 1 },
+                s.card,
+                {
+                  backgroundColor: cardBg,
+                  borderColor,
+                  borderWidth: 1,
+                },
               ]}
             >
-              <View style={[styles.catIcon, { backgroundColor: (category?.color ?? '#888') + '20' }]}>
-                <DynamicIcon name={category?.icon ?? 'circle'} size={16} color={category?.color ?? '#888'} />
-              </View>
-              <View style={styles.budgetInfo}>
-                <View style={styles.budgetTopRow}>
-                  <Text style={[styles.catName, { color: c.textPrimary }]}>{category?.name ?? 'Kategori'}</Text>
-                  <Text
-                    style={[
-                      styles.pctText,
-                      { color: pct >= 90 ? '#c62828' : pct >= 70 ? '#e65100' : c.textMuted },
-                    ]}
-                  >
-                    {pct}%
-                  </Text>
-                </View>
-                <View style={[styles.progressTrack, { backgroundColor: c.bgPage }]}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: `${pct}%`,
-                        backgroundColor: pct >= 90 ? '#c62828' : pct >= 70 ? '#e65100' : category?.color ?? c.accentPrimary,
-                      },
-                    ]}
+              <View style={s.cardTop}>
+                <View
+                  style={[
+                    s.catIcon,
+                    { backgroundColor: category ? `${category.color}22` : c.bgPage },
+                  ]}
+                >
+                  <DynamicIcon
+                    name={category?.icon ?? 'Circle'}
+                    size={15}
+                    color={category?.color ?? c.textMuted}
                   />
                 </View>
-                <Text style={[styles.amountText, { color: c.textMuted }]}>
-                  {formatCurrency(spent, budget.currency)} / {formatCurrency(budget.amount, budget.currency)}
+                <Text style={[s.catName, { color: c.textPrimary }]} numberOfLines={1}>
+                  {category?.name ?? 'Anggaran'}
                 </Text>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
 
-      <BudgetSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} editBudget={editBudget} />
+              <View style={[s.progressTrack, { backgroundColor: c.bgPage }]}>
+                <View
+                  style={[
+                    s.progressFill,
+                    {
+                      width: `${Math.min(100, Math.round(pct * 100))}%`,
+                      backgroundColor: barColor,
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={s.cardBottom}>
+                <Text style={[s.amountText, { color: c.textMuted }]}>
+                  {formatCurrency(spent, budget.currency)}
+                </Text>
+                <Text style={[s.amountText, { color: c.textMuted }]}>
+                  {formatCurrency(budget.amount, budget.currency)}
+                </Text>
+              </View>
+
+              {isOver && (
+                <Text style={s.overLabel}>Melebihi!</Text>
+              )}
+            </View>
+          );
+        })}
+
+        <TouchableOpacity
+          onPress={() => router.push('/(tabs)/settings' as any)}
+          style={[s.addCard, { borderColor: c.bgCard }]}
+        >
+          <Plus size={16} color={c.textMuted} />
+          <Text style={[s.addText, { color: c.textMuted }]}>Anggaran Baru</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {},
+const s = StyleSheet.create({
+  section: {},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,25 +137,84 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
-  title: { fontSize: 14, fontFamily: 'DM-Sans-SemiBold' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  addBtnText: { fontSize: 12, fontFamily: 'DM-Sans-SemiBold' },
-  emptyCard: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  emptyText: { fontSize: 13, fontFamily: 'DM-Sans', textAlign: 'center' },
-  card: { marginHorizontal: 16, borderRadius: 16, overflow: 'hidden' },
-  budgetRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
-  catIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  budgetInfo: { flex: 1, gap: 6 },
-  budgetTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  catName: { fontSize: 13, fontFamily: 'DM-Sans-Medium' },
-  pctText: { fontSize: 12, fontFamily: 'DM-Sans-SemiBold' },
-  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: 4, borderRadius: 2 },
-  amountText: { fontSize: 11, fontFamily: 'DM-Sans' },
+  title: { fontSize: 14, fontFamily: 'DM-Sans-SemiBold' },
+  linkText: { fontSize: 12, fontFamily: 'DM-Sans-Medium' },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  card: {
+    width: 175,
+    borderRadius: 20,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 10,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  catIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  catName: {
+    fontSize: 12,
+    fontFamily: 'DM-Sans-SemiBold',
+    flex: 1,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  amountText: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans',
+  },
+  overLabel: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans-SemiBold',
+    color: '#c62828',
+    marginTop: -4,
+  },
+  addCard: {
+    width: 130,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: 12,
+    minHeight: 100,
+  },
+  addText: {
+    fontSize: 10,
+    fontFamily: 'DM-Sans-Medium',
+    textAlign: 'center',
+  },
 });
