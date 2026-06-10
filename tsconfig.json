@@ -1,30 +1,37 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "types": [
+      "vite/client",
+      "vite-plugin-pwa/client"
+    ],
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@app/*": [
-        "./app/*"
       ]
     }
   },
   "include": [
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    ".expo/types/**/*.d.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts",
-    ".expo/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "old-code"
+    "src",
+    "vite.config.ts"
   ]
 }
